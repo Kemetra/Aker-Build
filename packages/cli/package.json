@@ -1,0 +1,26 @@
+{
+  "name": "@tenantguard/cli",
+  "version": "0.0.0",
+  "description": "TenantGuard CLI — tenantguard scan / map (and later commands)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "tenantguard": "./src/bin.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tenantguard/project-map": "workspace:*",
+    "@tenantguard/scanner": "workspace:*",
+    "commander": "^12.1.0",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

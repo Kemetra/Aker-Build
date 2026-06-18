@@ -207,5 +207,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/002-project-map-schema/plan.md` (active feature: 002-project-map-schema).
+`specs/003-cli-scanner/plan.md` (active feature: 003-cli-scanner).
 <!-- SPECKIT END -->
