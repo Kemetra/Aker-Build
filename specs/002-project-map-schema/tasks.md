@@ -33,8 +33,8 @@ dependency/lockfile state and is therefore an **explicit-approval gate** (Consti
 MUST NOT change unless package changes are explicitly approved).
 
 - [x] T001 Author `docs/decisions/ADR-001-tech-stack.md` capturing TypeScript / Node LTS / pnpm / Vitest / Zod / JSON+YAML, citing `docs/tenantguard_project_blueprint.md` (tech-stack table, "Why TypeScript first") and `specs/002-project-map-schema/spec.md` Assumptions as the decision basis. (Docs-only; unblocks the Implementation Boundary.) ✅ Done 2026-06-18 — `docs/decisions/ADR-001-tech-stack.md`.
-- [ ] T002 Initialize the `packages/project-map/` package (`package.json` with Zod + a YAML parser, `tsconfig.json`) per ADR-001. **Requires explicit approval (adds dependencies + lockfile).**
-- [ ] T003 [P] Configure Vitest + lint/format for `packages/project-map/` (`vitest.config.ts`, lint config). **Requires explicit approval if it touches the lockfile.**
+- [x] T002 Initialize the `packages/project-map/` package (`package.json` with Zod + a YAML parser, `tsconfig.json`) per ADR-001. **Requires explicit approval (adds dependencies + lockfile).**
+- [x] T003 [P] Configure Vitest + lint/format for `packages/project-map/` (`vitest.config.ts`, lint config). **Requires explicit approval if it touches the lockfile.**
 
 **Checkpoint**: Package skeleton exists; ADR-001 recorded. No schema logic yet.
 
@@ -46,8 +46,8 @@ MUST NOT change unless package changes are explicitly approved).
 
 **⚠️ CRITICAL**: No user-story work begins until this phase is complete.
 
-- [ ] T004 [P] Define `SCHEMA_VERSION = 1` and the shared **Evidence Object** Zod schema (`{type, path, line, signal, confidence}`; `line`/`path` nullable, `confidence` enum) in `packages/project-map/src/schema.ts`, exactly matching `contracts/project-map.schema.json` `$defs.evidence` and `data-model.md`.
-- [ ] T005 Stub the public surface (`schema`, `validate`, inferred types, `SCHEMA_VERSION`) in `packages/project-map/src/index.ts` so consumers (003–007) have a stable import target.
+- [x] T004 [P] Define `SCHEMA_VERSION = 1` and the shared **Evidence Object** Zod schema (`{type, path, line, signal, confidence}`; `line`/`path` nullable, `confidence` enum) in `packages/project-map/src/schema.ts`, exactly matching `contracts/project-map.schema.json` `$defs.evidence` and `data-model.md`.
+- [x] T005 Stub the public surface (`schema`, `validate`, inferred types, `SCHEMA_VERSION`) in `packages/project-map/src/index.ts` so consumers (003–007) have a stable import target.
 
 **Checkpoint**: Evidence Object + version constant + public surface available for all stories.
 
@@ -64,19 +64,19 @@ fails naming `tenant_model`; set `status: not_detected` with `strategy: separate
 
 ### Tests for User Story 1 (write FIRST; must FAIL before implementation) ⚠️
 
-- [ ] T006 [P] [US1] Accept test: conforming SaaS + non-SaaS maps validate, AND a **multi-repo** map (≥2 entries in `repos[]`, e.g. backend+frontend+worker) validates, in `packages/project-map/tests/schema.accept.test.ts` (loads both `contracts/example-map.*.yaml`; the SaaS example already has 3 repos — FR-002).
-- [ ] T007 [P] [US1] Reject test: missing each required top-level field → `ok:false` with an error naming that field path, in `packages/project-map/tests/schema.reject.test.ts` (SC-002). Also assert FR-003: `detected_stack` with empty/`null` fields (`runtime: null`, `frameworks: []`) is **accepted** (present-but-empty, not fabricated), while a map **missing** `detected_stack` entirely is **rejected** naming `project.detected_stack`.
-- [ ] T008 [P] [US1] Tenant-model test: `status` enum honored; `strategy`/`tenant_key` MUST be null/unknown when `status != detected`; guessed value → field-level error, in `packages/project-map/tests/tenant-model.test.ts` (FR-004a).
-- [ ] T009 [P] [US1] Evidence test: Evidence Object shape; nullable `line`/`path`; `confidence` on the evidence object, in `packages/project-map/tests/evidence.test.ts` (FR-004b).
-- [ ] T010 [P] [US1] Secret-safety test: a map/evidence carrying a secret-like value is rejected or has no field to hold it; `signal`/`path` never contain the secret, in `packages/project-map/tests/secret-safety.test.ts` (FR-011).
+- [x] T006 [P] [US1] Accept test: conforming SaaS + non-SaaS maps validate, AND a **multi-repo** map (≥2 entries in `repos[]`, e.g. backend+frontend+worker) validates, in `packages/project-map/tests/schema.accept.test.ts` (loads both `contracts/example-map.*.yaml`; the SaaS example already has 3 repos — FR-002).
+- [x] T007 [P] [US1] Reject test: missing each required top-level field → `ok:false` with an error naming that field path, in `packages/project-map/tests/schema.reject.test.ts` (SC-002). Also assert FR-003: `detected_stack` with empty/`null` fields (`runtime: null`, `frameworks: []`) is **accepted** (present-but-empty, not fabricated), while a map **missing** `detected_stack` entirely is **rejected** naming `project.detected_stack`.
+- [x] T008 [P] [US1] Tenant-model test: `status` enum honored; `strategy`/`tenant_key` MUST be null/unknown when `status != detected`; guessed value → field-level error, in `packages/project-map/tests/tenant-model.test.ts` (FR-004a).
+- [x] T009 [P] [US1] Evidence test: Evidence Object shape; nullable `line`/`path`; `confidence` on the evidence object, in `packages/project-map/tests/evidence.test.ts` (FR-004b).
+- [x] T010 [P] [US1] Secret-safety test: a map/evidence carrying a secret-like value is rejected or has no field to hold it; `signal`/`path` never contain the secret, in `packages/project-map/tests/secret-safety.test.ts` (FR-011).
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement the full Project Map Zod schema (version, project+detected_stack, repos[], boundaries[], tenant_model, critical_surfaces, optional metadata) in `packages/project-map/src/schema.ts`, matching `data-model.md` (depends on T004).
-- [ ] T012 [US1] Implement the conditional **tenant-model honesty invariant** (`status != detected ⇒ strategy ∈ {null,"unknown"} ∧ tenant_key == null`) via `superRefine` in `packages/project-map/src/schema.ts` (depends on T011).
-- [ ] T013 [US1] Implement `validate(map): { ok, errors: Array<{ path, message }> }` mapping Zod issues to field-paths in `packages/project-map/src/validate.ts` (FR-008; depends on T011).
-- [ ] T014 [US1] Implement JSON load/parse (canonical) in `packages/project-map/src/io.ts`; no network, no credentials (FR-010; depends on T013).
-- [ ] T015 [US1] Wire `schema`, `validate`, types, `SCHEMA_VERSION` into `packages/project-map/src/index.ts` (depends on T013).
+- [x] T011 [US1] Implement the full Project Map Zod schema (version, project+detected_stack, repos[], boundaries[], tenant_model, critical_surfaces, optional metadata) in `packages/project-map/src/schema.ts`, matching `data-model.md` (depends on T004).
+- [x] T012 [US1] Implement the conditional **tenant-model honesty invariant** (`status != detected ⇒ strategy ∈ {null,"unknown"} ∧ tenant_key == null`) via `superRefine` in `packages/project-map/src/schema.ts` (depends on T011).
+- [x] T013 [US1] Implement `validate(map): { ok, errors: Array<{ path, message }> }` mapping Zod issues to field-paths in `packages/project-map/src/validate.ts` (FR-008; depends on T011).
+- [x] T014 [US1] Implement JSON load/parse (canonical) in `packages/project-map/src/io.ts`; no network, no credentials (FR-010; depends on T013).
+- [x] T015 [US1] Wire `schema`, `validate`, types, `SCHEMA_VERSION` into `packages/project-map/src/index.ts` (depends on T013).
 
 **Checkpoint**: MVP — a Project Map can be validated with field-level errors and the honesty rule. US1 testable independently.
 
@@ -92,12 +92,12 @@ unknown extra field validates (ignored/warned), per SC-003/SC-004.
 
 ### Tests for User Story 2 (write FIRST; must FAIL before implementation) ⚠️
 
-- [ ] T016 [P] [US2] Compat test: additive change keeps previously-conforming maps valid; unknown extra field → `ok:true` (ignored or warning, never crash), in `packages/project-map/tests/compat.test.ts` (FR-006, FR-007).
+- [x] T016 [P] [US2] Compat test: additive change keeps previously-conforming maps valid; unknown extra field → `ok:true` (ignored or warning, never crash), in `packages/project-map/tests/compat.test.ts` (FR-006, FR-007).
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Implement tolerant read (passthrough of unknown fields; optional warning channel) in `packages/project-map/src/schema.ts` / `validate.ts` (depends on T013).
-- [ ] T018 [US2] Document the versioning & compatibility policy (additive = compatible; removal/rename/redefine = major bump) in `packages/project-map/README.md` and link it from `research.md` R5 (docs).
+- [x] T017 [US2] Implement tolerant read (passthrough of unknown fields; optional warning channel) in `packages/project-map/src/schema.ts` / `validate.ts` (depends on T013).
+- [x] T018 [US2] Document the versioning & compatibility policy (additive = compatible; removal/rename/redefine = major bump) in `packages/project-map/README.md` and link it from `research.md` R5 (docs).
 
 **Checkpoint**: Schema is safe to evolve; US1 + US2 both pass independently.
 
@@ -113,11 +113,11 @@ validated object (round-trip), per SC-005.
 
 ### Tests for User Story 3 (write FIRST; must FAIL before implementation) ⚠️
 
-- [ ] T019 [P] [US3] Round-trip test: same logical map as JSON vs YAML → identical `validate()` result, in `packages/project-map/tests/roundtrip.test.ts` (SC-005).
+- [x] T019 [P] [US3] Round-trip test: same logical map as JSON vs YAML → identical `validate()` result, in `packages/project-map/tests/roundtrip.test.ts` (SC-005).
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Implement YAML parse (to the same logical object as JSON) in `packages/project-map/src/io.ts` (depends on T014).
+- [x] T020 [US3] Implement YAML parse (to the same logical object as JSON) in `packages/project-map/src/io.ts` (depends on T014).
 
 **Checkpoint**: All three stories independently functional.
 
@@ -125,10 +125,10 @@ validated object (round-trip), per SC-005.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T021 [P] Run `quickstart.md` validation end-to-end against both example maps; confirm the acceptance table (SC-001…SC-007) holds.
-- [ ] T022 [P] Write `packages/project-map/README.md` (purpose, `validate()` usage, version policy, link to spec/contracts).
-- [ ] T023 Confirm domain-neutrality (no Retail Tower / ERPNext / POS terms) and zero secrets across package + tests (FR-012, FR-011).
-- [ ] T024 Verify the JSON Schema contract (`contracts/project-map.schema.json`) stays in sync with the Zod schema (add a drift check or note the sync procedure).
+- [x] T021 [P] Run `quickstart.md` validation end-to-end against both example maps; confirm the acceptance table (SC-001…SC-007) holds.
+- [x] T022 [P] Write `packages/project-map/README.md` (purpose, `validate()` usage, version policy, link to spec/contracts).
+- [x] T023 Confirm domain-neutrality (no Retail Tower / ERPNext / POS terms) and zero secrets across package + tests (FR-012, FR-011).
+- [x] T024 Verify the JSON Schema contract (`contracts/project-map.schema.json`) stays in sync with the Zod schema (add a drift check or note the sync procedure).
 
 ---
 
