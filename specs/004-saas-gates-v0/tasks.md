@@ -26,9 +26,9 @@ US3 P3 subset), each independently testable. Output is a `risks.json` validated 
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Author `docs/decisions/ADR-003-gate-rule-engine.md` recording **TypeScript-coded gate functions** (no YAML/Rego engine) as the v0 rule-engine approach, citing `research.md` R1 and the constitution's OPA-deferred posture. (Docs-only.)
-- [ ] T002 Initialize `packages/gates/` (`package.json` depending on `@tenantguard/project-map` + `@tenantguard/scanner` workspace deps + `zod`; `tsconfig.json`) and add a `gates` command surface to the existing `packages/cli` (`commander` already present). **Approved package/lockfile change.**
-- [ ] T003 [P] Configure Vitest for `packages/gates` (`vitest.config.ts`), reusing the workspace toolchain.
+- [x] T001 Author `docs/decisions/ADR-003-gate-rule-engine.md` recording **TypeScript-coded gate functions** (no YAML/Rego engine) as the v0 rule-engine approach, citing `research.md` R1 and the constitution's OPA-deferred posture. (Docs-only.)
+- [x] T002 Initialize `packages/gates/` (`package.json` depending on `@tenantguard/project-map` + `@tenantguard/scanner` workspace deps + `zod`; `tsconfig.json`) and add a `gates` command surface to the existing `packages/cli` (`commander` already present). **Approved package/lockfile change.**
+- [x] T003 [P] Configure Vitest for `packages/gates` (`vitest.config.ts`), reusing the workspace toolchain.
 
 **Checkpoint**: `packages/gates` skeletoned; ADR-003 recorded. No gate logic yet.
 
@@ -38,11 +38,11 @@ US3 P3 subset), each independently testable. Output is a `risks.json` validated 
 
 **⚠️ CRITICAL**: No user-story work begins until this phase is complete.
 
-- [ ] T004 [P] Define the `risks.json` Zod schema in `packages/gates/src/schema.ts`: `findingSchema = z.discriminatedUnion("status", [...])` (risk → severity enum + ≥1 evidence; needs_verification → severity null + ≥1 evidence; not_applicable → severity null + ≥0 evidence), **importing `evidenceSchema` from `@tenantguard/project-map`** (FR-003); `risksSchema = { schema_version, findings: Finding[] }` (R3, R4, data-model).
-- [ ] T005 [P] Define gate types (`Gate`, `GateContext`, `Finding`, `Severity`) in `packages/gates/src/types.ts` per `data-model.md`.
-- [ ] T006 Implement `GateContext` construction in `packages/gates/src/context.ts`: load + `validate()` `project-map.json` via `@tenantguard/project-map`; wire **read-only** `listFiles`/`fileExists`/`readFileSafe` reused from `@tenantguard/scanner` io (FR-008, R2; depends on T005).
-- [ ] T007 Implement the gate registry + subset selection by id in `packages/gates/src/registry.ts` (filter by `--gates` ids; unknown id → error) (FR-006, R7; depends on T005).
-- [ ] T008 Create the v0 sample-set fixtures under `packages/gates/tests/fixtures/` (per-gate clean + violation repos) and reuse the 003 fixture-prep helper (copy-to-tempdir + `git init`, cached) (SC-003, R6).
+- [x] T004 [P] Define the `risks.json` Zod schema in `packages/gates/src/schema.ts`: `findingSchema = z.discriminatedUnion("status", [...])` (risk → severity enum + ≥1 evidence; needs_verification → severity null + ≥1 evidence; not_applicable → severity null + ≥0 evidence), **importing `evidenceSchema` from `@tenantguard/project-map`** (FR-003); `risksSchema = { schema_version, findings: Finding[] }` (R3, R4, data-model).
+- [x] T005 [P] Define gate types (`Gate`, `GateContext`, `Finding`, `Severity`) in `packages/gates/src/types.ts` per `data-model.md`.
+- [x] T006 Implement `GateContext` construction in `packages/gates/src/context.ts`: load + `validate()` `project-map.json` via `@tenantguard/project-map`; wire **read-only** `listFiles`/`fileExists`/`readFileSafe` reused from `@tenantguard/scanner` io (FR-008, R2; depends on T005).
+- [x] T007 Implement the gate registry + subset selection by id in `packages/gates/src/registry.ts` (filter by `--gates` ids; unknown id → error) (FR-006, R7; depends on T005).
+- [x] T008 Create the v0 sample-set fixtures under `packages/gates/tests/fixtures/` (per-gate clean + violation repos) and reuse the 003 fixture-prep helper (copy-to-tempdir + `git init`, cached) (SC-003, R6).
 
 **Checkpoint**: Schema + types + context + registry + fixtures ready for all stories.
 
@@ -59,21 +59,21 @@ gate with evidence at the offending location; assert 0 scanned files changed.
 
 ### Tests for User Story 1 (write FIRST; must FAIL before implementation) ⚠️
 
-- [ ] T009 [P] [US1] Findings-shape test: every finding cites `gate_id`+`status`; every `status: risk` finding cites severity + ≥1 evidence object (SC-002), in `packages/gates/tests/findings-shape.test.ts`.
-- [ ] T010 [P] [US1] Known-violation test: a per-gate violation fixture yields a `risk` finding tied to the correct gate with evidence pointing at the offending location (SC-001), in `packages/gates/tests/known-violation.test.ts`.
-- [ ] T011 [P] [US1] Read-only test: snapshot fixture file state before+after a run; assert 0 created/modified/deleted (FR-008), in `packages/gates/tests/readonly.test.ts`.
-- [ ] T012 [P] [US1] Secret-safety test: secret-like content is flagged as a finding (evidence `signal` names the pattern); the secret value never appears in `risks.json` or stdout (SC-006, FR-009), in `packages/gates/tests/secrets.test.ts`.
+- [x] T009 [P] [US1] Findings-shape test: every finding cites `gate_id`+`status`; every `status: risk` finding cites severity + ≥1 evidence object (SC-002), in `packages/gates/tests/findings-shape.test.ts`.
+- [x] T010 [P] [US1] Known-violation test: a per-gate violation fixture yields a `risk` finding tied to the correct gate with evidence pointing at the offending location (SC-001), in `packages/gates/tests/known-violation.test.ts`.
+- [x] T011 [P] [US1] Read-only test: snapshot fixture file state before+after a run; assert 0 created/modified/deleted (FR-008), in `packages/gates/tests/readonly.test.ts`.
+- [x] T012 [P] [US1] Secret-safety test: secret-like content is flagged as a finding (evidence `signal` names the pattern); the secret value never appears in `risks.json` or stdout (SC-006, FR-009), in `packages/gates/tests/secrets.test.ts`.
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Implement the security/tenant-isolation gate (TG-G4) in `packages/gates/src/gates/g4-security.ts` (auth-guard / tenant-filter / role-guard / tenant_id / secret-in-logs signals) per `data-model.md` (depends on T006).
-- [ ] T014 [P] [US1] Implement the architecture-boundary gate (TG-G1) in `packages/gates/src/gates/g1-architecture.ts` (frontend→backend internals, worker HTTP, UI→DB signals) (depends on T006).
-- [ ] T015 [P] [US1] Implement the idempotency gate (TG-G5) in `packages/gates/src/gates/g5-idempotency.ts` (webhook/job/payment dedupe signals) (depends on T006).
-- [ ] T016 [P] [US1] Implement the source-truth gate (TG-G0) in `packages/gates/src/gates/g0-source-truth.ts` (missing source/spec/CI evidence signals) (depends on T006).
-- [ ] T017 [US1] Implement the run orchestrator in `packages/gates/src/run.ts`: select gates → run each → collect a single unified `findings[]` with **deterministic stable sort** (depends on T007, T013–T016).
-- [ ] T018 [US1] **Validate the produced risks.json with `risksSchema` before returning/writing**; on failure, error and emit nothing (R3; depends on T004, T017).
-- [ ] T019 [US1] Implement output write (`risks.json` to designated `--out`, default `./.tenantguard/`, outside scanned tracked source) in `packages/gates/src/io.ts` (FR-014; delegates reads to scanner io; depends on T018).
-- [ ] T020 [US1] Public surface `runGates(opts): RisksResult` in `packages/gates/src/index.ts` (depends on T018).
+- [x] T013 [P] [US1] Implement the security/tenant-isolation gate (TG-G4) in `packages/gates/src/gates/g4-security.ts` (auth-guard / tenant-filter / role-guard / tenant_id / secret-in-logs signals) per `data-model.md` (depends on T006).
+- [x] T014 [P] [US1] Implement the architecture-boundary gate (TG-G1) in `packages/gates/src/gates/g1-architecture.ts` (frontend→backend internals, worker HTTP, UI→DB signals) (depends on T006).
+- [x] T015 [P] [US1] Implement the idempotency gate (TG-G5) in `packages/gates/src/gates/g5-idempotency.ts` (webhook/job/payment dedupe signals) (depends on T006).
+- [x] T016 [P] [US1] Implement the source-truth gate (TG-G0) in `packages/gates/src/gates/g0-source-truth.ts` (missing source/spec/CI evidence signals) (depends on T006).
+- [x] T017 [US1] Implement the run orchestrator in `packages/gates/src/run.ts`: select gates → run each → collect a single unified `findings[]` with **deterministic stable sort** (depends on T007, T013–T016).
+- [x] T018 [US1] **Validate the produced risks.json with `risksSchema` before returning/writing**; on failure, error and emit nothing (R3; depends on T004, T017).
+- [x] T019 [US1] Implement output write (`risks.json` to designated `--out`, default `./.tenantguard/`, outside scanned tracked source) in `packages/gates/src/io.ts` (FR-014; delegates reads to scanner io; depends on T018).
+- [x] T020 [US1] Public surface `runGates(opts): RisksResult` in `packages/gates/src/index.ts` (depends on T018).
 
 **Checkpoint**: MVP — a scanned repo produces an evidence-backed, read-only, secret-safe risk list.
 
@@ -90,18 +90,18 @@ severity) from the JSON alone.
 
 ### Tests for User Story 2 (write FIRST; must FAIL before implementation) ⚠️
 
-- [ ] T021 [P] [US2] Needs-verification test: a gate with insufficient evidence emits `status: needs_verification` (severity null, ≥1 evidence describing what was inspected), never a fabricated pass/fail (SC-004), in `packages/gates/tests/needs-verification.test.ts`.
-- [ ] T022 [P] [US2] Not-applicable test: an inapplicable gate (e.g. no billing surface) emits `status: not_applicable` with severity null, not a failure (FR-005), in `packages/gates/tests/not-applicable.test.ts`.
-- [ ] T023 [P] [US2] Clean-no-false-positive test: a per-gate clean fixture yields 0 `risk` findings for that gate (SC-003), in `packages/gates/tests/clean-no-fp.test.ts`.
+- [x] T021 [P] [US2] Needs-verification test: a gate with insufficient evidence emits `status: needs_verification` (severity null, ≥1 evidence describing what was inspected), never a fabricated pass/fail (SC-004), in `packages/gates/tests/needs-verification.test.ts`.
+- [x] T022 [P] [US2] Not-applicable test: an inapplicable gate (e.g. no billing surface) emits `status: not_applicable` with severity null, not a failure (FR-005), in `packages/gates/tests/not-applicable.test.ts`.
+- [x] T023 [P] [US2] Clean-no-false-positive test: a per-gate clean fixture yields 0 `risk` findings for that gate (SC-003), in `packages/gates/tests/clean-no-fp.test.ts`.
 
 ### Implementation for User Story 2
 
-- [ ] T024 [P] [US2] Implement the contract/API gate (TG-G2) in `packages/gates/src/gates/g2-contract.ts` — emits `needs_verification` when no diff evidence is available (FR-004; depends on T006).
-- [ ] T025 [P] [US2] Implement the migration-safety gate (TG-G3) in `packages/gates/src/gates/g3-migration.ts` (depends on T006).
-- [ ] T026 [P] [US2] Implement the billing/usage gate (TG-G6) in `packages/gates/src/gates/g6-billing.ts` — emits `not_applicable` when no billing surface is detected (FR-005; depends on T006).
-- [ ] T027 [P] [US2] Implement the observability gate (TG-G7) in `packages/gates/src/gates/g7-observability.ts` (depends on T006).
-- [ ] T028 [P] [US2] Implement the dependency/upgrade gate (TG-G8) in `packages/gates/src/gates/g8-dependency.ts` (depends on T006).
-- [ ] T029 [US2] Implement the release-readiness gate (TG-G9) in `packages/gates/src/gates/g9-release.ts` (aggregates critical-gate/CI/rollback signals; depends on T006, T017).
+- [x] T024 [P] [US2] Implement the contract/API gate (TG-G2) in `packages/gates/src/gates/g2-contract.ts` — emits `needs_verification` when no diff evidence is available (FR-004; depends on T006).
+- [x] T025 [P] [US2] Implement the migration-safety gate (TG-G3) in `packages/gates/src/gates/g3-migration.ts` (depends on T006).
+- [x] T026 [P] [US2] Implement the billing/usage gate (TG-G6) in `packages/gates/src/gates/g6-billing.ts` — emits `not_applicable` when no billing surface is detected (FR-005; depends on T006).
+- [x] T027 [P] [US2] Implement the observability gate (TG-G7) in `packages/gates/src/gates/g7-observability.ts` (depends on T006).
+- [x] T028 [P] [US2] Implement the dependency/upgrade gate (TG-G8) in `packages/gates/src/gates/g8-dependency.ts` (depends on T006).
+- [x] T029 [US2] Implement the release-readiness gate (TG-G9) in `packages/gates/src/gates/g9-release.ts` (aggregates critical-gate/CI/rollback signals; depends on T006, T017).
 
 **Checkpoint**: All ten v0 gates implemented; the three statuses are honestly represented; US1 + US2 pass independently.
 
@@ -116,12 +116,12 @@ unchanged input → equivalent risk lists.
 
 ### Tests for User Story 3 (write FIRST; must FAIL before implementation) ⚠️
 
-- [ ] T030 [P] [US3] Subset test: `--gates TG-G4,TG-G5` runs only the named gates; an unknown id errors clearly (FR-006), in `packages/gates/tests/subset.test.ts`.
-- [ ] T031 [P] [US3] Determinism test: two runs over unchanged input produce equivalent risk lists (stable ordering), excluding any non-deterministic metadata (SC-005), in `packages/gates/tests/determinism.test.ts`.
+- [x] T030 [P] [US3] Subset test: `--gates TG-G4,TG-G5` runs only the named gates; an unknown id errors clearly (FR-006), in `packages/gates/tests/subset.test.ts`.
+- [x] T031 [P] [US3] Determinism test: two runs over unchanged input produce equivalent risk lists (stable ordering), excluding any non-deterministic metadata (SC-005), in `packages/gates/tests/determinism.test.ts`.
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Enforce stable sorting of `findings[]` (by `gate_id`, then first evidence `path`, then `signal`) and exclude clocks from the compared risks.json surface in `packages/gates/src/run.ts` (R5; depends on T017).
+- [x] T032 [US3] Enforce stable sorting of `findings[]` (by `gate_id`, then first evidence `path`, then `signal`) and exclude clocks from the compared risks.json surface in `packages/gates/src/run.ts` (R5; depends on T017).
 
 **Checkpoint**: Subset selection + determinism verified; all three stories pass independently.
 
@@ -133,19 +133,19 @@ unchanged input → equivalent risk lists.
 
 ### Tests (write FIRST; must FAIL) ⚠️
 
-- [ ] T033 [P] CLI gates test: `gates [path] --out <dir>` produces a valid `risks.json`, exits 0; missing `project-map.json` exits 1 with a "run scan first" message; unknown `--gates` id exits 2; scanned repo unchanged, in `packages/cli/tests/cli.gates.test.ts`.
+- [x] T033 [P] CLI gates test: `gates [path] --out <dir>` produces a valid `risks.json`, exits 0; missing `project-map.json` exits 1 with a "run scan first" message; unknown `--gates` id exits 2; scanned repo unchanged, in `packages/cli/tests/cli.gates.test.ts`.
 
 ### Implementation
 
-- [ ] T034 [US1] Implement the `gates` command (`[path]`, `--gates`, `--out`, `--stdout`) in `packages/cli/src/commands/gates.ts` and register it in `packages/cli/src/index.ts` (depends on T020).
+- [x] T034 [US1] Implement the `gates` command (`[path]`, `--gates`, `--out`, `--stdout`) in `packages/cli/src/commands/gates.ts` and register it in `packages/cli/src/index.ts` (depends on T020).
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T035 [P] Verify local-first: no network client or credential read anywhere in `packages/gates` (SC-007) — assert via a no-network test or code review note.
-- [ ] T036 [P] Verify domain-neutral: no Retail Tower / ERPNext / POS strings or rules in any gate (FR-011).
-- [ ] T037 Run `pnpm -r test` + `pnpm -r typecheck`; confirm `packages/gates` + `packages/cli` green and the empty-repo edge case (0 risk findings, ≤1 marker per gate) holds.
+- [x] T035 [P] Verify local-first: no network client or credential read anywhere in `packages/gates` (SC-007) — assert via a no-network test or code review note.
+- [x] T036 [P] Verify domain-neutral: no Retail Tower / ERPNext / POS strings or rules in any gate (FR-011).
+- [x] T037 Run `pnpm -r test` + `pnpm -r typecheck`; confirm `packages/gates` + `packages/cli` green and the empty-repo edge case (0 risk findings, ≤1 marker per gate) holds.
 
 ---
 

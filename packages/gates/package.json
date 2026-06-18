@@ -1,11 +1,13 @@
 {
-  "name": "@tenantguard/cli",
+  "name": "@tenantguard/gates",
   "version": "0.0.0",
-  "description": "TenantGuard CLI — tenantguard scan / map (and later commands)",
+  "description": "TenantGuard SaaS Gates v0 — evidence-backed risk detection producing risks.json",
   "license": "MIT",
   "type": "module",
-  "bin": {
-    "tenantguard": "./src/bin.ts"
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -13,11 +15,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/gates": "workspace:*",
     "@tenantguard/project-map": "workspace:*",
     "@tenantguard/scanner": "workspace:*",
-    "commander": "^12.1.0",
-    "yaml": "^2.6.1"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
