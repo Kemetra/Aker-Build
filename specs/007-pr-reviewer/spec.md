@@ -22,6 +22,17 @@ internals or language.
 
 ---
 
+## Clarifications
+
+### Session 2026-06-18
+
+- Q: The 004 gates engine runs over the whole project-map (full-repo evidence), not a diff — how does "run the gates against the change" work without modifying 004? → A: Run the **full 004 gate set over current (post-change) repo state**, then **attribute each finding to the diff** by checking whether its evidence `path` is among the changed files. Reuses 004 verbatim; read-only; deterministic. Findings whose evidence touches no changed file are out of the diff's scope and do not drive the verdict.
+- Q: 004 ships findings with `status` (risk / needs_verification / not_applicable) + `severity` but **no** "blocking gate" field — how is the verdict derived? → A: Map the verdict **off `status`**: a diff-attributable `risk` → **Not Ready**; a diff-attributable `needs_verification` → **Needs Verification**; otherwise **Ready**. **All `risk` findings block in v0** (a gate-ID subset refinement is a later concern). The earlier assumption that a "blocking vs informational" distinction was "refined alongside 004" is **retired** — it never shipped; severity is reporting detail, not the verdict driver.
+- Q: `review-pr --local-diff` has no item reference, but FR-003 / User Story 3 check the diff against a queue item's allowed/forbidden files — how is scope resolved? → A: Add an **optional `--item <ID>`** flag. When given, the reviewer loads that item's `allowed_files`/`forbidden_files` from `queue.json` (005) and runs the scope check. **Without `--item`, the scope check is skipped (and noted in the report)**; gate-based review + verdict still run, preserving always-available local-first review (US1).
+- Q: What output shape should the readiness report take? → A: Both forms — a **machine-readable `review.json`** (verdict + contributing findings + evidence) **and a human-readable Markdown report**, mirroring the risks.json/queue.json precedent. Printed to stdout and written to `.tenantguard/` (outside tracked source).
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 "User" is a reviewer (human or CI) checking whether a change is safe to merge.
@@ -73,8 +84,15 @@ out-of-scope edits.
 
 **Why this priority**: Scope adherence is how TenantGuard catches "agent changed too many files."
 
-**Independent Test**: Review a diff that touches a forbidden file for its item and confirm the verdict
-flags the out-of-scope change.
+**Independent Test**: Review a diff that touches a forbidden file for its item (via `--item <ID>`) and
+confirm the verdict flags the out-of-scope change.
+
+**Acceptance Scenarios**:
+
+1. **Given** `--item Q-001` whose diff touches a forbidden file, **When** review runs, **Then** the
+   verdict is Not Ready and the out-of-scope change is flagged with evidence.
+2. **Given** no `--item` flag, **When** local-diff review runs, **Then** the scope check is skipped, the
+   report notes that no scope was checked, and gate-based review + verdict still run.
 
 ---
 
@@ -91,14 +109,23 @@ flags the out-of-scope change.
 ## Verdict Model *(mandatory)*
 
 ```text
-Ready              no blocking gate failures or scope violations; evidence supports merge-readiness
-Not Ready          one or more blocking gate failures or out-of-scope changes (with evidence)
-Needs Verification evidence is insufficient to confirm safety for one or more checks
+Ready              no diff-attributable risk findings and no scope violations; evidence supports merge-readiness
+Not Ready          one or more diff-attributable risk findings or out-of-scope changes (with evidence)
+Needs Verification no risk findings, but one or more diff-attributable needs_verification findings remain
 ```
 
-The report MUST attach, per contributing finding, the gate id (where applicable), the location, and the
-evidence. A single Not-Ready or unresolved Needs-Verification on a blocking check prevents an overall
-Ready verdict.
+**Verdict derivation (grounded in the shipped 004 `Finding`).** 004 emits findings with `status`
+(`risk` / `needs_verification` / `not_applicable`) and `severity` — there is **no** "blocking gate"
+field. The reviewer therefore derives the verdict **off `status`**, considering only findings
+**attributable to the diff** (evidence `path` ∈ changed files) plus scope violations:
+
+- Any diff-attributable `risk` finding **or** any out-of-scope change → **Not Ready** (all `risk`
+  findings block in v0).
+- Else, any diff-attributable `needs_verification` finding → **Needs Verification**.
+- Else → **Ready**.
+
+`severity` is reporting detail (it orders/annotates findings), not the verdict driver. The report MUST
+attach, per contributing finding, the gate id, the location (evidence `path`/`line`), and the evidence.
 
 ---
 
@@ -108,10 +135,14 @@ Ready verdict.
 
 - **FR-001**: The reviewer MUST review a local diff and return one of Ready / Not Ready / Needs
   Verification.
-- **FR-002**: The reviewer MUST run the SaaS gates (004) against the change and attach evidence to each
-  contributing finding.
-- **FR-003**: The reviewer MUST check the change against declared scope (allowed/forbidden files) and
-  flag out-of-scope edits.
+- **FR-002**: The reviewer MUST run the **full 004 gate set over current (post-change) repo state** and
+  **attribute findings to the diff** by evidence `path` ∈ changed files; only diff-attributable findings
+  drive the verdict, and the reviewer MUST attach evidence to each contributing finding. It MUST reuse
+  the shipped 004 engine without modifying it.
+- **FR-003**: When an **optional `--item <ID>`** is supplied, the reviewer MUST load that item's
+  `allowed_files`/`forbidden_files` from `queue.json` (005) and flag out-of-scope edits (changed files
+  outside `allowed_files` or inside `forbidden_files`). **Without `--item`, the scope check MUST be
+  skipped and the report MUST note that no scope was checked** — gate review and the verdict still run.
 - **FR-004**: Local-diff review MUST require no network access and no credentials.
 - **FR-005**: The reviewer MUST support reviewing a GitHub PR by number, using PR metadata and changed
   files as evidence (additive capability).
@@ -123,12 +154,23 @@ Ready verdict.
 - **FR-009**: The report MUST NOT contain secrets; secret-like content MUST be flagged, never echoed.
 - **FR-010**: Review MUST be deterministic for unchanged input.
 - **FR-011**: The reviewer MUST be domain-neutral — no Retail Tower/ERPNext/POS specifics.
+- **FR-012**: The verdict MUST be derived **off finding `status`** (no "blocking gate" field exists in
+  004): any diff-attributable `risk` or out-of-scope change → Not Ready; else any diff-attributable
+  `needs_verification` → Needs Verification; else Ready. All `risk` findings block in v0; `severity` is
+  reporting detail, not the verdict driver.
+- **FR-013**: The reviewer MUST emit both a **machine-readable `review.json`** (verdict + contributing
+  findings + evidence) and a **human-readable Markdown report**, printed to stdout and written to the
+  designated out-dir (default `.tenantguard/`, outside tracked source).
 
 ### Key Entities
 
-- **Review Run**: one evaluation of a change (local diff or PR).
-- **Verdict**: Ready / Not Ready / Needs Verification, with contributing findings.
-- **Scope Check**: comparison of changed files against declared allowed/forbidden files.
+- **Review Run**: one evaluation of a change (local diff or PR), with an optional item id for scope.
+- **Verdict**: Ready / Not Ready / Needs Verification, derived off finding `status`, with contributing
+  (diff-attributable) findings.
+- **Changed Files**: the set of file paths the diff touches; the join key used to attribute 004 findings
+  to the diff (evidence `path` ∈ changed files).
+- **Scope Check**: comparison of changed files against a queue item's `allowed_files`/`forbidden_files`
+  (only when `--item` is supplied).
 - **PR/diff Evidence**: changed files, hunks, and (for PRs) PR metadata.
 
 ---
@@ -136,17 +178,25 @@ Ready verdict.
 ## CLI Surface *(mandatory)*
 
 ```text
-tenantguard review-pr --local-diff    review the current local diff (no credentials)
-tenantguard review-pr <number>        review a GitHub PR by number (requires GitHub access)
+tenantguard review-pr --local-diff               review the current local diff (no credentials)
+tenantguard review-pr --local-diff --item Q-001   ...and check scope against queue item Q-001
+tenantguard review-pr <number>                    review a GitHub PR by number (requires GitHub access)
+tenantguard review-pr <number> --item Q-001       ...with scope checked against Q-001
 ```
+
+`--item <ID>` is **optional**; when supplied, the item's `allowed_files`/`forbidden_files` are read from
+`<out>/queue.json` (default `.tenantguard/`) for the scope check. Without it, the scope check is skipped
+(noted in the report) and gate-based review still runs.
 
 ---
 
 ## Required Outputs *(mandatory)*
 
 ```text
-PR / readiness report   verdict (Ready/Not Ready/Needs Verification) + contributing findings + evidence
-                        in human-readable and machine-readable form
+review.json             machine-readable: verdict (Ready/Not Ready/Needs Verification) + contributing
+                        (diff-attributable) findings + evidence + scope result. Written to .tenantguard/.
+PR / readiness report   human-readable Markdown of the same verdict + findings + evidence. Printed to
+                        stdout and written to .tenantguard/. (008 surfaces this in CI.)
 ```
 
 ---
@@ -171,9 +221,11 @@ PR / readiness report   verdict (Ready/Not Ready/Needs Verification) + contribut
 
 - **SC-001**: Local-diff review returns exactly one of Ready / Not Ready / Needs Verification in 100%
   of runs, with evidence.
-- **SC-002**: A diff violating a blocking gate yields Not Ready naming the gate, in 100% of such cases
-  on the sample set.
-- **SC-003**: An out-of-scope edit (forbidden file) is flagged in 100% of such cases.
+- **SC-002**: A diff with a diff-attributable `risk` finding yields Not Ready naming the gate, in 100%
+  of such cases on the sample set.
+- **SC-003**: With `--item <ID>`, an out-of-scope edit (file outside `allowed_files` or inside
+  `forbidden_files`) is flagged in 100% of such cases; without `--item`, the report notes scope was not
+  checked.
 - **SC-004**: Any unjudgeable check yields Needs Verification, never a false pass.
 - **SC-005**: Local-diff review runs with no network access and no credentials.
 - **SC-006**: Review is read-only — 100% of the repo/diff/PR is unmodified after a review.
@@ -184,11 +236,14 @@ PR / readiness report   verdict (Ready/Not Ready/Needs Verification) + contribut
 ## Acceptance Criteria for This Feature *(mandatory)*
 
 - **AC-001**: The verdict model (Ready / Not Ready / Needs Verification) is specified.
-- **AC-002**: Gate-based review with per-finding evidence is specified.
-- **AC-003**: Scope (allowed/forbidden files) checking is specified.
+- **AC-002**: Gate-based review (full 004 set, diff-attributed by evidence `path`) with per-finding
+  evidence and the status-based verdict mapping is specified.
+- **AC-003**: Optional `--item`-driven scope (allowed/forbidden files) checking, and the skip-and-note
+  behavior without `--item`, are specified.
 - **AC-004**: Local-diff (no credentials) and GitHub-PR (additive) modes are specified.
 - **AC-005**: Read-only, no-secrets, deterministic, domain-neutral guarantees are specified.
-- **AC-006**: CLI surface (`review-pr --local-diff`, `review-pr <number>`) and output are defined.
+- **AC-006**: CLI surface (`review-pr --local-diff [--item]`, `review-pr <number> [--item]`) and the
+  `review.json` + Markdown outputs are defined.
 - **AC-007**: Non-goals are explicit (no PR comments/labels, no mutation, no CI wiring, library choice).
 - **AC-008**: The spec is implementation-neutral on diff/GitHub-client library (deferred to plan).
 - **AC-009**: No production code, reviewer code, `package.json`, or lockfile is created.
@@ -201,8 +256,12 @@ PR / readiness report   verdict (Ready/Not Ready/Needs Verification) + contribut
   and verdict model*, not the libraries.
 - **GitHub access**, when used for PR mode, relies on the user's existing credentials/CLI; TenantGuard
   stores no tokens.
-- **"Blocking gate"** vs informational gate distinction is refined alongside 004; a Not-Ready requires
-  at least one blocking failure.
+- **No "blocking gate" field in 004** (the earlier assumption that one was "refined alongside 004" never
+  shipped). The verdict is derived off finding `status`; **all `risk` findings block in v0**. Narrowing
+  to a gate-ID subset (e.g. G1–G4) is a later, additive refinement — never a change to 004.
+- **004 reuse is verbatim**: 007 is an additive consumer of the shipped gate engine (as 005/006 were of
+  their upstreams). It runs the gates over current repo state and attributes findings to the diff; it
+  does **not** modify 004 or build a diff-native gate engine.
 - **Local diff** means uncommitted/working changes and/or a stated base — exact diff base is a
   plan-layer detail.
 - **Report formats** are human-readable + machine-readable, consistent with 001's required outputs.
