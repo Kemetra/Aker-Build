@@ -21,14 +21,26 @@ must cite, how findings are shaped), not the parsing internals or rule-engine li
 
 ---
 
+## Clarifications
+
+### Session 2026-06-18
+
+- Q: How should `risks.json` represent the three gate outcomes (risk / needs-verification / not-applicable)? → A: One unified `findings[]` array; each finding carries a `status` enum (`risk` / `needs_verification` / `not_applicable`); severity + evidence are required for `risk` findings and conditional for the other statuses (see FR-013 / Finding entity).
+- Q: How is a subset of gates selected on the CLI (FR-006)? → A: By gate id, comma-separated — e.g. `tenantguard gates --gates TG-G4,TG-G5`.
+- Q: What are the canonical severity labels? → A: `low` / `medium` / `high` / `critical` (ordered, low→critical).
+- Q: What defines the v0 "sample set" for the false-positive baseline (SC-003)? → A: Reuse and extend the 003 scanner test fixtures (`saas`, `monorepo`, `empty`) with per-gate clean/violation fixtures; no new test infrastructure.
+- Q: Where is `risks.json` written? → A: To the designated output dir (`.tenantguard/risks.json`), the same out-dir convention 003 uses for `project-map.json`.
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 "User" is a developer/team running gates over a scanned repo.
 
 ### User Story 1 - Get an evidence-backed risk list (Priority: P1)
 
-A developer runs the gates over a scanned repo and gets `risks.json` where every finding names a gate,
-a severity, and concrete evidence.
+A developer runs the gates over a scanned repo and gets `risks.json` where every finding names a gate
+and a status, and every `risk` finding additionally names a severity and concrete evidence.
 
 **Why this priority**: Risk findings are the raw material for routing, prompts, and PR review. Without
 evidence-backed findings, the rest of the product has nothing trustworthy to act on.
@@ -39,25 +51,26 @@ guard) and confirm a finding appears, tied to the right gate, with evidence poin
 **Acceptance Scenarios**:
 
 1. **Given** a scanned repo, **When** gates run, **Then** a `risks.json` is produced.
-2. **Given** any finding, **When** inspected, **Then** it cites a gate id, a severity, and at least
-   one piece of concrete evidence (file/line/changed-file/missing-artifact/failed-command).
+2. **Given** any finding, **When** inspected, **Then** it cites a gate id and a status; and **Given** a
+   `status: risk` finding, **Then** it additionally cites a severity and at least one piece of concrete
+   evidence (file/line/changed-file/missing-artifact/failed-command).
 3. **Given** a clean repo for a given gate, **When** that gate runs, **Then** it produces no
    false-positive finding for that gate.
 
 ### User Story 2 - Understand and prioritize risks (Priority: P2)
 
-A team lead reviews `risks.json` and can tell, per finding, which gate it belongs to, how severe it is,
-and where to look.
+A team lead reviews `risks.json` and can tell, per finding, which gate it belongs to and its status; and
+for each `risk` finding, how severe it is and where to look.
 
 **Why this priority**: Findings must be actionable; severity + location is what makes triage possible.
 
 **Independent Test**: Produce a risk list spanning several gates and confirm each finding is
-classifiable by gate and severity without reading code.
+classifiable by gate and status — and each `risk` finding by severity — without reading code.
 
 ### User Story 3 - Run a subset of gates (Priority: P3)
 
-A developer runs only the gates relevant to a change (e.g. security + idempotency) and gets just those
-findings.
+A developer runs only the gates relevant to a change (e.g. security + idempotency) by passing their
+gate ids — `tenantguard gates --gates TG-G4,TG-G5` — and gets just those findings.
 
 **Why this priority**: Targeted runs keep feedback fast and relevant, especially for PR review (007).
 
@@ -69,7 +82,10 @@ findings.
   pass or fail.
 - **Gate not applicable** (e.g. no billing surface): the gate is skipped/marked not-applicable, not
   failed.
-- **Empty / non-SaaS repo**: gates produce an empty or minimal risk list, no fabricated findings.
+- **Empty / non-SaaS repo**: zero `risk` findings (no fabrication). The list is "minimal," not
+  necessarily empty: each gate that does not apply MAY emit a single `not_applicable` finding
+  (at most one per gate), and a gate lacking evidence MAY emit one `needs_verification` finding —
+  these honest absence/uncertainty markers are not fabricated risks.
 - **Conflicting evidence**: finding is emitted at lower confidence rather than as a hard assertion.
 - **Secret-like content found by a gate**: flagged as a finding; the secret value itself is never
   copied into the risk list.
@@ -131,14 +147,29 @@ change; unresolved high-risk review finding.
 - **FR-001**: The system MUST define the v0 gate set (TG-G0…TG-G9), each with id, name, purpose, and
   the evidence it relies on.
 - **FR-002**: Running gates over a scanned repo MUST produce a `risks.json` list of findings.
-- **FR-003**: Every finding MUST cite a gate id, a severity, and at least one **Evidence Object**
-  using the shared `{type, path, line, signal, confidence}` shape from `002-project-map-schema`;
-  findings without evidence MUST NOT be emitted. Gates MUST reuse the shared shape and MUST NOT
-  define a divergent evidence/finding shape.
-- **FR-004**: A gate with insufficient evidence MUST report "needs verification," never a fabricated
-  pass/fail.
-- **FR-005**: A gate that does not apply to a repo MUST be marked not-applicable/skipped, not failed.
-- **FR-006**: The system MUST support running a subset of gates.
+- **FR-003**: Every finding MUST cite a `gate_id` and a `status`. A finding with `status: risk` MUST
+  additionally cite a severity and at least one **Evidence Object** using the shared
+  `{type, path, line, signal, confidence}` shape from `002-project-map-schema`; a `risk` finding
+  without evidence MUST NOT be emitted. Gates MUST reuse the shared evidence shape and MUST NOT define
+  a divergent evidence/finding shape. (Severity/evidence requirements for non-`risk` statuses are
+  defined in FR-013 and the Finding entity.)
+- **FR-004**: A gate with insufficient evidence MUST emit a finding with `status: needs_verification`,
+  never a fabricated pass/fail.
+- **FR-005**: A gate that does not apply to a repo MUST emit a finding with `status: not_applicable`,
+  not a failure.
+- **FR-006**: The system MUST support running a subset of gates, selected by gate id via a
+  comma-separated `--gates` option (e.g. `--gates TG-G4,TG-G5`).
+- **FR-012**: Findings MUST use a single unified `findings[]` array; each finding carries a `status`
+  enum (`risk` / `needs_verification` / `not_applicable`). Outcomes MUST NOT be split into separate
+  top-level lists.
+- **FR-013**: For a `status: risk` finding, severity MUST be one of the ordered labels
+  `low` / `medium` / `high` / `critical`. For `status: needs_verification` or `not_applicable`,
+  severity MUST be `null` (no risk has been asserted). A `needs_verification` finding MUST still cite
+  at least one Evidence Object (what was inspected / why evidence was insufficient); a `not_applicable`
+  finding MAY have an empty evidence list (the gate simply does not apply).
+- **FR-014**: `risks.json` MUST be written to the designated output directory (`.tenantguard/`), the
+  same out-dir convention `003-cli-scanner` uses for `project-map.json`; writing there is not a
+  modification of the scanned repo's tracked source.
 - **FR-007**: Gate runs MUST be deterministic for unchanged input (stable findings and ordering).
 - **FR-008**: Gates MUST read the Project Map (002) and repo evidence; they MUST be read-only on the
   scanned repo.
@@ -150,19 +181,27 @@ change; unresolved high-risk review finding.
 ### Key Entities
 
 - **Gate**: a named check (id, name, purpose, evidence basis).
-- **Finding**: one detected risk: `gate_id`, `severity`, and one or more **Evidence Objects** (the
-  shared `{type, path, line, signal, confidence}` shape defined in `002-project-map-schema`).
-  Location and confidence live *inside* the evidence object(s) — they are not separate finding-level
-  fields — so there is a single canonical home for each.
-- **Risk List** (`risks.json`): the collection of findings from a gate run.
-- **Severity**: a classification (e.g. low/medium/high/critical) supporting triage.
+- **Finding**: one gate outcome. Always: `gate_id`, `status` (`risk` / `needs_verification` /
+  `not_applicable`). Conditional on status:
+  - `risk` → `severity` (`low`/`medium`/`high`/`critical`) + ≥1 **Evidence Object**.
+  - `needs_verification` → `severity: null` + ≥1 **Evidence Object** (what was inspected / why
+    inconclusive).
+  - `not_applicable` → `severity: null` + evidence list MAY be empty.
+  Evidence Objects use the shared `{type, path, line, signal, confidence}` shape defined in
+  `002-project-map-schema`. Location and confidence live *inside* the evidence object(s) — they are not
+  separate finding-level fields — so there is a single canonical home for each.
+- **Risk List** (`risks.json`): a single unified `findings[]` collection from a gate run, holding all
+  three outcome statuses (no separate per-status top-level lists).
+- **Severity**: one of the ordered labels `low` / `medium` / `high` / `critical` (low→critical),
+  supporting triage.
 
 ---
 
 ## CLI Surface *(mandatory)*
 
 ```text
-tenantguard gates       run the gate set (or a subset) over the scanned repo, produce risks.json
+tenantguard gates                       run the full gate set over the scanned repo, produce risks.json
+tenantguard gates --gates TG-G4,TG-G5   run only the named gates (comma-separated gate ids)
 ```
 
 ---
@@ -170,9 +209,15 @@ tenantguard gates       run the gate set (or a subset) over the scanned repo, pr
 ## Required Outputs *(mandatory)*
 
 ```text
-risks.json   evidence-backed findings: each finding = gate id + severity + one or more shared
-             Evidence Objects ({type, path, line, signal, confidence}) per 002. Location and
-             confidence are carried inside the evidence object(s), not as separate finding fields.
+.tenantguard/risks.json
+             A single unified findings[] array. Every finding = gate id + status
+             (risk / needs_verification / not_applicable). A risk finding additionally has
+             severity (low/medium/high/critical) + one or more shared Evidence Objects
+             ({type, path, line, signal, confidence}) per 002; needs_verification has
+             severity:null + >=1 evidence; not_applicable has severity:null + possibly-empty
+             evidence. Location and confidence are carried inside the evidence object(s), not as
+             separate finding fields. Written to the designated out-dir (same convention as 003's
+             project-map.json), never into the scanned repo's tracked source.
 ```
 
 ---
@@ -197,9 +242,11 @@ risks.json   evidence-backed findings: each finding = gate id + severity + one o
 
 - **SC-001**: Running gates over a repo with a known violation produces a finding tied to the correct
   gate with evidence pointing at the offending location.
-- **SC-002**: 100% of emitted findings cite a gate id, severity, and at least one evidence item.
+- **SC-002**: 100% of emitted findings cite a gate id and a status; 100% of `status: risk` findings
+  additionally cite a severity and at least one evidence item.
 - **SC-003**: A repo clean for a gate produces 0 false-positive findings for that gate (on the v0
-  sample set).
+  sample set). The **v0 sample set** = the reused 003 scanner fixtures (`saas`, `monorepo`, `empty`)
+  plus per-gate clean/violation fixtures added for the gates under test; no new test infrastructure.
 - **SC-004**: A gate with insufficient evidence reports "needs verification" rather than pass/fail.
 - **SC-005**: Two gate runs over unchanged input produce equivalent risk lists (deterministic).
 - **SC-006**: 0 secrets appear in any risk list.
@@ -210,9 +257,12 @@ risks.json   evidence-backed findings: each finding = gate id + severity + one o
 ## Acceptance Criteria for This Feature *(mandatory)*
 
 - **AC-001**: The v0 gate set (TG-G0…TG-G9) is defined with id, name, purpose, and evidence basis.
-- **AC-002**: Finding shape is specified as gate id + severity + one or more shared Evidence Objects
-  (`{type, path, line, signal, confidence}` from 002); location and confidence are inside the evidence
-  object, and 004 reuses the shared shape rather than redefining it.
+- **AC-002**: Finding shape is specified as gate id + `status` (`risk` / `needs_verification` /
+  `not_applicable`), with severity (`low`/`medium`/`high`/`critical`) and ≥1 shared Evidence Object
+  (`{type, path, line, signal, confidence}` from 002) required for `risk` findings and conditional for
+  the other statuses (severity `null`; evidence required for `needs_verification`, optional for
+  `not_applicable`), in a single unified `findings[]` array; location and confidence are inside the
+  evidence object, and 004 reuses the shared shape rather than redefining it.
 - **AC-003**: "Needs verification" and "not applicable" behaviors are specified.
 - **AC-004**: Subset execution and determinism are specified.
 - **AC-005**: Read-only, local-first, no-secrets, domain-neutral guarantees are specified.
@@ -227,8 +277,8 @@ risks.json   evidence-backed findings: each finding = gate id + severity + one o
 
 - **Rule-engine approach deferred** to plan/ADR. The blueprint proposes TypeScript rules + YAML config
   for v0, with OPA/Rego deferred; this spec mandates the gate *model and behavior*, not the engine.
-- **Severity scale** is a small ordered set (e.g. low/medium/high/critical); the exact labels are
-  refined at plan layer.
+- **Severity scale** is the ordered set `low` / `medium` / `high` / `critical` (clarified 2026-06-18;
+  see Clarifications).
 - **v0 detection is signal-based**, not exhaustive static analysis — false negatives are acceptable in
   v0 as long as findings that ARE emitted are evidence-backed and low on false positives.
 - **Gate vocabulary** (surface names, boundary rule keys) aligns with the 002 schema and 003 scanner
