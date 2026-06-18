@@ -39,4 +39,8 @@ scan sources
 
 ## Status
 
-Product foundation stage. No production code yet.
+MVP implementation / dogfooding stage.
+
+- The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`).
+- TenantGuard runs against its own repo via a report-only GitHub Action dogfooding workflow.
+- The GitHub App and hosted dashboard remain deferred.

@@ -30,9 +30,15 @@ One-line positioning:
 
 ## Current Phase
 
-Docs-first product foundation.
+MVP implementation / dogfooding.
 
-Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
+The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`).
+
+Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
+
+A report-only GitHub Action dogfood workflow exists (TenantGuard runs against its own repo and reports; it does not auto-fix or auto-merge).
+
+The GitHub App and hosted dashboard remain deferred.
 
 ---
 
