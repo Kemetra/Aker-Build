@@ -2,7 +2,7 @@
 
 **Feature Branch**: `003-cli-scanner`
 **Created**: 2026-06-18
-**Status**: Draft
+**Status**: Approved (foundation — reviewed 2026-06-18)
 **Input**: User description: "Local repo scanning that produces project-map.json conforming to the 002 schema. Depends on 001 and 002. Docs only; no production code."
 
 **Depends on**: `001-product-foundation`, `002-project-map-schema`

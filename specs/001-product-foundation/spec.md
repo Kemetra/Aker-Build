@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-product-foundation`
 **Created**: 2026-06-18
-**Status**: Draft
+**Status**: Approved (foundation — reviewed 2026-06-18)
 **Input**: User description: "Create the first product foundation specification for TenantGuard — a CLI-first SaaS Build Kernel — defining purpose, users, pains, MVP scope, non-goals, core workflow, CLI commands, outputs, Spec Kit relationship, principles, acceptance criteria, and follow-up specs. Docs only."
 
 ---

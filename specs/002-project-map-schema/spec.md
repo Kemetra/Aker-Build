@@ -2,7 +2,7 @@
 
 **Feature Branch**: `002-project-map-schema`
 **Created**: 2026-06-18
-**Status**: Draft
+**Status**: Approved (foundation — reviewed 2026-06-18)
 **Input**: User description: "Define the versioned Project Map schema and the required JSON/YAML outputs for TenantGuard. Depends on 001-product-foundation. Docs only; no production code."
 
 **Depends on**: `001-product-foundation`

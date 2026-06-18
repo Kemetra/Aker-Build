@@ -1,0 +1,21 @@
+# Non-SaaS example: no tenant model detected. Demonstrates the honesty rule (FR-004a) — empty
+# collections and null tenant values, never fabricated. Validates against project-map.schema.json.
+version: 1
+project:
+  name: example-cli-tool
+  detected_stack:
+    runtime: node
+    package_manager: pnpm
+    frameworks: []
+repos:
+  - name: root
+    path: .
+    type: backend
+    owns: []
+boundaries: []
+tenant_model:
+  status: not_detected
+  strategy: null
+  tenant_key: null
+  required_surfaces: []
+critical_surfaces: []

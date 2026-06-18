@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tenantguard.dev/schemas/project-map/v1.json",
+  "title": "TenantGuard Project Map",
+  "description": "Contract artifact (non-executable) describing the Project Map shape. Canonical runtime validation is the Zod schema derived at implementation time; this JSON Schema documents the same contract for interop. Consumers MUST tolerate unknown fields (additionalProperties:true => forward compatibility).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["version", "project", "repos", "boundaries", "tenant_model", "critical_surfaces"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1, "description": "Schema version. Starts at 1; drives the compatibility policy." },
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "detected_stack"],
+      "properties": {
+        "name": { "type": "string" },
+        "detected_stack": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["runtime", "package_manager", "frameworks"],
+          "properties": {
+            "runtime": { "type": ["string", "null"], "description": "null when undetected; never fabricated." },
+            "package_manager": { "type": ["string", "null"] },
+            "frameworks": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "repos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name", "path", "type", "owns"],
+        "properties": {
+          "name": { "type": "string" },
+          "path": { "type": "string" },
+          "type": { "type": "string", "description": "backend | frontend | worker | other named type (extensible enum)." },
+          "owns": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "boundaries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "rule", "description"],
+        "properties": {
+          "id": { "type": "string" },
+          "rule": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "tenant_model": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["status", "strategy", "tenant_key", "required_surfaces"],
+      "properties": {
+        "status": { "enum": ["detected", "not_detected", "unknown", "not_applicable"] },
+        "strategy": {
+          "type": ["string", "null"],
+          "description": "shared_db_shared_schema | shared_db_separate_schema | separate_db | unknown | null. MUST be null/unknown when status != detected."
+        },
+        "tenant_key": { "type": ["string", "null"], "description": "MUST be null when status != detected. Never fabricated." },
+        "required_surfaces": { "type": "array", "items": { "type": "string" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "not": { "const": "detected" } } } },
+          "then": {
+            "properties": {
+              "strategy": { "enum": [null, "unknown"] },
+              "tenant_key": { "const": null }
+            }
+          }
+        }
+      ]
+    },
+    "critical_surfaces": { "type": "array", "items": { "type": "string" } },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "generated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "title": "Evidence Object (shared, normative — reused by specs 004/005/006/007)",
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type", "path", "signal", "confidence"],
+      "properties": {
+        "type": { "enum": ["file", "line", "changed_file", "missing_artifact", "failed_command", "pr_metadata", "ci_status", "spec_file"] },
+        "path": { "type": ["string", "null"], "description": "Repo-relative path; null for path-less evidence (failed command, CI status)." },
+        "line": { "type": ["integer", "null"], "description": "Line where applicable; null/absent otherwise. Never fabricated." },
+        "signal": { "type": "string", "description": "Short key for the observation, e.g. route_without_auth_guard. MUST NOT contain a secret value." },
+        "confidence": { "enum": ["high", "medium", "low"] }
+      }
+    }
+  }
+}

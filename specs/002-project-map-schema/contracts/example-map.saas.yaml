@@ -1,0 +1,37 @@
+# Conforming SaaS example (mirrors spec.md illustrative example). Validates against
+# project-map.schema.json with zero errors. JSON is canonical; this YAML carries identical meaning.
+version: 1
+project:
+  name: example-saas
+  detected_stack:
+    runtime: node
+    package_manager: pnpm
+    frameworks:
+      - nextjs
+      - nestjs
+repos:
+  - name: api
+    path: apps/api
+    type: backend
+    owns: [auth, tenants, billing, jobs]
+  - name: web
+    path: apps/web
+    type: frontend
+    owns: [admin-ui]
+  - name: worker
+    path: apps/worker
+    type: worker
+    owns: [async-jobs]
+boundaries:
+  - id: B-001
+    rule: frontend_calls_api_only
+    description: Frontend must not call the database directly.
+  - id: B-002
+    rule: worker_has_no_public_routes
+    description: Worker must not expose public HTTP endpoints unless explicitly approved.
+tenant_model:
+  status: detected
+  strategy: shared_db_shared_schema
+  tenant_key: tenant_id
+  required_surfaces: [api_routes, db_queries, background_jobs, reports]
+critical_surfaces: [api_routes, db_migrations, background_jobs, webhooks, billing_usage, auth_guards]
