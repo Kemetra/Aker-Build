@@ -3,9 +3,13 @@
 **Feature Branch**: `006-agent-prompt-compiler`
 **Created**: 2026-06-18
 **Status**: Draft
-**Input**: User description: "Generate safe prompts for Claude, Codex, and generic coding agents. Depends on 001, 002, 003, 004, 005. Docs only; no production code."
+**Input**: User description: "Generate safe prompts for Claude, Codex, and generic coding agents. Docs only; no production code."
 
-**Depends on**: `001-product-foundation`, `005-derived-queue-router` (compiles a queue item into a prompt)
+**Depends on (direct)**: `005-derived-queue-router` — the compiler's input is a routed queue item.
+**Depends on (transitive, via 005)**: `002-project-map-schema`, `003-cli-scanner`, `004-saas-gates-v0`
+— 005 derives queue items from the map (002), scanner output (003), and gate findings (004), so 006
+relies on them only indirectly through the queue item it receives. `001-product-foundation` is the
+foundational spec all features assume.
 **Blocks**: — (terminal of the produce→route→prompt chain for MVP)
 
 ---

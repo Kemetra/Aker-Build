@@ -399,6 +399,19 @@ Listed in dependency order — **defined here, not implemented by this feature**
 
 Dependency note: do not implement `003-cli-scanner` before `002-project-map-schema` exists.
 
+**Roadmap status (binding)**: `001-product-foundation` and `002-project-map-schema` are the active
+foundation contracts. **`003`–`008` are DRAFT ROADMAP specs** — defined here for direction and
+dependency ordering, **not** approved as implementation-ready. None of `003`–`008` may proceed to
+`plan.md`, `tasks.md`, or any production code until that individual spec has been reviewed and
+explicitly approved. A `**Status**: Draft` line on those specs means "drafted for the roadmap," not
+"ready to build."
+
+**`008-github-action` is a FUTURE CI surface.** It MUST NOT be planned or implemented until the
+local CLI scanner (`003`), the SaaS gates (`004`), and the PR reviewer (`007`) are implemented and
+reviewed. The GitHub Action only wraps already-built, already-reviewed local capabilities in CI; it
+introduces no new core logic and is never a prerequisite for core value (per Constitution II, CLI
+First). GitHub App and hosted dashboard remain deferred waves beyond `008`.
+
 ---
 
 ## Assumptions

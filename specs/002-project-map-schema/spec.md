@@ -109,17 +109,43 @@ is JSON and YAML.)
 - **boundaries[]**: list of architecture boundary rules. Each item:
   - **id** (string, e.g. `B-001`), **rule** (machine-readable key), **description** (human text).
 - **tenant_model**: object describing multi-tenancy.
-  - **strategy** (enum, e.g. `shared_db_shared_schema` | `shared_db_separate_schema` |
-    `separate_db`), **tenant_key** (string, e.g. `tenant_id`), **required_surfaces[]** (list of
-    surfaces that must carry tenant scoping).
+  - **status** (enum, required): `detected` | `not_detected` | `unknown` | `not_applicable`.
+    Records whether a tenant model was found, explicitly absent, undeterminable, or out of scope
+    for this repo — so non-SaaS or single-tenant repos are represented honestly instead of fabricated.
+  - **strategy** (enum **or `null`**, e.g. `shared_db_shared_schema` | `shared_db_separate_schema` |
+    `separate_db` | `unknown`): MUST be `null` (or `unknown`) when `status` is not `detected`.
+    A value MUST NOT be guessed.
+  - **tenant_key** (string **or `null`**, e.g. `tenant_id`): MUST be `null` when `status` is not
+    `detected`. A value MUST NOT be fabricated.
+  - **required_surfaces[]** (list of surfaces that must carry tenant scoping; MAY be empty when no
+    tenant model is detected).
 - **critical_surfaces[]**: list of high-risk surfaces (e.g. `api_routes`, `db_migrations`,
   `background_jobs`, `webhooks`, `billing_usage`, `auth_guards`).
 
 ### Optional fields
 
-- Per-value **confidence**/**evidence** annotations (file path, detector) where detection is
-  uncertain — supports "evidence-based" and "needs verification."
+- Per-value **evidence** annotations where detection is uncertain — supports "evidence-based" and
+  "needs verification." These use the shared **Evidence Object** shape defined below.
 - Project-level metadata (description, generated-at timestamp) that does not change meaning.
+
+### Shared Evidence Object *(normative — referenced by downstream specs)*
+
+A single, reusable shape for any evidence citation across TenantGuard (map annotations, gate
+findings, queue items, prompt context). Downstream specs MUST reference this shape rather than
+redefine their own:
+
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `type` | enum | yes | Kind of evidence: `file` \| `line` \| `changed_file` \| `missing_artifact` \| `failed_command` \| `pr_metadata` \| `ci_status` \| `spec_file`. |
+| `path` | string \| null | yes | Repo-relative path the evidence points at; `null` when the evidence has no path (e.g. a failed command or CI status). |
+| `line` | integer \| null | no | Line number where applicable; `null`/absent for path-less or whole-file evidence. MUST NOT be fabricated. |
+| `signal` | string | yes | Short machine/human key describing what was observed (e.g. `route_without_auth_guard`, `dropped_column`). |
+| `confidence` | enum | yes | Detection confidence: `high` \| `medium` \| `low`. Uncertain detections use `low` rather than asserting. |
+
+Notes:
+- `confidence` lives on the **evidence object** (one canonical home), not duplicated elsewhere.
+- An evidence object MUST NOT contain secrets or credential values (see FR-011); `signal`/`path`
+  describe *where/what*, never the secret itself.
 
 ### Illustrative example (non-normative)
 
@@ -154,10 +180,38 @@ boundaries:
     rule: worker_has_no_public_routes
     description: Worker must not expose public HTTP endpoints unless explicitly approved.
 tenant_model:
+  status: detected
   strategy: shared_db_shared_schema
   tenant_key: tenant_id
   required_surfaces: [api_routes, db_queries, background_jobs, reports]
 critical_surfaces: [api_routes, db_migrations, background_jobs, webhooks, billing_usage, auth_guards]
+```
+
+### Illustrative example — non-SaaS / no tenant model detected (non-normative)
+
+A repo with no detectable multi-tenancy is still schema-valid: collections are empty and the tenant
+model is marked `not_detected` with `null` values, never fabricated.
+
+```yaml
+version: 1
+project:
+  name: example-cli-tool
+  detected_stack:
+    runtime: node
+    package_manager: pnpm
+    frameworks: []
+repos:
+  - name: root
+    path: .
+    type: backend
+    owns: []
+boundaries: []
+tenant_model:
+  status: not_detected
+  strategy: null
+  tenant_key: null
+  required_surfaces: []
+critical_surfaces: []
 ```
 
 ---
@@ -173,8 +227,14 @@ critical_surfaces: [api_routes, db_migrations, background_jobs, webhooks, billin
 - **FR-002**: The schema MUST represent single-repo and multi-repo/area projects.
 - **FR-003**: `detected_stack` fields MUST always be present even when empty or unknown; the schema
   MUST NOT require fabricated values.
-- **FR-004**: The schema MUST allow per-value evidence/confidence annotations so uncertain detections
-  can be marked rather than asserted.
+- **FR-004**: The schema MUST allow per-value evidence annotations (using the shared Evidence Object)
+  so uncertain detections can be marked rather than asserted.
+- **FR-004a**: `tenant_model.status` MUST be one of `detected` | `not_detected` | `unknown` |
+  `not_applicable`. When `status` is not `detected`, `strategy` and `tenant_key` MUST be `null` (or
+  `unknown` for `strategy`); the schema MUST NOT require or permit fabricated tenant values.
+- **FR-004b**: The schema MUST define a single shared Evidence Object shape
+  (`type`, `path`, `line`, `signal`, `confidence`) with `line` optional/nullable and `confidence`
+  carried on the evidence object. Downstream specs MUST reuse this shape rather than redefine it.
 
 **Versioning & compatibility**
 
@@ -205,7 +265,9 @@ critical_surfaces: [api_routes, db_migrations, background_jobs, webhooks, billin
 - **Boundary**: an architecture rule the project must respect (id, rule key, description).
 - **Tenant Model**: how multi-tenancy is structured (strategy, tenant key, required surfaces).
 - **Critical Surface**: a high-risk area gates pay special attention to.
-- **Evidence Annotation** (optional): provenance/confidence attached to a detected value.
+- **Evidence Object** (shared): the canonical `{type, path, line, signal, confidence}` shape used
+  for any evidence citation, here and in downstream specs (gates, queue, prompts). Optional as a
+  per-value annotation on the map; mandatory wherever a downstream spec emits a finding.
 
 ---
 
@@ -255,7 +317,12 @@ Both MUST validate against the same schema and represent the same logical map.
 - **AC-002**: A versioning and backward/forward compatibility policy is stated.
 - **AC-003**: Required outputs (`project-map.json`, YAML form) are specified.
 - **AC-004**: Validation behavior (pass/fail + field-level errors) is specified.
-- **AC-005**: A non-normative example map is included and is internally consistent with the schema.
+- **AC-005**: A non-normative example map is included and is internally consistent with the schema,
+  including a non-SaaS example where `tenant_model.status` is `not_detected` with `null` values.
+- **AC-005a**: `tenant_model.status` and the null-when-not-detected rule for `strategy`/`tenant_key`
+  are specified, so non-SaaS / single-tenant / undeterminable repos are represented without fabrication.
+- **AC-005b**: The shared Evidence Object shape (`type`, `path`, `line`, `signal`, `confidence`) is
+  defined once here and declared as the shape downstream specs reuse.
 - **AC-006**: Non-goals are explicit (scanner, gates, persistence, UI, library choice).
 - **AC-007**: The schema is domain-neutral and secret-free.
 - **AC-008**: The spec is implementation-neutral on serializer/validator choice (deferred to plan).

@@ -131,8 +131,10 @@ change; unresolved high-risk review finding.
 - **FR-001**: The system MUST define the v0 gate set (TG-G0…TG-G9), each with id, name, purpose, and
   the evidence it relies on.
 - **FR-002**: Running gates over a scanned repo MUST produce a `risks.json` list of findings.
-- **FR-003**: Every finding MUST cite a gate id, a severity, and at least one piece of concrete
-  evidence; findings without evidence MUST NOT be emitted.
+- **FR-003**: Every finding MUST cite a gate id, a severity, and at least one **Evidence Object**
+  using the shared `{type, path, line, signal, confidence}` shape from `002-project-map-schema`;
+  findings without evidence MUST NOT be emitted. Gates MUST reuse the shared shape and MUST NOT
+  define a divergent evidence/finding shape.
 - **FR-004**: A gate with insufficient evidence MUST report "needs verification," never a fabricated
   pass/fail.
 - **FR-005**: A gate that does not apply to a repo MUST be marked not-applicable/skipped, not failed.
@@ -148,7 +150,10 @@ change; unresolved high-risk review finding.
 ### Key Entities
 
 - **Gate**: a named check (id, name, purpose, evidence basis).
-- **Finding**: one detected risk (gate id, severity, location, evidence, confidence).
+- **Finding**: one detected risk: `gate_id`, `severity`, and one or more **Evidence Objects** (the
+  shared `{type, path, line, signal, confidence}` shape defined in `002-project-map-schema`).
+  Location and confidence live *inside* the evidence object(s) — they are not separate finding-level
+  fields — so there is a single canonical home for each.
 - **Risk List** (`risks.json`): the collection of findings from a gate run.
 - **Severity**: a classification (e.g. low/medium/high/critical) supporting triage.
 
@@ -165,7 +170,9 @@ tenantguard gates       run the gate set (or a subset) over the scanned repo, pr
 ## Required Outputs *(mandatory)*
 
 ```text
-risks.json   evidence-backed findings (gate id, severity, location, evidence, confidence)
+risks.json   evidence-backed findings: each finding = gate id + severity + one or more shared
+             Evidence Objects ({type, path, line, signal, confidence}) per 002. Location and
+             confidence are carried inside the evidence object(s), not as separate finding fields.
 ```
 
 ---
@@ -203,7 +210,9 @@ risks.json   evidence-backed findings (gate id, severity, location, evidence, co
 ## Acceptance Criteria for This Feature *(mandatory)*
 
 - **AC-001**: The v0 gate set (TG-G0…TG-G9) is defined with id, name, purpose, and evidence basis.
-- **AC-002**: Finding shape (gate id, severity, location, evidence, confidence) is specified.
+- **AC-002**: Finding shape is specified as gate id + severity + one or more shared Evidence Objects
+  (`{type, path, line, signal, confidence}` from 002); location and confidence are inside the evidence
+  object, and 004 reuses the shared shape rather than redefining it.
 - **AC-003**: "Needs verification" and "not applicable" behaviors are specified.
 - **AC-004**: Subset execution and determinism are specified.
 - **AC-005**: Read-only, local-first, no-secrets, domain-neutral guarantees are specified.
