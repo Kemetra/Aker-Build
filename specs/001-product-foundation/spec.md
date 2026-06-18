@@ -395,6 +395,7 @@ Listed in dependency order — **defined here, not implemented by this feature**
 006-agent-prompt-compiler   Safe prompts for Claude, Codex, and generic agents.
 007-pr-reviewer             Local-diff and GitHub PR review against scope and gates.
 008-github-action           Run TenantGuard in CI and produce PR summaries.
+009-launch-and-community-strategy   Launch & community strategy (docs-only).
 ```
 
 Dependency note: do not implement `003-cli-scanner` before `002-project-map-schema` exists.
@@ -411,6 +412,11 @@ local CLI scanner (`003`), the SaaS gates (`004`), and the PR reviewer (`007`) a
 reviewed. The GitHub Action only wraps already-built, already-reviewed local capabilities in CI; it
 introduces no new core logic and is never a prerequisite for core value (per Constitution II, CLI
 First). GitHub App and hosted dashboard remain deferred waves beyond `008`.
+
+**`009-launch-and-community-strategy` is a docs-only strategy spec** (not part of the CLI build
+chain). It depends on `001`, **blocks no CLI implementation**, and only *informs* later
+README/demo/community work. Like `003`–`008` it is a draft roadmap spec, not implementation-ready;
+it produces no code, marketing-site, dashboard, App, package, lockfile, or Action.
 
 ---
 
