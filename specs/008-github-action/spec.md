@@ -22,6 +22,17 @@ specification; per repo rules, no `.github/workflows/*` file is created by this 
 
 ---
 
+## Clarifications
+
+### Session 2026-06-18
+
+- Q: What does 008 actually deliver, given AC-008 forbids a live `.github/workflows/*.yml` in four places (and creating one auto-activates CI)? → A: **Docs + an example workflow shown as documentation** — the integration contract, an ADR for runtime/packaging, and a concrete example workflow YAML embedded in quickstart/contracts (NOT a live file under `.github/`). No CI is auto-activated; adopting the workflow is the consumer's separately-gated opt-in.
+- Q: Does 008 produce any new TypeScript code? → A: **No.** 008 is pure CI wiring/documentation over 007's existing `review.json` + `review.md` outputs (FR-002 "no separate engine"; Integration Surface "no new core behavior"). No new package, no TS, no TDD suite — the feature is the contract + example workflow + ADR.
+- Q: What drives the CI check's pass/fail for critical-gate-blocking (FR-004), given 007 makes ANY diff-attributable risk `not_ready`? → A: **`severity: "critical"` in `review.json` findings** (plus 004's TG-G9 critical aggregator) — NOT the verdict and NOT the exit code. The **verdict drives the summary** (FR-003); **`severity:"critical"` drives the check status** (FR-004). This satisfies SC-002 (critical → fail) AND SC-003 (non-critical findings → pass while reported). The verdict is independent of the process exit code (a Not-Ready review still exits 0).
+- Q: What command chain should the example workflow document? → A: **checkout PR head → `tenantguard scan` → `tenantguard review-pr`** (which runs the gates internally). The PR-head checkout is **load-bearing**: 007's gates inspect the local working tree, so without it CI would review the base, not the PR, and emit a false "Ready". An explicit `tenantguard gates` step is redundant (review-pr already runs the gates).
+
+---
+
 ## User Scenarios & Testing *(mandatory)*
 
 "User" is a maintainer who wants TenantGuard feedback automatically on every PR.
@@ -80,10 +91,11 @@ findings reported.
 
 ```text
 Trigger        runs on pull_request events (and re-runs on update)
-Engine         reuses the TenantGuard CLI: scan → gates → review (007)
-Summary        verdict (Ready/Not Ready/Needs Verification) + contributing findings + evidence
-Enforcement    optional critical-gate-blocking: critical failure → check fails; otherwise report-only
+Engine         reuses the TenantGuard CLI: checkout PR head → scan → review-pr (review-pr runs gates internally)
+Summary        verdict (Ready/Not Ready/Needs Verification) + contributing findings + evidence (from review.json/review.md)
+Enforcement    optional critical-gate-blocking driven by severity:"critical" in review.json (NOT the verdict / exit code)
 Side effects   none on the repo (read-only; no commit/push/merge/auto-comment in MVP)
+Deliverable    integration contract + example workflow (as docs, not a live .github/workflows file) + ADR
 ```
 
 ---
@@ -93,12 +105,17 @@ Side effects   none on the repo (read-only; no commit/push/merge/auto-comment in
 ### Functional Requirements
 
 - **FR-001**: The integration MUST run on `pull_request` events and re-run when the PR updates.
-- **FR-002**: The integration MUST reuse the existing TenantGuard CLI/gates (scan → gates → review),
-  not a separate engine.
-- **FR-003**: The integration MUST produce a CI summary containing the review verdict and contributing
-  findings with evidence.
-- **FR-004**: The integration MUST support an optional critical-gate-blocking mode: a critical gate
-  failure fails the CI check; otherwise findings are report-only.
+- **FR-002**: The integration MUST reuse the existing TenantGuard CLI (the minimal chain
+  **checkout PR head → `tenantguard scan` → `tenantguard review-pr`**), not a separate engine, and MUST
+  introduce **no new TypeScript / core behavior** — it consumes 007's existing `review.json` +
+  `review.md` outputs.
+- **FR-003**: The integration MUST produce a CI summary containing the review **verdict** and
+  contributing findings with evidence (drawn from `review.md`/`review.json`).
+- **FR-004**: The integration MUST support an optional critical-gate-blocking mode driven by
+  **`severity: "critical"`** in `review.json` findings (plus 004's TG-G9 critical aggregator) — a
+  critical finding fails the CI check; otherwise findings are report-only. The check status MUST NOT be
+  driven by the verdict (any diff-attributable risk makes the verdict `not_ready`, which would wrongly
+  fail non-critical findings) nor by the process exit code (a Not-Ready review still exits 0).
 - **FR-005**: The integration MUST be read-only on the repository — no commit, push, merge, or
   auto-comment in MVP.
 - **FR-006**: The summary and logs MUST NOT contain secrets; secret-like content MUST be flagged, never
@@ -121,12 +138,17 @@ Side effects   none on the repo (read-only; no commit/push/merge/auto-comment in
 The Action wraps the existing commands; no new core behavior beyond CI wiring:
 
 ```text
-(scan) → tenantguard gates → tenantguard review-pr <number|--local-diff>  → CI summary
+checkout PR head → tenantguard scan → tenantguard review-pr <number|--local-diff>  → CI summary
 ```
 
-Configuration (e.g. enabling critical-gate-blocking, selecting gates) is exposed through the Action's
-inputs. The concrete workflow file and input schema are produced when this feature is implemented — not
-in this docs-only spec.
+The **PR-head checkout is load-bearing**: 007's gates inspect the local working tree, so without it CI
+reviews the base, not the PR (false "Ready"). An explicit `tenantguard gates` step is **not** needed —
+`review-pr` runs the gates internally.
+
+Configuration (enabling critical-gate-blocking, selecting gates, the out-dir) is exposed through the
+documented workflow's inputs/env. This feature delivers the **integration contract + an example
+workflow shown as documentation** (in quickstart/contracts) + an ADR for runtime/packaging — **not** a
+live `.github/workflows/*.yml` file (that adoption is the consumer's separately-gated opt-in, AC-008).
 
 ---
 

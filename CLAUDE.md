@@ -207,5 +207,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/007-pr-reviewer/plan.md` (active feature: 007-pr-reviewer).
+`specs/008-github-action/plan.md` (active feature: 008-github-action).
 <!-- SPECKIT END -->
