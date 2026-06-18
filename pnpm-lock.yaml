@@ -16,6 +16,9 @@ importers:
       '@tenantguard/project-map':
         specifier: workspace:*
         version: link:../project-map
+      '@tenantguard/queue':
+        specifier: workspace:*
+        version: link:../queue
       '@tenantguard/scanner':
         specifier: workspace:*
         version: link:../scanner
@@ -63,6 +66,31 @@ importers:
       yaml:
         specifier: ^2.6.1
         version: 2.9.0
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.21)
+
+  packages/queue:
+    dependencies:
+      '@tenantguard/gates':
+        specifier: workspace:*
+        version: link:../gates
+      '@tenantguard/project-map':
+        specifier: workspace:*
+        version: link:../project-map
+      '@tenantguard/scanner':
+        specifier: workspace:*
+        version: link:../scanner
       zod:
         specifier: ^3.24.1
         version: 3.25.76
