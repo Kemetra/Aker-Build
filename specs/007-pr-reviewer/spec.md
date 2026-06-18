@@ -144,8 +144,10 @@ attach, per contributing finding, the gate id, the location (evidence `path`/`li
   outside `allowed_files` or inside `forbidden_files`). **Without `--item`, the scope check MUST be
   skipped and the report MUST note that no scope was checked** — gate review and the verdict still run.
 - **FR-004**: Local-diff review MUST require no network access and no credentials.
-- **FR-005**: The reviewer MUST support reviewing a GitHub PR by number, using PR metadata and changed
-  files as evidence (additive capability).
+- **FR-005**: The reviewer MUST support reviewing a GitHub PR by number, using PR metadata (number,
+  title, state, base) and changed files as evidence (additive capability). **v0 assumption**: the gates
+  inspect the local working tree, so the PR branch must be checked out locally; reviewing a fetched PR
+  diff without a checkout is a later, additive capability.
 - **FR-006**: When GitHub access is unavailable, PR review MUST report the gap clearly and MUST NOT
   block local-diff review.
 - **FR-007**: Any check with insufficient evidence MUST yield Needs Verification, never a false pass.

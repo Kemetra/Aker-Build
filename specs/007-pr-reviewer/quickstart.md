@@ -24,6 +24,11 @@ tenantguard review-pr 42 --item Q-001          # PR review + scope check
 tenantguard review-pr --local-diff --stdout    # print only, no files written
 ```
 
+> **PR-mode v0 caveat:** the gates inspect your **local working tree**, while the changed-files set
+> for a PR comes from GitHub. **Check out the PR branch locally** before `review-pr <number>`, or the
+> PR's files won't exist locally, nothing will attribute, and the verdict could be a false "Ready".
+> Reviewing a fetched PR diff without a local checkout is a later, additive capability.
+
 Example (abbreviated) Markdown output:
 
 ```markdown

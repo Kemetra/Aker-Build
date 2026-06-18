@@ -24,7 +24,10 @@ export interface ReviewCmdOptions {
   sink?: (line: string) => void;
   errSink?: (line: string) => void;
   /** Injectable PR-source deps (default-real); used to test gh-unavailable degradation. */
-  prDeps?: { prChangedFiles?: (prNumber: number) => string[] };
+  prDeps?: {
+    prChangedFiles?: (prNumber: number) => string[];
+    prMetadata?: (prNumber: number) => { title: string; state: string; baseRefName: string };
+  };
 }
 
 const DEFAULT_OUT = ".tenantguard";

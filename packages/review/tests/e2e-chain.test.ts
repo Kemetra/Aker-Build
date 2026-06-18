@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import { scanToFile } from "@tenantguard/scanner";
 import { runGatesToFile } from "@tenantguard/gates";
 import { reviewLocalDiff } from "../src/review.js";
+import { renderReport } from "../src/render.js";
 
 /**
  * T036 — the ONE genuine end-to-end chain (scan → gates → reviewLocalDiff) over a real fixture repo,
@@ -44,5 +45,13 @@ describe("e2e: scan → gates → review-pr --local-diff (T036)", () => {
     expect(report.changed_files.some((f) => f.startsWith(".tenantguard/"))).toBe(false);
     expect(report.verdict).toBe("not_ready");
     expect(report.findings.some((f) => "gate_id" in f && f.gate_id === "TG-G4")).toBe(true);
+
+    // the rendered Markdown matches the documented quickstart shape (gate line + indented evidence)
+    const md = renderReport(report);
+    expect(md).toMatch(/^# Review: Not Ready/);
+    expect(md).toContain("## Contributing findings");
+    expect(md).toMatch(/- \*\*TG-G4\*\* \(risk, high\)/);
+    expect(md).toMatch(/\n {2}- `apps\/api\/routes\/admin\.ts:\d+` — /); // indented evidence sub-bullet
+    expect(md).toContain("## Verdict");
   });
 });

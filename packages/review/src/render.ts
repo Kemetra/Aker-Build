@@ -24,6 +24,10 @@ export function renderReport(report: ReviewReport): string {
 
   const itemPart = report.scope.checked ? ` · **Item:** ${report.scope.item_id}` : "";
   lines.push(`**Mode:** ${report.mode}${itemPart} · **Changed files:** ${report.changed_files.length}`);
+  if (report.pr) {
+    lines.push("");
+    lines.push(`**PR #${report.pr.number}:** ${report.pr.title} (${report.pr.state}, base \`${report.pr.base_ref}\`)`);
+  }
   lines.push("");
 
   lines.push("## Contributing findings");

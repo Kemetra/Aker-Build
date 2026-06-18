@@ -34,6 +34,14 @@ export type ReviewFinding =
   | { gate_id: string; status: Exclude<FindingStatus, "not_applicable">; severity: Severity | null; evidence: Evidence[] }
   | { kind: "scope"; file: string; reason: ScopeViolationReason; item_id: string };
 
+/** PR metadata surfaced as context/evidence in PR mode (FR-005). Absent for local-diff. */
+export interface PrMetadata {
+  number: number;
+  title: string;
+  state: string;
+  base_ref: string;
+}
+
 /** The machine-readable review report (review.json). */
 export interface ReviewReport {
   schema_version: number;
@@ -44,6 +52,8 @@ export interface ReviewReport {
   scope: ScopeResult;
   /** PR mode only: was GitHub access available? `null` for local-diff. */
   github_available: boolean | null;
+  /** PR mode only: the PR's metadata, used as evidence alongside changed files (FR-005). */
+  pr?: PrMetadata;
 }
 
 export interface ReviewOptions {

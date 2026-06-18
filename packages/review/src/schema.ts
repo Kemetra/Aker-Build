@@ -45,6 +45,13 @@ const scopeResultSchema = z.object({
   ),
 });
 
+const prMetadataSchema = z.object({
+  number: z.number().int(),
+  title: z.string(),
+  state: z.string(),
+  base_ref: z.string(),
+});
+
 /** The review.json document. */
 export const reviewSchema = z.object({
   schema_version: z.number().int().min(1),
@@ -54,6 +61,7 @@ export const reviewSchema = z.object({
   findings: z.array(reviewFindingSchema),
   scope: scopeResultSchema,
   github_available: z.boolean().nullable(),
+  pr: prMetadataSchema.optional(),
 });
 
 export interface ReviewValidationResult {

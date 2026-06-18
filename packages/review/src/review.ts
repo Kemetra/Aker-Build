@@ -7,7 +7,7 @@ import { checkScope, SCOPE_SKIPPED } from "./scope.js";
 import { decideVerdict } from "./verdict.js";
 import { loadQueueItem } from "./io.js";
 import { REVIEW_SCHEMA_VERSION } from "./schema.js";
-import type { ReviewReport, ReviewFinding, ReviewOptions, ScopeResult } from "./types.js";
+import type { ReviewReport, ReviewFinding, ReviewOptions, ScopeResult, PrMetadata } from "./types.js";
 
 /**
  * Injectable dependencies (the codebase's context/deps idiom — cf. 004 GateContext, 005 RouterInputs).
@@ -19,8 +19,6 @@ export interface ReviewDeps {
   runGates?: (repoRoot: string, opts: { out: string }) => RunGatesResult;
   /** Repo root to review (defaults to the targetPath / cwd). */
   repoRoot?: string;
-  /** When true, skip the scope-item lookup's queue read is unaffected; reserved for file-write control in callers. */
-  stdoutOnly?: boolean;
 }
 
 const DEFAULT_OUT = ".tenantguard";
@@ -82,6 +80,7 @@ export function assemble(
   attributable: readonly AttributableFinding[],
   scope: ScopeResult,
   githubAvailable: boolean | null,
+  prMeta?: PrMetadata,
 ): ReviewReport {
   // Code-unit sort (not localeCompare) so re-runs over the same set are byte-identical (SC-007),
   // independent of the order findings arrive in.
@@ -108,5 +107,6 @@ export function assemble(
     findings,
     scope,
     github_available: githubAvailable,
+    ...(prMeta ? { pr: prMeta } : {}),
   };
 }

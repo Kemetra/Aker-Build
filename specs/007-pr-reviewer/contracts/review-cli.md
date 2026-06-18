@@ -27,13 +27,22 @@ Exactly one of `--local-diff` / `<number>` MUST be given (else bad input).
 
 ## Behavior
 
-1. Resolve **changed files** — local: read-only `git diff --name-only`; PR: the user's `gh` CLI.
-2. Run the **full 004 gate set** over current repo state (`@tenantguard/gates.runGates`), then **keep
-   findings whose evidence `path` ∈ changed files** (diff-attribution).
+1. Resolve **changed files** — local: read-only `git diff --name-only`; PR: the user's `gh` CLI
+   (`gh pr view <n> --json files`).
+2. Run the **full 004 gate set** over the **current working tree** (`@tenantguard/gates.runGates`),
+   then **keep findings whose evidence `path` ∈ changed files** (diff-attribution).
 3. If `--item`, load the item from `queue.json` and compute scope violations; else skip + note.
 4. Derive the **verdict** off `status` (risk/out-of-scope → Not Ready; else needs_verification → Needs
    Verification; else Ready).
-5. Emit `review.json` + Markdown (printed; written to out-dir unless `--stdout`).
+5. Emit `review.json` + Markdown (printed; written to out-dir unless `--stdout`). In PR mode the report
+   also carries the PR's metadata (`pr`: number/title/state/base) as evidence (FR-005).
+
+**v0 PR-mode assumption (important):** the gates inspect the **local working tree**, while the PR's
+changed-files SET comes from GitHub. So the PR branch **must be checked out locally** for findings to
+attribute correctly. If it isn't, files named by the PR won't exist locally, no findings will attribute,
+and the verdict could be a false "Ready". Reviewing a PR's fetched diff directly (without a local
+checkout) is a later, additive capability. The reviewer's own out-dir is always excluded from the
+changed files (so it never reviews its own output).
 
 ## Exit codes
 

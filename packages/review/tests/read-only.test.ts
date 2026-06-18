@@ -39,7 +39,6 @@ describe("review is read-only on the repo/diff (T014, SC-006, FR-008)", () => {
         changedFiles: () => changedFiles(repo),
         runGates: () => ({ risks: { schema_version: 1, findings: [] } }),
         repoRoot: repo,
-        stdoutOnly: true, // do not write files into the repo for this assertion
       },
     );
 
