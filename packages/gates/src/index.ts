@@ -19,8 +19,8 @@ const DEFAULT_OUT = ".tenantguard";
 export function runGates(targetPath: string, opts: RunGatesOptions = {}): RunGatesResult {
   const out = opts.out ?? DEFAULT_OUT;
   const repoRoot = resolve(targetPath);
-  const ctx = buildContext(repoRoot, out);
   const config = loadConfig(repoRoot, { configPath: opts.configPath }).config;
+  const ctx = buildContext(repoRoot, out, config);
   const risks = applyConfigToRisks(runGatesOnContext(ctx, opts.gates), config);
   return { risks };
 }

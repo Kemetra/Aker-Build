@@ -1,4 +1,5 @@
 import { resolve, relative, isAbsolute } from "node:path";
+import { filterPaths, loadConfig } from "@tenantguard/config";
 import { runGates as realRunGates } from "@tenantguard/gates";
 import type { RunGatesResult } from "@tenantguard/gates";
 import { changedFiles as realChangedFiles } from "./git.js";
@@ -16,7 +17,7 @@ import type { ReviewReport, ReviewFinding, ReviewOptions, ScopeResult, PrMetadat
  */
 export interface ReviewDeps {
   changedFiles?: (repoRoot: string) => string[];
-  runGates?: (repoRoot: string, opts: { out: string }) => RunGatesResult;
+  runGates?: (repoRoot: string, opts: { out: string; configPath?: string }) => RunGatesResult;
   /** Repo root to review (defaults to the targetPath / cwd). */
   repoRoot?: string;
 }
@@ -32,7 +33,7 @@ export function reviewLocalDiff(opts: ReviewOptions = {}, deps: ReviewDeps = {})
   const out = opts.out ?? DEFAULT_OUT;
   const repoRoot = deps.repoRoot ?? ".";
   const getChanged = deps.changedFiles ?? realChangedFiles;
-  const getGates = deps.runGates ?? ((root: string, o: { out: string }) => realRunGates(root, o));
+  const getGates = deps.runGates ?? ((root: string, o: { out: string; configPath?: string }) => realRunGates(root, o));
 
   // Exclude the reviewer's own out-dir from the changed files: it holds review.json/review.md and
   // upstream artifacts (project-map/queue), which are not source changes. Otherwise run 2's diff
@@ -40,14 +41,20 @@ export function reviewLocalDiff(opts: ReviewOptions = {}, deps: ReviewDeps = {})
   // would falsely flag them. Resolved relative to repoRoot so an absolute --out outside the repo is
   // a no-op (git never reports those paths anyway).
   const changed = excludeOutDir(getChanged(repoRoot), repoRoot, out);
-  const { risks } = getGates(repoRoot, { out });
-  const attributable = diffAttributableFindings(risks.findings, changed);
+  const scopedChanged = applyConfigPathFilter(changed, repoRoot, opts.configPath);
+  const { risks } = getGates(repoRoot, { out, configPath: opts.configPath });
+  const attributable = diffAttributableFindings(risks.findings, scopedChanged);
 
   const scope: ScopeResult = opts.item
-    ? checkScope(changed, loadQueueItem(out, opts.item))
+    ? checkScope(scopedChanged, loadQueueItem(out, opts.item))
     : SCOPE_SKIPPED;
 
   return assemble("local-diff", changed, attributable, scope, null);
+}
+
+export function applyConfigPathFilter(changed: string[], repoRoot: string, configPath?: string): string[] {
+  const config = loadConfig(repoRoot, { configPath }).config;
+  return filterPaths(changed, config);
 }
 
 /**

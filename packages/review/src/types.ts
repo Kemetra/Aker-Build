@@ -61,4 +61,6 @@ export interface ReviewOptions {
   out?: string;
   /** Optional queue item id; when set, scope is checked against its allowed/forbidden files. */
   item?: string;
+  /** Optional explicit config path. If omitted, tenantguard.config.json/yaml is auto-discovered. */
+  configPath?: string;
 }

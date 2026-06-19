@@ -1,8 +1,10 @@
 import { scan, scanToFile } from "@tenantguard/scanner";
+import { ConfigError } from "@tenantguard/config";
 import { stringify as toYaml } from "yaml";
 
 export interface ScanCmdOptions {
   out?: string;
+  config?: string;
   stdout?: boolean;
   format?: "json" | "yaml";
   sink?: (line: string) => void;
@@ -23,11 +25,11 @@ export function runScan(targetPath: string, opts: ScanCmdOptions = {}): number {
   try {
     if (opts.stdout) {
       // Build map without writing a file.
-      const { map } = scan(targetPath);
+      const { map } = scan(targetPath, { configPath: opts.config });
       print(opts.format === "yaml" ? toYaml(map) : JSON.stringify(map, null, 2));
       return 0;
     }
-    const { outPath, result } = scanToFile(targetPath, out);
+    const { outPath, result } = scanToFile(targetPath, out, { configPath: opts.config });
     printErr(`Wrote ${outPath}`);
     for (const note of result.notes) {
       printErr(`note(${note.kind})${note.path ? " " + note.path : ""}: ${note.message}`);
@@ -36,6 +38,8 @@ export function runScan(targetPath: string, opts: ScanCmdOptions = {}): number {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     printErr(msg);
-    return /not a git repository/i.test(msg) ? 1 : 2;
+    if (/not a git repository/i.test(msg)) return 1;
+    if (err instanceof ConfigError) return 2;
+    return 2;
   }
 }

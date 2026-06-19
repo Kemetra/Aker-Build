@@ -81,4 +81,17 @@ describe("011 config suppressions", () => {
     const { risks } = runGates(repoRoot, { out: outDir, gates: ["TG-G4"], configPath });
     expect(risks.findings.some((f) => f.suppression?.id === "TG-G4-GLOB-001")).toBe(true);
   });
+
+  it("does not emit findings for excluded paths", () => {
+    const { repoRoot, outDir } = gatesFixture("vuln");
+    const configPath = join(repoRoot, "tenantguard.config.json");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ version: 1, paths: { exclude: ["apps/api/routes/admin.ts"] } }),
+      "utf8",
+    );
+
+    const { risks } = runGates(repoRoot, { out: outDir, gates: ["TG-G4"], configPath });
+    expect(risks.findings.flatMap((finding) => finding.evidence.map((e) => e.path))).not.toContain("apps/api/routes/admin.ts");
+  });
 });

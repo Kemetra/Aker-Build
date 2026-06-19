@@ -213,5 +213,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/012-report-command-and-output-contract/plan.md` (active feature: 012-report-command-and-output-contract).
+`specs/013-config-path-scope-enforcement/plan.md` (active feature: 013-config-path-scope-enforcement).
 <!-- SPECKIT END -->

@@ -5,7 +5,9 @@ import { tmpdir } from "node:os";
 import {
   ConfigNotFoundError,
   ConfigSecretError,
+  filterPaths,
   findConfigPath,
+  isPathAllowed,
   loadConfig,
   validateConfig,
 } from "../src/index.js";
@@ -129,5 +131,26 @@ describe("tenantguard config schema and reader", () => {
 
   it("throws when an explicit config path is missing", () => {
     expect(() => loadConfig(tempRepo(), { configPath: "missing.config.json" })).toThrow(ConfigNotFoundError);
+  });
+
+  it("matches include and exclude path filters consistently", () => {
+    const config = {
+      version: 1 as const,
+      paths: {
+        include: ["apps/**/*.ts", "package.json"],
+        exclude: ["apps/api/generated/**", "apps/web/secret.ts"],
+      },
+    };
+
+    expect(isPathAllowed("apps/api/routes/admin.ts", config)).toBe(true);
+    expect(isPathAllowed("apps/admin.ts", config)).toBe(true);
+    expect(isPathAllowed("apps/api/generated/client.ts", config)).toBe(false);
+    expect(isPathAllowed("apps/web/secret.ts", config)).toBe(false);
+    expect(isPathAllowed("docs/readme.md", config)).toBe(false);
+    expect(isPathAllowed("package.json", config)).toBe(true);
+    expect(filterPaths(["docs/readme.md", "apps/api/routes/admin.ts", "package.json"], config)).toEqual([
+      "apps/api/routes/admin.ts",
+      "package.json",
+    ]);
   });
 });

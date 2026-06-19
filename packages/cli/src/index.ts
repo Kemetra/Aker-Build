@@ -29,10 +29,11 @@ export function buildProgram(): Command {
     .command("scan")
     .description("Scan a local repo (read-only) and produce a Project Map")
     .argument("[path]", "target repo path", ".")
+    .option("--config <path>", "explicit tenantguard.config.json/yaml path")
     .option("--out <dir>", "output directory (outside scanned tracked source)", ".tenantguard")
     .option("--stdout", "print the map to stdout instead of writing a file")
     .option("--format <fmt>", "json | yaml", "json")
-    .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" }) => {
+    .action((path: string, opts: { out: string; config?: string; stdout?: boolean; format: "json" | "yaml" }) => {
       process.exitCode = runScan(path, opts);
     });
 
@@ -99,13 +100,14 @@ export function buildProgram(): Command {
     .argument("[target]", "target repo path (with --local-diff) or a PR number", ".")
     .option("--local-diff", "review the current local working diff (no credentials)")
     .option("--item <id>", "check changed files against this queue item's allowed/forbidden files")
+    .option("--config <path>", "explicit tenantguard.config.json/yaml path")
     .option("--out <dir>", "directory holding project-map.json (+ queue.json for --item); review.json/review.md written here", ".tenantguard")
     .option("--stdout", "print the report only (do not write files)")
     .option("--format <fmt>", "json | yaml", "json")
     .action(
       (
         target: string,
-        opts: { localDiff?: boolean; item?: string; out: string; stdout?: boolean; format: "json" | "yaml" },
+        opts: { localDiff?: boolean; item?: string; config?: string; out: string; stdout?: boolean; format: "json" | "yaml" },
       ) => {
         process.exitCode = runReviewCommand(target, opts);
       },

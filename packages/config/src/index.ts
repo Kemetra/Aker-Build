@@ -149,3 +149,50 @@ export function loadConfig(repoRoot: string, opts: { configPath?: string } = {})
   if (!result.ok || !result.config) throw new ConfigValidationError(result.errors);
   return { path, config: result.config };
 }
+
+export function matchesPathPattern(path: string, pattern: string): boolean {
+  const normalizedPath = path.replace(/\\/g, "/");
+  const normalizedPattern = pattern.replace(/\\/g, "/");
+  if (normalizedPath === normalizedPattern) return true;
+  if (normalizedPattern.endsWith("/**")) {
+    const prefix = normalizedPattern.slice(0, -3);
+    return normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`);
+  }
+  if (!normalizedPattern.includes("*")) return false;
+  return globToRegex(normalizedPattern).test(normalizedPath);
+}
+
+export function isPathAllowed(path: string, config: TenantGuardConfig): boolean {
+  const include = config.paths?.include ?? [];
+  const exclude = config.paths?.exclude ?? [];
+  const included = include.length === 0 || include.some((pattern) => matchesPathPattern(path, pattern));
+  if (!included) return false;
+  return !exclude.some((pattern) => matchesPathPattern(path, pattern));
+}
+
+export function filterPaths(paths: readonly string[], config: TenantGuardConfig): string[] {
+  return paths.filter((path) => isPathAllowed(path, config));
+}
+
+function globToRegex(pattern: string): RegExp {
+  let source = "";
+  for (let i = 0; i < pattern.length; i += 1) {
+    const char = pattern[i]!;
+    if (char === "*") {
+      if (pattern[i + 1] === "*") {
+        if (pattern[i + 2] === "/") {
+          source += "(?:.*/)?";
+          i += 2;
+        } else {
+          source += ".*";
+          i += 1;
+        }
+      } else {
+        source += "[^/]*";
+      }
+      continue;
+    }
+    source += char.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+  }
+  return new RegExp(`^${source}$`);
+}

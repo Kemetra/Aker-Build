@@ -19,4 +19,6 @@ export interface ScanResult {
 export interface ScanOptions {
   /** Output directory (outside the scanned repo's tracked source). Default ".tenantguard". */
   out?: string;
+  /** Optional explicit config path. If omitted, tenantguard.config.json/yaml is auto-discovered. */
+  configPath?: string;
 }

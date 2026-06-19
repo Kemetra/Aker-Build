@@ -1,4 +1,5 @@
 import { validate } from "@tenantguard/project-map";
+import { filterPaths, loadConfig } from "@tenantguard/config";
 import type { ScanResult, ScanOptions } from "./types.js";
 import { listFiles, isGitRepo, writeOutput } from "./io.js";
 import { assemble } from "./assemble.js";
@@ -10,17 +11,19 @@ import { detectSecrets } from "./detect/secrets.js";
  * - Validates the assembled map against @tenantguard/project-map before returning (R5).
  * - No network, no credentials (FR-011).
  */
-export function scan(targetPath: string, _opts: ScanOptions = {}): ScanResult {
+export function scan(targetPath: string, opts: ScanOptions = {}): ScanResult {
   if (!isGitRepo(targetPath)) {
     throw new Error(
       `Not a Git repository: ${targetPath} (scanning non-Git directories is out of MVP scope)`,
     );
   }
 
-  const { map, notes } = assemble(targetPath, listFiles);
+  const config = loadConfig(targetPath, { configPath: opts.configPath }).config;
+  const scopedListFiles = (root: string): string[] => filterPaths(listFiles(root), config);
+  const { map, notes } = assemble(targetPath, scopedListFiles);
 
   // Secret safety: flag-only, value never captured (FR-012).
-  const files = listFiles(targetPath);
+  const files = scopedListFiles(targetPath);
   notes.push(...detectSecrets(targetPath, files));
 
   // The producer must never emit an invalid map (R5, FR-002).

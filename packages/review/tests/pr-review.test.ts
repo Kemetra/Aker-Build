@@ -1,4 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { reviewPr } from "../src/pr.js";
 import type { Finding } from "../src/types.js";
 
@@ -46,5 +49,29 @@ describe("PR review reuses the attribute→verdict core over PR changed files (T
       repoRoot: ".",
     });
     expect(report.verdict).toBe("ready");
+  });
+
+  it("keeps excluded PR files visible while ignoring them for attribution", () => {
+    const repoRoot = mkdtempSync(join(tmpdir(), "tg-pr-config-"));
+    const configPath = join(repoRoot, "tenantguard.config.json");
+    writeFileSync(
+      configPath,
+      JSON.stringify({ version: 1, paths: { exclude: ["apps/api/routes/admin.ts"] } }),
+      "utf8",
+    );
+    const findings: Finding[] = [
+      { gate_id: "TG-G4", status: "risk", severity: "high", evidence: [ev("apps/api/routes/admin.ts", 12, "unguarded admin")] },
+    ];
+
+    const report = reviewPr(42, { configPath }, {
+      prChangedFiles: () => ["apps/api/routes/admin.ts"],
+      prMetadata: META,
+      runGates: () => ({ risks: { schema_version: 1, findings } }),
+      repoRoot,
+    });
+
+    expect(report.changed_files).toEqual(["apps/api/routes/admin.ts"]);
+    expect(report.verdict).toBe("ready");
+    expect(report.findings).toHaveLength(0);
   });
 });

@@ -1,4 +1,5 @@
 import { stringify as toYaml } from "yaml";
+import { ConfigError } from "@tenantguard/config";
 import { isGitRepo } from "@tenantguard/scanner";
 import { MissingProjectMapError, NotGitRepoError, InvalidProjectMapError } from "@tenantguard/gates";
 import {
@@ -18,6 +19,7 @@ import type { ReviewReport } from "@tenantguard/review";
 export interface ReviewCmdOptions {
   localDiff?: boolean;
   item?: string;
+  config?: string;
   out?: string;
   stdout?: boolean;
   format?: "json" | "yaml";
@@ -60,14 +62,14 @@ export function runReviewCommand(
   try {
     let report: ReviewReport;
     if (prNumber) {
-      report = reviewPr(Number(prNumber), { out, item: opts.item }, { ...opts.prDeps, repoRoot: "." });
+      report = reviewPr(Number(prNumber), { out, item: opts.item, configPath: opts.config }, { ...opts.prDeps, repoRoot: "." });
     } else {
       const targetPath = arg ?? ".";
       if (!isGitRepo(targetPath)) {
         printErr(`Not a Git repository: ${targetPath}`);
         return 2;
       }
-      report = reviewLocalDiff({ out, item: opts.item }, { repoRoot: targetPath });
+      report = reviewLocalDiff({ out, item: opts.item, configPath: opts.config }, { repoRoot: targetPath });
     }
     assertValidReport(report);
     const markdown = renderReport(report);
@@ -93,6 +95,7 @@ export function runReviewCommand(
     if (err instanceof UnknownItemError) return 2;
     if (err instanceof GitUnavailableError) return 2;
     if (err instanceof GitHubUnavailableError) return 2;
+    if (err instanceof ConfigError) return 2;
     if (err instanceof InvalidProjectMapError) return 3;
     if (err instanceof InvalidReviewError) return 3;
     return 3;

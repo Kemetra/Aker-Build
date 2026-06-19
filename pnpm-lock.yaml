@@ -10,6 +10,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@tenantguard/config':
+        specifier: workspace:*
+        version: link:../config
       '@tenantguard/gates':
         specifier: workspace:*
         version: link:../gates
@@ -219,6 +222,9 @@ importers:
 
   packages/review:
     dependencies:
+      '@tenantguard/config':
+        specifier: workspace:*
+        version: link:../config
       '@tenantguard/gates':
         specifier: workspace:*
         version: link:../gates
@@ -247,6 +253,9 @@ importers:
 
   packages/scanner:
     dependencies:
+      '@tenantguard/config':
+        specifier: workspace:*
+        version: link:../config
       '@tenantguard/project-map':
         specifier: workspace:*
         version: link:../project-map

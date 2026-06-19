@@ -4,7 +4,7 @@ import { prChangedFiles as realPrChangedFiles, prMetadata as realPrMetadata } fr
 import { diffAttributableFindings } from "./attribute.js";
 import { checkScope, SCOPE_SKIPPED } from "./scope.js";
 import { loadQueueItem } from "./io.js";
-import { assemble } from "./review.js";
+import { applyConfigPathFilter, assemble } from "./review.js";
 import type { ReviewReport, ReviewOptions, ScopeResult, PrMetadata } from "./types.js";
 
 /**
@@ -14,7 +14,7 @@ import type { ReviewReport, ReviewOptions, ScopeResult, PrMetadata } from "./typ
 export interface PrReviewDeps {
   prChangedFiles?: (prNumber: number) => string[];
   prMetadata?: (prNumber: number) => { title: string; state: string; baseRefName: string };
-  runGates?: (repoRoot: string, opts: { out: string }) => RunGatesResult;
+  runGates?: (repoRoot: string, opts: { out: string; configPath?: string }) => RunGatesResult;
   /** Repo root the gates run over (the checked-out PR / current repo). */
   repoRoot?: string;
 }
@@ -36,9 +36,10 @@ export function reviewPr(prNumber: number, opts: ReviewOptions = {}, deps: PrRev
   const repoRoot = deps.repoRoot ?? ".";
   const getChanged = deps.prChangedFiles ?? realPrChangedFiles;
   const getMetadata = deps.prMetadata ?? realPrMetadata;
-  const getGates = deps.runGates ?? ((root: string, o: { out: string }) => realRunGates(root, o));
+  const getGates = deps.runGates ?? ((root: string, o: { out: string; configPath?: string }) => realRunGates(root, o));
 
   const changed = getChanged(prNumber); // may throw GitHubUnavailableError (propagated)
+  const scopedChanged = applyConfigPathFilter(changed, repoRoot, opts.configPath);
   const meta = getMetadata(prNumber); // may throw GitHubUnavailableError (propagated)
   const prMeta: PrMetadata = {
     number: prNumber,
@@ -47,11 +48,11 @@ export function reviewPr(prNumber: number, opts: ReviewOptions = {}, deps: PrRev
     base_ref: meta.baseRefName,
   };
 
-  const { risks } = getGates(repoRoot, { out });
-  const attributable = diffAttributableFindings(risks.findings, changed);
+  const { risks } = getGates(repoRoot, { out, configPath: opts.configPath });
+  const attributable = diffAttributableFindings(risks.findings, scopedChanged);
 
   const scope: ScopeResult = opts.item
-    ? checkScope(changed, loadQueueItem(out, opts.item))
+    ? checkScope(scopedChanged, loadQueueItem(out, opts.item))
     : SCOPE_SKIPPED;
 
   return assemble("pr", changed, attributable, scope, true, prMeta);

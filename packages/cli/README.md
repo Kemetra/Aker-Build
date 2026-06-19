@@ -18,7 +18,7 @@ pnpm dlx tsx packages/cli/src/bin.ts --help
 
 ```bash
 # Scan a repo (read-only) and write .tenantguard/project-map.json
-tenantguard scan [path] [--out <dir>] [--stdout] [--format json|yaml]
+tenantguard scan [path] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Show / re-emit the produced map
 tenantguard map [--out <dir>] [--format json|yaml]
@@ -36,8 +36,8 @@ tenantguard route [path] [--out <dir>] [--stdout] [--format json|yaml]
 tenantguard prompt <id> [--agent claude|codex|generic] [--out <dir>] [--stdout]
 
 # Review a local diff or GitHub PR
-tenantguard review-pr [path] --local-diff [--item <id>] [--out <dir>] [--stdout] [--format json|yaml]
-tenantguard review-pr <number> [--item <id>] [--out <dir>] [--stdout] [--format json|yaml]
+tenantguard review-pr [path] --local-diff [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
+tenantguard review-pr <number> [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Summarize produced artifacts
 tenantguard report [path] [--out <dir>] [--stdout] [--format json|yaml|md]

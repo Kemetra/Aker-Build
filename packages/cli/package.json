@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tenantguard/config": "workspace:*",
     "@tenantguard/gates": "workspace:*",
     "@tenantguard/project-map": "workspace:*",
     "@tenantguard/prompt": "workspace:*",
