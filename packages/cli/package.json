@@ -1,7 +1,7 @@
 {
   "name": "@tenantguard/cli",
   "version": "0.0.0",
-  "description": "TenantGuard CLI — tenantguard scan / map (and later commands)",
+  "description": "TenantGuard CLI — scan, gates, queue, route, prompt, and review PRs safely",
   "license": "MIT",
   "type": "module",
   "bin": {

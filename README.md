@@ -17,7 +17,8 @@ TenantGuard is not a SaaS boilerplate. It does not generate a full app. It contr
 
 TenantGuard's MVP CLI chain is implemented and in release-readiness hardening. The current focus is a reliable first-run demo, documented command surface, and launch prerequisites.
 
-GitHub App, hosted dashboard, auto-fix, auto-commit, and auto-merge remain deferred.
+- TenantGuard runs against its own repo via a report-only GitHub Action dogfooding workflow.
+- GitHub App, hosted dashboard, auto-fix, auto-commit, and auto-merge remain deferred.
 
 ## Quickstart
 
