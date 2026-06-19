@@ -18,6 +18,8 @@ route.json
 prompt-Q-001.md
 review.json
 review.md
+tenantguard-report.json
+tenantguard-report.md
 ```
 
 ## Manual Flow
@@ -31,6 +33,7 @@ pnpm dlx tsx packages/cli/src/bin.ts queue <repo> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts route <repo> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts prompt Q-001 --agent claude --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts review-pr <repo> --local-diff --out <out-dir>
+pnpm dlx tsx packages/cli/src/bin.ts report <repo> --out <out-dir>
 ```
 
 Expected value:
@@ -41,6 +44,7 @@ Expected value:
 - `route.json` selects the next safe task and explains why.
 - `prompt-Q-001.md` gives an AI agent a bounded objective, allowed files, forbidden files, validation, git rules, stop conditions, and final report requirements.
 - `review.json` and `review.md` summarize whether the current local diff is ready.
+- `tenantguard-report.json` and `tenantguard-report.md` summarize the run artifacts, suppressions, config, and Spec Kit evidence.
 
 ## Boundaries
 

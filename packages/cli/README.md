@@ -1,6 +1,6 @@
 # @tenantguard/cli
 
-The `tenantguard` command-line interface (Commander). Current MVP commands are `scan`, `map`, `gates`, `queue`, `route`, `prompt`, and `review-pr`.
+The `tenantguard` command-line interface (Commander). Current MVP commands are `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, and `report`.
 
 Scanner spec: [`specs/003-cli-scanner`](../../specs/003-cli-scanner/spec.md) ·
 Gates spec: [`specs/004-saas-gates-v0`](../../specs/004-saas-gates-v0/spec.md) ·
@@ -38,6 +38,9 @@ tenantguard prompt <id> [--agent claude|codex|generic] [--out <dir>] [--stdout]
 # Review a local diff or GitHub PR
 tenantguard review-pr [path] --local-diff [--item <id>] [--out <dir>] [--stdout] [--format json|yaml]
 tenantguard review-pr <number> [--item <id>] [--out <dir>] [--stdout] [--format json|yaml]
+
+# Summarize produced artifacts
+tenantguard report [path] [--out <dir>] [--stdout] [--format json|yaml|md]
 ```
 
 ## Exit codes
@@ -49,6 +52,7 @@ tenantguard review-pr <number> [--item <id>] [--out <dir>] [--stdout] [--format 
 - `route`: `0` decision produced · `1` missing queue · `2` not a Git repo · `3` internal error.
 - `prompt`: `0` prompt compiled · `1` missing queue · `2` bad input or scope refusal · `3` internal error.
 - `review-pr`: `0` review completed · `1` missing upstream input · `2` bad input or unavailable git/gh · `3` internal error.
+- `report`: `0` report produced · `2` invalid input artifact · `3` internal error.
 
 ## Guarantees
 
