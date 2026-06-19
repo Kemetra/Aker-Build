@@ -22,7 +22,13 @@ export function scoreItem(item: QueueItem, ctx: QueueContext): ScoreBreakdown {
   // Each factor: { weight, value in [0,1], note }
   const factors = [
     { name: "readiness", weight: 0.35, value: item.status === "ready" ? 1 : 0, note: `status=${item.status}` },
-    { name: "risk", weight: 0.2, value: 1 - LEVEL_VALUE[item.risk] / 3, note: `risk=${item.risk}` },
+    { name: "risk", weight: 0.1, value: 1 - LEVEL_VALUE[item.risk] / 3, note: `risk=${item.risk}` },
+    {
+      name: "confidence",
+      weight: 0.1,
+      value: item.confidence_tier === "suspected" ? 0 : 1,
+      note: `tier=${item.confidence_tier ?? "confirmed"}`,
+    },
     {
       name: "blast_radius",
       weight: 0.15,

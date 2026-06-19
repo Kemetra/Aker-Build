@@ -1,4 +1,5 @@
 import type { Finding } from "@tenantguard/gates";
+import { confidenceTier } from "@tenantguard/gates";
 import type { QueueContext, QueueItem, QueueItemType, Level } from "./types.js";
 
 /** Map a gate id to the kind of work a fix would be. */
@@ -74,6 +75,7 @@ export function deriveItems(ctx: QueueContext): QueueItem[] {
       source: { evidence: [...f.evidence, ...specEvidence] },
       priority: isRisk ? level : "low",
       risk: isRisk ? level : "low",
+      confidence_tier: confidenceTier(f),
       depends_on: [],
       lock_scope: { files: paths },
       allowed_files: paths,

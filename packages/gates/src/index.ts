@@ -41,5 +41,6 @@ export { buildContext, MissingProjectMapError, NotGitRepoError, InvalidProjectMa
 export { runGatesOnContext, InvalidRisksError } from "./run.js";
 export { findingSchema, risksSchema, validateRisks, RISKS_SCHEMA_VERSION, SEVERITIES } from "./schema.js";
 export { applyConfigToRisks, findingId } from "./suppressions.js";
+export { confidenceTier, type ConfidenceTier } from "./confidence.js";
 export { ConfigError, ConfigSecretError, ConfigValidationError } from "@tenantguard/config";
 export type { Finding, FindingStatus, Severity, Gate, GateContext, RiskList, RunGatesOptions, RunGatesResult, SuppressionMetadata } from "./types.js";

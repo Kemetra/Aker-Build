@@ -23,23 +23,37 @@ function run(ctx: GateContext): Finding[] {
     const content = readCode(ctx, file);
     if (!content.trim()) continue;
 
-    const hasAuthGuard = AUTH_GUARD.test(content);
+    // Route-precise + confidence-varied (P2). A guard token ON the route line → guarded, no
+    // finding. Otherwise: if NO guard token appears anywhere in the file, the route is provably
+    // unguarded → high confidence (→ confirmed). If a token exists elsewhere in the file, the
+    // route may be protected by middleware (e.g. `router.use(requireAuth)`) we can't prove from
+    // here → medium confidence (→ suspected; advisory, never blocks). This stops the common
+    // middleware pattern from being a high-confidence false positive.
+    const fileHasGuard = AUTH_GUARD.test(content);
+    const lines = content.split(/\r?\n/);
     for (const line of matchingLines(content, ROUTE_DEF)) {
-      if (!hasAuthGuard) {
-        findings.push(
-          risk(ID, "high", [
-            lineEvidence(file, line, "API route without an auth guard", "high"),
-          ]),
-        );
-      }
-    }
-
-    const hasRoleGuard = ROLE_GUARD.test(content);
-    if (ADMIN_ROUTE.test(content) && !hasRoleGuard) {
-      const line = matchingLines(content, ADMIN_ROUTE)[0] ?? 1;
+      const text = lines[line - 1] ?? "";
+      if (AUTH_GUARD.test(text)) continue; // guarded on its own line
+      const confidence = fileHasGuard ? "medium" : "high";
       findings.push(
         risk(ID, "high", [
-          lineEvidence(file, line, "admin route without a role guard", "high"),
+          lineEvidence(file, line, "API route without an auth guard", confidence),
+        ]),
+      );
+    }
+
+    // Admin route without a role guard — same route-precise + confidence-varied honesty as the
+    // auth-guard check above. A role guard on the admin line → fine. Otherwise high confidence
+    // only if no role guard appears anywhere in the file; medium if one exists elsewhere (the
+    // admin route may be protected by file-level role middleware we can't prove from here).
+    const fileHasRoleGuard = ROLE_GUARD.test(content);
+    for (const line of matchingLines(content, ADMIN_ROUTE)) {
+      const text = lines[line - 1] ?? "";
+      if (ROLE_GUARD.test(text)) continue;
+      const confidence = fileHasRoleGuard ? "medium" : "high";
+      findings.push(
+        risk(ID, "high", [
+          lineEvidence(file, line, "admin route without a role guard", confidence),
         ]),
       );
     }

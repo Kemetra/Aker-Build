@@ -20,6 +20,7 @@ export const queueItemSchema = z.object({
   source: z.object({ evidence: z.array(evidenceSchema) }),
   priority: z.enum(LEVELS),
   risk: z.enum(LEVELS),
+  confidence_tier: z.enum(["confirmed", "suspected"]).optional(),
   depends_on: z.array(z.string()),
   lock_scope: z.object({ files: z.array(z.string()) }),
   allowed_files: z.array(z.string()),

@@ -48,6 +48,12 @@ export const tenantGuardConfigSchema = z.object({
       z.object({
         severity: severitySchema.optional(),
         suppressions: z.array(suppressionSchema).optional(),
+        /**
+         * Minimum confidence tier to SURFACE for this gate (P2). Findings below it are suppressed
+         * with an audited record — never silently dropped. `confirmed` = only high-confidence
+         * findings surface; `suspected` (default) = surface everything.
+         */
+        min_tier: z.enum(["confirmed", "suspected"]).optional(),
       }).strict(),
     )
     .optional(),

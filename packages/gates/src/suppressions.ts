@@ -2,6 +2,7 @@ import type { TenantGuardConfig } from "@tenantguard/config";
 import type { Finding, RiskList, SuppressionMetadata } from "./types.js";
 import { validateRisks } from "./schema.js";
 import { InvalidRisksError } from "./run.js";
+import { confidenceTier } from "./confidence.js";
 
 export function applyConfigToRisks(risks: RiskList, config: TenantGuardConfig): RiskList {
   const findings = risks.findings.map((finding) => applyGateConfig(finding, config));
@@ -27,6 +28,20 @@ function applyGateConfig(finding: Finding, config: TenantGuardConfig): Finding {
   let next = finding;
   if (next.status === "risk" && gateConfig.severity) {
     next = { ...next, severity: gateConfig.severity };
+  }
+
+  // P2: per-gate min_tier. A finding below the threshold is suppressed with an AUDITED record
+  // (never silently dropped) so it remains visible in output, marked why. Only `confirmed` is a
+  // meaningful floor (everything is >= suspected); applies to risk/needs_verification findings.
+  if (gateConfig.min_tier === "confirmed" && confidenceTier(next) === "suspected" && !next.suppression) {
+    const tierSuppression: SuppressionMetadata = {
+      id: `min-tier:${next.gate_id}`,
+      reason: `below gate min_tier=confirmed (finding tier=suspected)`,
+      owner: "tenantguard:config",
+      matched_by: "finding_id",
+    };
+    next = { ...next, suppression: tierSuppression } as Finding;
+    return next;
   }
 
   const suppression = gateConfig.suppressions?.find((candidate) => matchesSuppression(next, candidate));

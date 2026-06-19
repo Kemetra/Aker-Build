@@ -17,6 +17,8 @@ export interface QueueItem {
   source: { evidence: Evidence[] };
   priority: Level;
   risk: Level;
+  /** Collapsed confidence tier of the source finding (P2). Optional/additive; absence = confirmed. */
+  confidence_tier?: "confirmed" | "suspected";
   depends_on: string[];
   lock_scope: { files: string[] };
   allowed_files: string[];
