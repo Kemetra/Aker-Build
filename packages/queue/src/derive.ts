@@ -55,8 +55,9 @@ function evidencePaths(f: Finding): string[] {
  */
 export function deriveItems(ctx: QueueContext): QueueItem[] {
   const findings = ctx.risks.findings.filter(
-    (f) => f.status === "risk" || f.status === "needs_verification",
+    (f) => (f.status === "risk" || f.status === "needs_verification") && !f.suppression,
   );
+  const specEvidence = ctx.specKit?.evidence ?? [];
 
   const items: QueueItem[] = findings.map((f, i) => {
     const id = `Q-${String(i + 1).padStart(3, "0")}`;
@@ -70,7 +71,7 @@ export function deriveItems(ctx: QueueContext): QueueItem[] {
       title: isRisk ? `Fix: ${sig}` : `Verify: ${sig}`,
       status: isRisk ? "ready" : "blocked",
       type: typeForGate(f.gate_id),
-      source: { evidence: f.evidence },
+      source: { evidence: [...f.evidence, ...specEvidence] },
       priority: isRisk ? level : "low",
       risk: isRisk ? level : "low",
       depends_on: [],

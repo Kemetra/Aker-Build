@@ -1,6 +1,6 @@
 # Implementation Plan: 011 Spec Kit Adapter and Config Boundary
 
-Status: Draft
+Status: Implemented in branch `011-spec-kit-adapter-and-config-boundary`
 Feature: `011-spec-kit-adapter-and-config-boundary`
 Date: 2026-06-19
 
@@ -101,6 +101,17 @@ Required:
 ```bash
 pnpm test
 pnpm typecheck
+```
+
+Focused:
+
+```bash
+pnpm --filter @tenantguard/config test
+pnpm --filter @tenantguard/spec-kit-adapter test
+pnpm --filter @tenantguard/gates test
+pnpm --filter @tenantguard/queue test
+pnpm --filter @tenantguard/prompt test
+pnpm --filter @tenantguard/cli test
 ```
 
 Suggested focused tests:

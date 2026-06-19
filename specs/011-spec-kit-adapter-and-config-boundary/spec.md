@@ -1,6 +1,6 @@
 # Feature Specification: Spec Kit Adapter and Config Boundary
 
-Status: Draft
+Status: Implemented in branch `011-spec-kit-adapter-and-config-boundary`
 Feature: `011-spec-kit-adapter-and-config-boundary`
 Date: 2026-06-19
 Type: Product capability / adapter / config model

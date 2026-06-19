@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve, join } from "node:path";
 import { tmpdir } from "node:os";
-import { rmSync, existsSync, readFileSync, mkdtempSync, cpSync, mkdirSync } from "node:fs";
+import { rmSync, existsSync, readFileSync, mkdtempSync, cpSync, mkdirSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { scanToFile } from "@tenantguard/scanner";
 import { validateRisks } from "@tenantguard/gates";
@@ -79,5 +79,35 @@ describe("T033 `tenantguard gates` command", () => {
     const risks = JSON.parse(lines.join("\n"));
     const ids = new Set(risks.findings.map((f: { gate_id: string }) => f.gate_id));
     expect([...ids]).toEqual(["TG-G4"]);
+  });
+
+  it("applies visible suppressions from --config", () => {
+    const { repoRoot, outDir } = prepRepoWithMap();
+    created.push(repoRoot);
+    const configPath = join(repoRoot, "tenantguard.config.json");
+    writeFileSync(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        gates: {
+          "TG-G4": {
+            suppressions: [
+              {
+                id: "TG-G4-CLI-001",
+                path: "apps/api/routes/admin.ts",
+                reason: "CLI fixture suppression.",
+                owner: "maintainer",
+              },
+            ],
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    const code = runGatesCommand(repoRoot, { out: outDir, config: configPath, errSink: () => {} });
+    expect(code).toBe(0);
+    const risks = JSON.parse(readFileSync(resolve(outDir, "risks.json"), "utf8"));
+    expect(risks.findings.some((f: { suppression?: { id: string } }) => f.suppression?.id === "TG-G4-CLI-001")).toBe(true);
   });
 });

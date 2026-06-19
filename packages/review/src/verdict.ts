@@ -14,11 +14,12 @@ export function decideVerdict(
   findings: readonly AttributableFinding[],
   scope: ScopeResult,
 ): Verdict {
-  const hasRisk = findings.some((f) => f.status === "risk");
+  const activeFindings = findings.filter((f) => !f.suppression);
+  const hasRisk = activeFindings.some((f) => f.status === "risk");
   const hasScopeViolation = scope.violations.length > 0;
   if (hasRisk || hasScopeViolation) return "not_ready";
 
-  const hasNeedsVerification = findings.some((f) => f.status === "needs_verification");
+  const hasNeedsVerification = activeFindings.some((f) => f.status === "needs_verification");
   if (hasNeedsVerification) return "needs_verification";
 
   return "ready";

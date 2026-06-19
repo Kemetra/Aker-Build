@@ -2,10 +2,12 @@
 // SaaS Gates v0 — evidence-backed risk detection producing risks.json (004).
 
 import { resolve } from "node:path";
+import { loadConfig } from "@tenantguard/config";
 import { buildContext } from "./context.js";
 import { runGatesOnContext } from "./run.js";
 import { writeRisks } from "./io.js";
 import type { RunGatesOptions, RunGatesResult } from "./types.js";
+import { applyConfigToRisks } from "./suppressions.js";
 
 const DEFAULT_OUT = ".tenantguard";
 
@@ -16,8 +18,10 @@ const DEFAULT_OUT = ".tenantguard";
  */
 export function runGates(targetPath: string, opts: RunGatesOptions = {}): RunGatesResult {
   const out = opts.out ?? DEFAULT_OUT;
-  const ctx = buildContext(resolve(targetPath), out);
-  const risks = runGatesOnContext(ctx, opts.gates);
+  const repoRoot = resolve(targetPath);
+  const ctx = buildContext(repoRoot, out);
+  const config = loadConfig(repoRoot, { configPath: opts.configPath }).config;
+  const risks = applyConfigToRisks(runGatesOnContext(ctx, opts.gates), config);
   return { risks };
 }
 
@@ -36,4 +40,6 @@ export { GATES, selectGates, UnknownGateError } from "./registry.js";
 export { buildContext, MissingProjectMapError, NotGitRepoError, InvalidProjectMapError } from "./context.js";
 export { runGatesOnContext, InvalidRisksError } from "./run.js";
 export { findingSchema, risksSchema, validateRisks, RISKS_SCHEMA_VERSION, SEVERITIES } from "./schema.js";
-export type { Finding, FindingStatus, Severity, Gate, GateContext, RiskList, RunGatesOptions, RunGatesResult } from "./types.js";
+export { applyConfigToRisks, findingId } from "./suppressions.js";
+export { ConfigError, ConfigSecretError, ConfigValidationError } from "@tenantguard/config";
+export type { Finding, FindingStatus, Severity, Gate, GateContext, RiskList, RunGatesOptions, RunGatesResult, SuppressionMetadata } from "./types.js";

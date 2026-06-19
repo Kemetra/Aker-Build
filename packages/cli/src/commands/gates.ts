@@ -6,11 +6,13 @@ import {
   NotGitRepoError,
   UnknownGateError,
   InvalidRisksError,
+  ConfigError,
 } from "@tenantguard/gates";
 
 export interface GatesCmdOptions {
   out?: string;
   gates?: string;
+  config?: string;
   stdout?: boolean;
   format?: "json" | "yaml";
   sink?: (line: string) => void;
@@ -34,11 +36,11 @@ export function runGatesCommand(targetPath: string, opts: GatesCmdOptions = {}):
 
   try {
     if (opts.stdout) {
-      const { risks } = runGates(targetPath, { out, gates: ids });
+      const { risks } = runGates(targetPath, { out, gates: ids, configPath: opts.config });
       print(opts.format === "yaml" ? toYaml(risks) : JSON.stringify(risks, null, 2));
       return 0;
     }
-    const { outPath, result } = runGatesToFile(targetPath, { out, gates: ids });
+    const { outPath, result } = runGatesToFile(targetPath, { out, gates: ids, configPath: opts.config });
     printErr(`Wrote ${outPath}`);
     const findings = result.risks.findings;
     const riskCount = findings.filter((f) => f.status === "risk").length;
@@ -48,7 +50,7 @@ export function runGatesCommand(targetPath: string, opts: GatesCmdOptions = {}):
     const msg = err instanceof Error ? err.message : String(err);
     printErr(msg);
     if (err instanceof MissingProjectMapError) return 1;
-    if (err instanceof NotGitRepoError || err instanceof UnknownGateError) return 2;
+    if (err instanceof NotGitRepoError || err instanceof UnknownGateError || err instanceof ConfigError) return 2;
     if (err instanceof InvalidRisksError) return 3;
     return 3;
   }

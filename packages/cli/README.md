@@ -24,7 +24,7 @@ tenantguard scan [path] [--out <dir>] [--stdout] [--format json|yaml]
 tenantguard map [--out <dir>] [--format json|yaml]
 
 # Run SaaS gates and write risks.json
-tenantguard gates [path] [--gates <ids>] [--out <dir>] [--stdout] [--format json|yaml]
+tenantguard gates [path] [--gates <ids>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Derive queue.json from project-map.json + risks.json
 tenantguard queue [path] [--out <dir>] [--stdout] [--format json|yaml]

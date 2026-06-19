@@ -7,6 +7,13 @@ export const RISKS_SCHEMA_VERSION = 1;
 /** Ordered severity labels (low→critical). Applies only to `risk` findings. */
 export const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 const severitySchema = z.enum(SEVERITIES);
+const suppressionSchema = z.object({
+  id: z.string(),
+  reason: z.string(),
+  owner: z.string(),
+  expires: z.string().optional(),
+  matched_by: z.enum(["path", "finding_id"]),
+});
 
 /**
  * Finding shape — a discriminated union on `status` (004 R4). The discriminator makes the
@@ -23,18 +30,21 @@ export const findingSchema = z.discriminatedUnion("status", [
     status: z.literal("risk"),
     severity: severitySchema,
     evidence: z.array(evidenceSchema).min(1),
+    suppression: suppressionSchema.optional(),
   }),
   z.object({
     gate_id: z.string(),
     status: z.literal("needs_verification"),
     severity: z.null(),
     evidence: z.array(evidenceSchema).min(1),
+    suppression: suppressionSchema.optional(),
   }),
   z.object({
     gate_id: z.string(),
     status: z.literal("not_applicable"),
     severity: z.null(),
     evidence: z.array(evidenceSchema),
+    suppression: suppressionSchema.optional(),
   }),
 ]);
 

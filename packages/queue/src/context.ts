@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { loadJson, validate, type ProjectMap } from "@tenantguard/project-map";
 import { validateRisks, type RiskList } from "@tenantguard/gates";
 import { isGitRepo } from "@tenantguard/scanner";
+import { readSpecKitArtifacts } from "@tenantguard/spec-kit-adapter";
 import type { QueueContext, RouterInputs } from "./types.js";
 
 /** Raised when project-map.json is missing — CLI maps to "run scan first" (exit 1). */
@@ -55,5 +56,6 @@ export function buildContext(repoRoot: string, outDir: string, inputs?: Partial<
     risks: parsedRisks as RiskList,
     repoRoot,
     inputs: { changedFiles: inputs?.changedFiles ?? [] },
+    specKit: readSpecKitArtifacts(repoRoot),
   };
 }

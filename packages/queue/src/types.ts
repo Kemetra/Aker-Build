@@ -1,5 +1,6 @@
 import type { Evidence, ProjectMap } from "@tenantguard/project-map";
 import type { RiskList } from "@tenantguard/gates";
+import type { SpecKitContext } from "@tenantguard/spec-kit-adapter";
 
 /** Ordered level used for both priority and risk. */
 export type Level = "low" | "medium" | "high" | "critical";
@@ -53,6 +54,7 @@ export interface QueueContext {
   risks: RiskList;
   repoRoot: string;
   inputs: RouterInputs;
+  specKit?: SpecKitContext;
 }
 
 export interface QueueOptions {

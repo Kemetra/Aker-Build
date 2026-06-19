@@ -213,5 +213,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/010-release-readiness-and-first-run-demo/plan.md` (active feature: 010-release-readiness-and-first-run-demo).
+`specs/011-spec-kit-adapter-and-config-boundary/plan.md` (active feature: 011-spec-kit-adapter-and-config-boundary).
 <!-- SPECKIT END -->

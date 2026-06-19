@@ -6,6 +6,15 @@ export type Severity = "low" | "medium" | "high" | "critical";
 /** A gate outcome status. */
 export type FindingStatus = "risk" | "needs_verification" | "not_applicable";
 
+/** Visible metadata for an explicitly suppressed finding. Suppressed findings remain in output. */
+export interface SuppressionMetadata {
+  id: string;
+  reason: string;
+  owner: string;
+  expires?: string;
+  matched_by: "path" | "finding_id";
+}
+
 /**
  * One gate outcome. Status-conditional shape (FR-003/FR-013, data-model):
  * - risk → severity (enum) + >=1 evidence
@@ -14,9 +23,9 @@ export type FindingStatus = "risk" | "needs_verification" | "not_applicable";
  * Evidence objects reuse the shared 002 shape verbatim (never redefined).
  */
 export type Finding =
-  | { gate_id: string; status: "risk"; severity: Severity; evidence: Evidence[] }
-  | { gate_id: string; status: "needs_verification"; severity: null; evidence: Evidence[] }
-  | { gate_id: string; status: "not_applicable"; severity: null; evidence: Evidence[] };
+  | { gate_id: string; status: "risk"; severity: Severity; evidence: Evidence[]; suppression?: SuppressionMetadata }
+  | { gate_id: string; status: "needs_verification"; severity: null; evidence: Evidence[]; suppression?: SuppressionMetadata }
+  | { gate_id: string; status: "not_applicable"; severity: null; evidence: Evidence[]; suppression?: SuppressionMetadata };
 
 /** The risks.json document. */
 export interface RiskList {
@@ -49,6 +58,8 @@ export interface RunGatesOptions {
   out?: string;
   /** Subset of gate ids to run; omitted/empty = full set. */
   gates?: string[];
+  /** Optional explicit config path. If omitted, tenantguard.config.json/yaml is auto-discovered. */
+  configPath?: string;
 }
 
 export interface RunGatesResult {

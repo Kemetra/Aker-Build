@@ -48,11 +48,12 @@ export function buildProgram(): Command {
     .description("Run the SaaS gate set (or a subset) over the scanned repo, produce risks.json")
     .argument("[path]", "target repo path", ".")
     .option("--gates <ids>", "comma-separated gate ids to run, e.g. TG-G4,TG-G5")
+    .option("--config <path>", "explicit tenantguard.config.json/yaml path")
     .option("--out <dir>", "output directory (holds project-map.json; risks.json written here)", ".tenantguard")
     .option("--stdout", "print risks.json to stdout instead of writing a file")
     .option("--format <fmt>", "json | yaml", "json")
     .action(
-      (path: string, opts: { out: string; gates?: string; stdout?: boolean; format: "json" | "yaml" }) => {
+      (path: string, opts: { out: string; gates?: string; config?: string; stdout?: boolean; format: "json" | "yaml" }) => {
         process.exitCode = runGatesCommand(path, opts);
       },
     );

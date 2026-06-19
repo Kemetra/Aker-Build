@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/gates",
+  "name": "@tenantguard/config",
   "version": "0.0.0",
-  "description": "TenantGuard SaaS Gates v0 — evidence-backed risk detection producing risks.json",
+  "description": "TenantGuard local config schema and reader",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,9 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
+    "yaml": "^2.6.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {

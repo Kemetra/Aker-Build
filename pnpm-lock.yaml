@@ -45,8 +45,30 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.21)
 
+  packages/config:
+    dependencies:
+      yaml:
+        specifier: ^2.6.1
+        version: 2.9.0
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.21)
+
   packages/gates:
     dependencies:
+      '@tenantguard/config':
+        specifier: workspace:*
+        version: link:../config
       '@tenantguard/project-map':
         specifier: workspace:*
         version: link:../project-map
@@ -116,6 +138,9 @@ importers:
       '@tenantguard/scanner':
         specifier: workspace:*
         version: link:../scanner
+      '@tenantguard/spec-kit-adapter':
+        specifier: workspace:*
+        version: link:../spec-kit-adapter
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -166,6 +191,22 @@ importers:
       yaml:
         specifier: ^2.6.1
         version: 2.9.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.19.21)
+
+  packages/spec-kit-adapter:
+    dependencies:
+      '@tenantguard/project-map':
+        specifier: workspace:*
+        version: link:../project-map
     devDependencies:
       '@types/node':
         specifier: ^22.10.2

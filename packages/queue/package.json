@@ -18,6 +18,7 @@
     "@tenantguard/gates": "workspace:*",
     "@tenantguard/project-map": "workspace:*",
     "@tenantguard/scanner": "workspace:*",
+    "@tenantguard/spec-kit-adapter": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

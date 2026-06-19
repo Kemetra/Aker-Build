@@ -6,6 +6,13 @@ import { SEVERITIES } from "@tenantguard/gates";
 export const REVIEW_SCHEMA_VERSION = 1;
 
 const severitySchema = z.enum(SEVERITIES);
+const suppressionSchema = z.object({
+  id: z.string(),
+  reason: z.string(),
+  owner: z.string(),
+  expires: z.string().optional(),
+  matched_by: z.enum(["path", "finding_id"]),
+});
 
 /**
  * A contributing review finding. Either a diff-attributable 004 gate finding (only `risk` /
@@ -19,12 +26,14 @@ const gateFindingSchema = z.discriminatedUnion("status", [
     status: z.literal("risk"),
     severity: severitySchema,
     evidence: z.array(evidenceSchema).min(1),
+    suppression: suppressionSchema.optional(),
   }),
   z.object({
     gate_id: z.string(),
     status: z.literal("needs_verification"),
     severity: z.null(),
     evidence: z.array(evidenceSchema).min(1),
+    suppression: suppressionSchema.optional(),
   }),
 ]);
 

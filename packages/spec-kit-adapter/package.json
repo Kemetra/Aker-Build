@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/gates",
+  "name": "@tenantguard/spec-kit-adapter",
   "version": "0.0.0",
-  "description": "TenantGuard SaaS Gates v0 — evidence-backed risk detection producing risks.json",
+  "description": "Read-only Spec Kit artifact adapter for TenantGuard",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,10 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
-    "zod": "^3.24.1"
+    "@tenantguard/project-map": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
