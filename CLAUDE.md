@@ -30,7 +30,7 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding.
+MVP implementation / dogfooding, with release-readiness and first-run demo hardening active.
 
 The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`).
 
@@ -213,5 +213,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/009-launch-and-community-strategy/plan.md` (active feature: 009-launch-and-community-strategy).
+`specs/010-release-readiness-and-first-run-demo/plan.md` (active feature: 010-release-readiness-and-first-run-demo).
 <!-- SPECKIT END -->

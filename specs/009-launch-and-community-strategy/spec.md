@@ -2,7 +2,7 @@
 
 **Feature Branch**: `009-launch-and-community-strategy`
 **Created**: 2026-06-18
-**Status**: Draft — roadmap spec (not implementation-ready; see `001` § Follow-up Feature Specs)
+**Status**: Reviewed strategy - execution pending; 010 handles release-readiness and first-run demo prerequisites.
 **Input**: User description: "Create a docs-only specification for TenantGuard's launch and community strategy: launch purpose, target audience, core marketing message, GitHub repo readiness checklist, pre-launch checklist, launch channels, content plan, growth loops, success metrics, launch stages, non-goals, acceptance criteria, and dependencies. Docs only; no production code."
 
 **Depends on**: `001-product-foundation` (positioning, MVP scope, non-goals, principles)
