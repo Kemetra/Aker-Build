@@ -40,6 +40,7 @@ pnpm dlx tsx packages/cli/src/bin.ts queue <repo> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts route <repo> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts prompt Q-001 --agent claude --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts review-pr <repo> --local-diff --out <out-dir>
+pnpm dlx tsx packages/cli/src/bin.ts report <repo> --out <out-dir>
 ```
 
 ## Core flow
@@ -65,6 +66,7 @@ tenantguard route [path]
 tenantguard prompt <id> --agent claude|codex|generic
 tenantguard review-pr [path] --local-diff
 tenantguard review-pr <number>
+tenantguard report [path]
 ```
 
 The npm-published `tenantguard` binary is a follow-up release task. Until then, local and CI usage runs the TypeScript CLI through `tsx`.

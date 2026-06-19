@@ -30,9 +30,9 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with release-readiness and first-run demo hardening active.
+MVP implementation / dogfooding, with report output contract hardening active.
 
-The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`).
+The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`).
 
 Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
 
@@ -213,5 +213,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/011-spec-kit-adapter-and-config-boundary/plan.md` (active feature: 011-spec-kit-adapter-and-config-boundary).
+`specs/012-report-command-and-output-contract/plan.md` (active feature: 012-report-command-and-output-contract).
 <!-- SPECKIT END -->

@@ -6,6 +6,7 @@ import { runQueueCommand } from "./commands/queue.js";
 import { runRouteCommand } from "./commands/route.js";
 import { runPromptCommand } from "./commands/prompt.js";
 import { runReviewCommand } from "./commands/review.js";
+import { runReportCommand } from "./commands/report.js";
 
 export { runScan } from "./commands/scan.js";
 export { runMap } from "./commands/map.js";
@@ -14,6 +15,7 @@ export { runQueueCommand } from "./commands/queue.js";
 export { runRouteCommand } from "./commands/route.js";
 export { runPromptCommand } from "./commands/prompt.js";
 export { runReviewCommand } from "./commands/review.js";
+export { runReportCommand } from "./commands/report.js";
 
 /** Build the `tenantguard` CLI program. Commands set process.exitCode (no hard process.exit). */
 export function buildProgram(): Command {
@@ -108,6 +110,17 @@ export function buildProgram(): Command {
         process.exitCode = runReviewCommand(target, opts);
       },
     );
+
+  program
+    .command("report")
+    .description("Summarize produced TenantGuard artifacts into tenantguard-report.json and Markdown")
+    .argument("[path]", "target repo path", ".")
+    .option("--out <dir>", "directory holding produced artifacts; report files written here", ".tenantguard")
+    .option("--stdout", "print the report instead of writing files")
+    .option("--format <fmt>", "json | yaml | md", "json")
+    .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" | "md" }) => {
+      process.exitCode = runReportCommand(path, opts);
+    });
 
   return program;
 }

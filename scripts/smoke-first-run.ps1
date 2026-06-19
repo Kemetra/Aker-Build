@@ -74,6 +74,7 @@ router.get("/admin/preview", (_req, res) => {
 '@ | Set-Content -LiteralPath $DiffPath -Encoding utf8
 
 Invoke-TenantGuard @("review-pr", $Repo, "--local-diff", "--item", "Q-001", "--out", $Out)
+Invoke-TenantGuard @("report", $Repo, "--out", $Out)
 
 $Expected = @(
   "project-map.json",
@@ -82,7 +83,9 @@ $Expected = @(
   "route.json",
   "prompt-Q-001.md",
   "review.json",
-  "review.md"
+  "review.md",
+  "tenantguard-report.json",
+  "tenantguard-report.md"
 )
 
 foreach ($File in $Expected) {
@@ -103,6 +106,17 @@ if ($Review.verdict -eq "ready") {
 }
 if ($Review.changed_files -notcontains "apps/api/src/routes/admin-preview.ts") {
   throw "review.json did not include the controlled changed file"
+}
+
+$Report = Get-Content -LiteralPath (Join-Path $Out "tenantguard-report.json") -Raw | ConvertFrom-Json
+if ([string]::IsNullOrWhiteSpace($Report.summary.project_name)) {
+  throw "tenantguard-report.json did not include a project name"
+}
+if ($Report.summary.findings.total -lt 1) {
+  throw "tenantguard-report.json did not summarize findings"
+}
+if ($Report.summary.review.changed_files -lt 1) {
+  throw "tenantguard-report.json did not summarize review changed files"
 }
 
 Write-Host ""

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tenantguard.dev/contracts/report.schema.json",
+  "title": "TenantGuard Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifacts", "config", "spec_kit", "summary", "suppressions"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["present", "missing"],
+      "properties": {
+        "present": { "type": "array", "items": { "type": "string" } },
+        "missing": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "suppressions_configured"],
+      "properties": {
+        "path": { "type": ["string", "null"] },
+        "project_name": { "type": "string" },
+        "project_type": { "type": "string" },
+        "include": { "type": "array", "items": { "type": "string" } },
+        "exclude": { "type": "array", "items": { "type": "string" } },
+        "suppressions_configured": { "type": "integer", "minimum": 0 },
+        "error": { "type": "string" }
+      }
+    },
+    "spec_kit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["present", "artifact_count", "evidence_count", "secret_like_count"],
+      "properties": {
+        "present": { "type": "boolean" },
+        "artifact_count": { "type": "integer", "minimum": 0 },
+        "evidence_count": { "type": "integer", "minimum": 0 },
+        "secret_like_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project_name", "repo_count", "tenant_status", "findings", "queue", "route", "review"],
+      "properties": {
+        "project_name": { "type": ["string", "null"] },
+        "repo_count": { "type": "integer", "minimum": 0 },
+        "tenant_status": { "type": ["string", "null"] },
+        "findings": { "$ref": "#/$defs/findings" },
+        "queue": { "$ref": "#/$defs/queue" },
+        "route": { "$ref": "#/$defs/route" },
+        "review": {
+          "anyOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/review" }
+          ]
+        }
+      }
+    },
+    "suppressions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/suppression" }
+    }
+  },
+  "$defs": {
+    "findings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "risk", "needs_verification", "not_applicable", "suppressed", "by_severity"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "risk": { "type": "integer", "minimum": 0 },
+        "needs_verification": { "type": "integer", "minimum": 0 },
+        "not_applicable": { "type": "integer", "minimum": 0 },
+        "suppressed": { "type": "integer", "minimum": 0 },
+        "by_severity": { "$ref": "#/$defs/severity_summary" }
+      }
+    },
+    "severity_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["low", "medium", "high", "critical"],
+      "properties": {
+        "low": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "critical": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "queue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "ready", "blocked", "done"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "ready": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "done": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["next_id", "blocked", "no_safe_task_reasons"],
+      "properties": {
+        "next_id": { "type": ["string", "null"] },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "no_safe_task_reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "changed_files", "findings"],
+      "properties": {
+        "verdict": { "enum": ["ready", "not_ready", "needs_verification"] },
+        "changed_files": { "type": "integer", "minimum": 0 },
+        "findings": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "suppression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "finding_status", "severity", "id", "reason", "owner", "matched_by"],
+      "properties": {
+        "gate_id": { "type": "string" },
+        "finding_status": { "enum": ["risk", "needs_verification", "not_applicable"] },
+        "severity": { "enum": ["low", "medium", "high", "critical", null] },
+        "id": { "type": "string" },
+        "reason": { "type": "string" },
+        "owner": { "type": "string" },
+        "expires": { "type": "string" },
+        "matched_by": { "enum": ["path", "finding_id"] }
+      }
+    }
+  }
+}
