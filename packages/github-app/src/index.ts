@@ -4,12 +4,15 @@
 
 export { verifySignature, parseEvent, WebhookSignatureError } from "./webhook.js";
 export { buildPayload, postCheck, type ChecksClient } from "./checks.js";
+// incompletePayload is defined+exported below (used by handleEvent and by runtimes that must post an
+// honest neutral when a GitHub read fails before the review can run).
 // Re-export the Checks payload types so consumers of handleEvent/ChecksClient can name them
 // without reaching into @tenantguard/review directly (read-only re-export; no behavior change).
 export type { ChecksPayload, CheckAnnotation } from "@tenantguard/review";
 export {
   run,
   safeRun,
+  PrepareRepoError,
   type Workspace,
   type RunnerDeps,
   type RunOutcome,
@@ -29,8 +32,12 @@ import { buildPayload, postCheck, type ChecksClient } from "./checks.js";
 import { safeRun, type RunnerDeps } from "./review-runner.js";
 import type { PullRequestEvent } from "./types.js";
 
-/** A neutral payload for an incomplete review — never `success` (FR-011). */
-function incompletePayload(reason: string): ChecksPayload {
+/**
+ * A neutral payload for an incomplete review — never `success` (FR-011). Exported so a runtime can
+ * post the same honest neutral when it cannot even reach `handleEvent` (e.g. a GitHub read fails
+ * before the review runs). The `reason` MUST be a fixed, path-free, secret-free string.
+ */
+export function incompletePayload(reason: string): ChecksPayload {
   return {
     name: "TenantGuard",
     conclusion: "neutral",

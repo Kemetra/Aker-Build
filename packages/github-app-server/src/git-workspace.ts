@@ -46,7 +46,9 @@ export function makeGitWorkspace(deps: GitWorkspaceDeps): Workspace {
 
         const init = deps.git.run(["-c", authHeader, "init", "--quiet", dir], tmpRoot);
         if (init.code !== 0) throw new WorkspaceError("git init failed");
-        const fetch = deps.git.run(["-c", authHeader, "fetch", "--depth", "1", url, headSha], dir);
+        // `--` separates options from positionals so a crafted url/sha can never be read as a flag
+        // (defense-in-depth; the webhook schema already constrains headSha to hex).
+        const fetch = deps.git.run(["-c", authHeader, "fetch", "--depth", "1", "--", url, headSha], dir);
         if (fetch.code !== 0) throw new WorkspaceError("git fetch failed for the PR head ref");
         const co = deps.git.run(["-c", authHeader, "checkout", "--quiet", "FETCH_HEAD"], dir);
         if (co.code !== 0) throw new WorkspaceError("git checkout failed");

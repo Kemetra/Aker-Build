@@ -5,6 +5,18 @@ import type { PullRequestEvent } from "./types.js";
 type RunGatesFn = NonNullable<PrReviewDeps["runGates"]>;
 
 /**
+ * Raised when scanning the checkout (`prepareRepo`) fails. Its message is FIXED and path-free — the
+ * underlying scan error embeds an absolute tmp/checkout path, which `safeRun` would otherwise forward
+ * into the public Checks summary. `safeRun` maps this to a neutral conclusion like any incompleteness.
+ */
+export class PrepareRepoError extends Error {
+  constructor() {
+    super("could not prepare the checkout for review");
+    this.name = "PrepareRepoError";
+  }
+}
+
+/**
  * Provides an ephemeral, per-event working tree checked out at the PR head SHA, and disposes of it
  * afterward. This is the linchpin of statelessness (FR-008): the gates read the FILESYSTEM (see
  * `reviewPr`'s contract — it runs over `repoRoot`), so the App must check out the head, run, and
@@ -24,6 +36,13 @@ export interface RunnerDeps {
   prMetadata: (prNumber: number) => { title: string; state: string; baseRefName: string };
   /** Optional gates-runner override. Defaults to review's real `runGates` over the checkout. */
   runGates?: RunGatesFn;
+  /**
+   * Prepare the freshly-checked-out repo so the gates can run: the runtime SCANS the checkout and
+   * produces its project-map BEFORE `runGates` reads it, returning the ABSOLUTE out-dir holding that
+   * map. Without this the gates resolve `project-map.json` from cwd (not the checkout) and every real
+   * review degrades to neutral. Optional so fake-injected `runGates` tests need not produce a map.
+   */
+  prepareRepo?: (repoRoot: string) => string;
 }
 
 /**
@@ -42,9 +61,22 @@ export async function run(event: PullRequestEvent, deps: RunnerDeps): Promise<Re
     headSha: event.headSha,
   });
   try {
+    // Scan the checkout to produce its project-map and learn the absolute out-dir the gates must
+    // read. Threaded into `reviewPr` as `opts.out` so resolution stays inside the checkout (never
+    // cwd). When omitted (fake-injected `runGates` tests), `reviewPr` uses its relative default.
+    // A scan failure is re-thrown as a FIXED, path-free message: the original would embed an absolute
+    // tmp/checkout path that `safeRun` forwards into the public Checks summary (info disclosure).
+    let out: string | undefined;
+    if (deps.prepareRepo) {
+      try {
+        out = deps.prepareRepo(repoRoot);
+      } catch {
+        throw new PrepareRepoError();
+      }
+    }
     return reviewPr(
       event.prNumber,
-      {},
+      out ? { out } : {},
       {
         repoRoot,
         prChangedFiles: deps.prChangedFiles,

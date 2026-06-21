@@ -12,7 +12,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@octokit/auth-app": "^7.1.5",
+    "@octokit/rest": "^21.1.1",
     "@tenantguard/github-app": "workspace:*",
+    "@tenantguard/scanner": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

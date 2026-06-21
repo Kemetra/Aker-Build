@@ -83,11 +83,18 @@ Allowed files:
 ```text
 packages/github-app-server/**
 specs/015-github-app-deployment/**
-packages/github-app/** only if a read-only export is needed (no behavior change)
+packages/github-app/** — read-only exports AND the additive runner changes the live edge required (see note)
 CLAUDE.md active feature pointer only
 pnpm-lock.yaml only for the new workspace package manifest + any added GitHub/HTTP dep
 README.md / packages/cli/README.md only to document running the service
 ```
+
+> **Scope deviation (live-edge implementation, surfaced not silent):** the original plan allowed `packages/github-app/**` only for read-only exports with *no behavior change*. Building the live edge required **additive behavior changes** to 014, because the always-neutral defect lives in 014's `run()`:
+> - `RunnerDeps.prepareRepo?` + threading the produced project-map out-dir into `reviewPr` (so the gates read the checkout, not cwd — this was the always-neutral bug).
+> - `PrepareRepoError` + `incompletePayload` export (honest neutral + path-free reason on scan failure).
+> - Tightened `webhookEventSchema` `head.sha` to a hex-only regex (boundary hardening / argv-injection defense).
+>
+> **These are additive runtime/validation changes; NONE change gate/scanner/review JUDGMENT** — verdicts and findings still come entirely from the unchanged engine (Principle VI / FR-013 intact). The constitution's harder rule ("no changes to gate/scanner/review judgment behavior") is upheld.
 
 Forbidden files:
 

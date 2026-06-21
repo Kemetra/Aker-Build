@@ -9,7 +9,10 @@ export const webhookEventSchema = z.object({
   pull_request: z.object({
     number: z.number().int().positive(),
     draft: z.boolean().optional(),
-    head: z.object({ sha: z.string().min(1) }),
+    // A commit SHA only — a 40-hex (SHA-1) or 64-hex (SHA-256) string. Rejecting anything else at the
+    // boundary stops a crafted `head.sha` (e.g. one starting with `-`) from ever reaching `git fetch`
+    // as an option rather than a ref (argument-injection defense; the runner also passes `--`).
+    head: z.object({ sha: z.string().regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i) }),
   }),
   repository: z.object({
     owner: z.object({ login: z.string().min(1) }),

@@ -13,8 +13,9 @@ Set credentials in the deployment environment or secret manager — never in a f
 
 ```text
 TENANTGUARD_APP_ID=<app id>
-TENANTGUARD_APP_PRIVATE_KEY=<private key>     # never logged or written to disk
-TENANTGUARD_WEBHOOK_SECRET=<webhook secret>   # never logged or written to disk
+TENANTGUARD_APP_PRIVATE_KEY=<private key>          # never logged or written to disk
+TENANTGUARD_WEBHOOK_SECRET=<webhook secret>        # never logged or written to disk
+TENANTGUARD_INSTALLATION_ID=<installation id>      # single-tenant: the sole installation
 PORT=<optional>
 ```
 
@@ -37,6 +38,10 @@ Start the service (self-hosted, single-tenant). Point the GitHub App's webhook U
 - **Report-only**: the only GitHub writes are creating/updating the check — no commits, pushes, merges, labels, or comments.
 - **Stateless**: no database; the per-event checkout is deleted; zero repository source remains on disk after an event.
 - **Honest**: bad input is rejected; an unreviewable event concludes neutral, never a false pass.
+
+## Verifying it actually runs live
+
+The automated test suite proves the runtime is correctly assembled and secret-safe, but it does **not** make a real network call to GitHub. To confirm live operation you must run a manual smoke test against a registered App + installation: open a PR on an installed repo and confirm a **TenantGuard** check appears at the head commit with the expected conclusion. Until that smoke test passes, treat "runs live" as built-and-wired but not yet field-verified.
 
 ## Not in this feature
 
