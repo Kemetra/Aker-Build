@@ -11,7 +11,7 @@
 
 - Q: What App distribution model should v1 target? → A: Self-hostable, single-tenant first — an org deploys its own App instance/runner; a public multi-tenant hosted App is deferred (closer to P5). This keeps the "no stored secrets / no stored source" posture trivially true and matches the dogfood Action's "runs in your own CI" trust model.
 - Q: What is the readability bound for prominent inline annotations? → A: At most 50 prominent annotations per check (matching GitHub's per-request annotation limit); any overflow is summarized in the check body rather than annotated line-by-line.
-- Q: How are draft pull requests handled? → A: Draft PRs ARE reviewed, but their check conclusion is always neutral (never failure) so a WIP draft never shows a blocking-looking red check; all other report-only rules still apply.
+- Q: How are draft pull requests handled? → A: Draft PRs ARE reviewed, but a `failure` conclusion is downgraded to `neutral` (drafts never show a blocking-looking red check); a clean draft may still be `success`. All other report-only rules apply.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -73,7 +73,7 @@ An engineering lead evaluating TenantGuard installs the App on an organization o
 - **Re-run / synchronize**: when a PR receives new commits, the App MUST re-review the new head and update (not duplicate) its check.
 - **App lacks the Checks permission** on a repo: the App MUST surface an actionable message about missing permission rather than failing silently.
 - **No TenantGuard config present** in the repo: the App MUST run with documented defaults (consistent with the CLI), not refuse to run.
-- **Draft pull request**: the App MUST review draft PRs under the same report-only rules, but MUST set the check conclusion to neutral (never failure) so a work-in-progress draft never shows a blocking-looking red check.
+- **Draft pull request**: the App MUST review draft PRs under the same report-only rules, but MUST downgrade a `failure` conclusion to `neutral` so a work-in-progress draft never shows a blocking-looking red check (a clean draft may still conclude `success`).
 
 ## Requirements *(mandatory)*
 
@@ -93,7 +93,7 @@ An engineering lead evaluating TenantGuard installs the App on an organization o
 - **FR-012**: On repeated events for the same PR, the App MUST update its existing check for that head rather than creating duplicate checks.
 - **FR-013**: The App's reported findings, summary, and conclusion MUST be consistent with what the existing CLI `review-pr` and report output contract produce for the same diff, so the App is a faithful productization of the dogfood Action — not a divergent second judgment.
 - **FR-014**: The App's behavior MUST be observable enough for an installer to verify the safety boundary — i.e. the set of write operations it performs is documented and limited to checks/annotations.
-- **FR-015**: For a draft pull request, the App MUST still run the review and report findings, but MUST set the check conclusion to neutral regardless of whether `confirmed` findings exist.
+- **FR-015**: For a draft pull request, the App MUST still run the review and report findings, but MUST NOT conclude `failure` — a `failure` conclusion is downgraded to `neutral` so a work-in-progress draft never shows a blocking-looking red check. (A clean draft with no findings may still conclude `success`; the rule suppresses red, not green.)
 
 ### Key Entities *(include if feature involves data)*
 
