@@ -6,6 +6,9 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "bin": {
+    "tenantguard-app-server": "./src/bin.ts"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
