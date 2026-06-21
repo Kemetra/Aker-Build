@@ -42,9 +42,10 @@ describe("makeGitWorkspace over a REAL file:// remote (real init/fetch/checkout 
     const tmpRoot = mkdtempSync(join(tmpdir(), "tg-ws-root-"));
     dirs.push(tmpRoot);
 
+    const TOKEN = "ghs_REAL_GIT_TOKEN_SENTINEL_0000";
     const ws = makeGitWorkspace({
       git: makeNodeGit(), // the REAL runner
-      authToken: async () => "unused-for-file-transport",
+      authToken: async () => TOKEN,
       tmpRoot,
       // Point the fetch at the local bare-ish repo via file:// — exercises the real sequence offline.
       remoteUrl: () => pathToFileURL(repoDir).href,
@@ -59,32 +60,36 @@ describe("makeGitWorkspace over a REAL file:// remote (real init/fetch/checkout 
     expect(existsSync(marker)).toBe(true);
     expect(readFileSync(marker, "utf8").trim()).toBe("the-real-head-content");
 
+    // FR-006, the REAL property (not the tautology the reviewer flagged): after a real checkout the
+    // token must NOT be persisted to .git/config on disk. The workspace passes it via an in-memory
+    // `-c http.extraheader`, never as a stored remote/credential — so it must be absent from config.
+    const gitConfigPath = join(checkoutDir, ".git", "config");
+    if (existsSync(gitConfigPath)) {
+      expect(readFileSync(gitConfigPath, "utf8")).not.toContain(TOKEN);
+    }
+
     // dispose removes everything — no source left on disk (SC-005).
     await ws.dispose(checkoutDir);
     expect(existsSync(checkoutDir)).toBe(false);
   });
 
-  it("throws WorkspaceError (no token leak) when the head SHA does not exist on the remote", async () => {
+  it("throws WorkspaceError when the head SHA does not exist on the remote (real git failure)", async () => {
     const { repoDir } = makeOriginRepo();
     const tmpRoot = mkdtempSync(join(tmpdir(), "tg-ws-root-"));
     dirs.push(tmpRoot);
-    const TOKEN = "ghs_REAL_GIT_TOKEN_SENTINEL";
     const ws = makeGitWorkspace({
       git: makeNodeGit(),
-      authToken: async () => TOKEN,
+      authToken: async () => "ghs_unused",
       tmpRoot,
       remoteUrl: () => pathToFileURL(repoDir).href,
     });
 
     const missingSha = "f".repeat(40); // valid hex, but not a commit in the origin
+    // Real git fails the fetch; the workspace surfaces a fixed-message WorkspaceError (by design its
+    // message is a literal — the token-redaction property is proven on the success path above and in
+    // git-workspace.test.ts's stderr-bearing case, not here).
     await expect(ws.checkout({ owner: "o", repo: "r", headSha: missingSha })).rejects.toMatchObject({
       name: "WorkspaceError",
     });
-    // Whatever git printed, our error must not carry the token (FR-006) — real git, real failure.
-    try {
-      await ws.checkout({ owner: "o", repo: "r", headSha: missingSha });
-    } catch (e) {
-      expect((e as Error).message).not.toContain(TOKEN);
-    }
   });
 });
