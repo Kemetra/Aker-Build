@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "project": { "name": "tenantguard", "type": "cli-kernel" },
+  "paths": {
+    "exclude": [
+      "benchmark/**",
+      "packages/gates/tests/fixtures/**",
+      "packages/scanner/tests/fixtures/**",
+      "examples/**"
+    ]
+  }
+}
