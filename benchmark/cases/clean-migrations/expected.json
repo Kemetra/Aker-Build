@@ -1,0 +1,5 @@
+{
+  "description": "Additive migration with a DEFAULT. G3 applies (migration surface exists) and must fire nothing.",
+  "gates_under_test": ["TG-G3"],
+  "expected_findings": []
+}

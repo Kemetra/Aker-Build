@@ -1,0 +1,7 @@
+{
+  "description": "Destructive migration (DROP TABLE) fires G3 at confirmed.",
+  "gates_under_test": ["TG-G3"],
+  "expected_findings": [
+    { "gate_id": "TG-G3", "path": "migrations/001_drop_legacy.sql", "tier": "confirmed" }
+  ]
+}
