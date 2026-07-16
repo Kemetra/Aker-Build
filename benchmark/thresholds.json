@@ -1,5 +1,13 @@
 {
+  "TG-G3": {
+    "confirmed": { "min_precision": 0.9, "min_recall": 0.85 },
+    "suspected": { "min_recall": 0.85 }
+  },
   "TG-G4": {
     "confirmed": { "min_precision": 0.9, "min_recall": 0.85 }
+  },
+  "TG-G5": {
+    "confirmed": { "min_precision": 0.9, "min_recall": 0.85 },
+    "suspected": { "min_recall": 0.85 }
   }
 }
