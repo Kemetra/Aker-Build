@@ -1,0 +1,5 @@
+{
+  "description": "Query is tenant-scoped on the same line. G4 must fire nothing.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": []
+}

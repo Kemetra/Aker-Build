@@ -1,0 +1,5 @@
+{
+  "description": "Logging with no secret-named values. G4 must fire nothing.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": []
+}

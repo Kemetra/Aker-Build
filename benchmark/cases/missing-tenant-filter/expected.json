@@ -1,0 +1,7 @@
+{
+  "description": "A DB query with no tenant token on the query line. Ground truth: missing tenant filter. Fires G4 at suspected (same-line heuristic cannot prove absence until W3).",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": [
+    { "gate_id": "TG-G4", "path": "src/db.ts", "tier": "suspected" }
+  ]
+}
