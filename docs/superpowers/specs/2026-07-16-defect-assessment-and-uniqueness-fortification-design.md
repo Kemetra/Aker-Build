@@ -116,7 +116,9 @@ LLM-review competitor can copy without rebuilding the whole kernel. Own spec cyc
   are reported, never swallowed.
 
 ## Success criteria
-1. Benchmark: ≥12 cases, thresholds on 4 gates, scorecard visible in README.
+1. Benchmark: ≥12 cases, thresholds on the 3 risk-emitting evidence-fed gates
+   (G3/G4/G5; G2 emits only needs_verification in v0 — it joins when 007 diff
+   evidence lands), scorecard visible in README.
 2. The multi-line Prisma tenant-filter case passes (D3 dead).
 3. Dogfood PRs show inline Checks annotations (D5 dead).
 4. `npx tenantguard scan` works from a clean machine (D1 dead).
