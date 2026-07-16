@@ -42,7 +42,7 @@ describe("detectDataAccess", () => {
       path: "users.ts",
       line: 1,
       signal: "no_tenant_filter",
-      confidence: "high",
+      confidence: "medium",
     });
   });
 
@@ -72,6 +72,31 @@ describe("detectDataAccess", () => {
   it("skips non-source files and unreadable paths without throwing", () => {
     const root = fixture({ "data.json": `{"db.user.findMany": true}\n` });
     expect(detectDataAccess(root, ["data.json", "missing.ts"])).toEqual([]);
+  });
+
+  it("classifies a multi-line ORM call with the tenant token in the statement window as tenant_scoped (medium)", () => {
+    const root = fixture({
+      "invoices.ts": `export function list(prisma, tenantId) {\n  return prisma.invoice.findMany({\n    where: { tenantId },\n  });\n}\n`,
+    });
+    const ev = detectDataAccess(root, ["invoices.ts"]);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]).toMatchObject({ line: 2, signal: "tenant_scoped", confidence: "medium" });
+  });
+
+  it("ignores bare array/Map method calls (no db-ish receiver)", () => {
+    const root = fixture({
+      "util.ts": `export const active = (users) => users.find((u) => u.active);\nexport const drop = (m, k) => m.delete(k);\n`,
+    });
+    expect(detectDataAccess(root, ["util.ts"])).toEqual([]);
+  });
+
+  it("still counts raw SQL regardless of receiver", () => {
+    const root = fixture({
+      "raw.ts": `export const q = () => run("SELECT id FROM invoices WHERE status = 'open'");\n`,
+    });
+    const ev = detectDataAccess(root, ["raw.ts"]);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]?.signal).toBe("no_tenant_filter");
   });
 });
 

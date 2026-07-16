@@ -68,15 +68,17 @@ function run(ctx: GateContext): Finding[] {
     }
   }
 
-  // Missing tenant filter (P1 data_access evidence, consumed at last). The scanner's same-line
-  // heuristic cannot PROVE the filter is absent (it may sit on the next line — spec D3), so this
-  // emits medium confidence (→ suspected, advisory-only) until W3's windowed detection can prove
-  // absence. Never confirmed from this signal alone.
+  // Missing tenant filter (P1 data_access evidence, consumed at last). The scanner (W3a) is
+  // receiver-gated to common DB handle names plus raw SQL and scans a 5-line statement window,
+  // but a window cannot PROVE the filter is absent (a neighboring statement's tenant token can
+  // fall inside it), so this emits medium confidence (→ suspected, advisory-only). Upgrading to
+  // confirmed awaits a proven FP≈0 record on the benchmark corpus (plan decision 4). Never
+  // confirmed from this signal alone.
   for (const ev of ctx.projectMap.data_access ?? []) {
     if (ev.signal !== "no_tenant_filter" || !ev.path) continue;
     findings.push(
       risk(ID, "high", [
-        lineEvidence(ev.path, ev.line ?? 1, "DB query without a tenant filter (same-line heuristic)", "medium"),
+        lineEvidence(ev.path, ev.line ?? 1, "DB query without a tenant filter (statement-window heuristic)", "medium"),
       ]),
     );
   }

@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Published CLI entry for the benchmark. NOTE: like the `tenantguard` CLI bin, this uses `.js`
 // import specifiers that resolve to `.ts` sources and therefore requires a TS-aware runtime
-// (a build step, or `tsx`) — plain `node` does not do `.js`→`.ts` resolution. In-repo, the
-// benchmark + its CI regression gate run via vitest (`pnpm test`), which is the repo's working
-// TS execution path; see packages/eval/tests/ci-gate.test.ts. This file mirrors the CLI bin so a
-// published/built package exposes a `tenantguard-benchmark` command.
+// (a build step, or `tsx`) — plain `node` does not do `.js`→`.ts` resolution. In-repo, this bin
+// is exercised two ways: the vitest CI gate (`packages/eval/tests/ci-gate.test.ts`, run via
+// `pnpm test`) asserts thresholds in-process, and the dogfood workflow's `benchmark` job runs
+// this bin directly on PRs via `tsx`. This file mirrors the CLI bin so a published/built package
+// exposes a `tenantguard-benchmark` command.
 import { resolve } from "node:path";
 import { runBenchmarkSuite } from "./run.js";
 import { renderMarkdown } from "./report.js";

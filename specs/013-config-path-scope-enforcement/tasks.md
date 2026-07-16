@@ -28,6 +28,6 @@ description: "Task list for 013-config-path-scope-enforcement"
 
 ## Phase 4: Validation
 
-- [ ] T014 Run focused package tests.
-- [ ] T015 Run `pnpm test` and `pnpm typecheck`.
-- [ ] T016 Final status confirms no forbidden surfaces or unrelated changes.
+- [x] T014 Run focused package tests.
+- [x] T015 Run `pnpm test` and `pnpm typecheck`.
+- [x] T016 Final status confirms no forbidden surfaces or unrelated changes.

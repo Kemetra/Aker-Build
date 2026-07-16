@@ -25,7 +25,7 @@ describe("G4 consumes project-map data_access evidence", () => {
     const { repoRoot, outDir } = gatesFixture("data-access");
     const ctx = buildContext(repoRoot, outDir);
     const findings = g4Security.run(ctx);
-    const onLine6 = findings.filter((f) => f.evidence.some((e) => e.line === 6));
-    expect(onLine6).toHaveLength(0);
+    const onLine9 = findings.filter((f) => f.evidence.some((e) => e.line === 9));
+    expect(onLine9).toHaveLength(0);
   });
 });
