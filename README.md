@@ -44,6 +44,13 @@ multi-line ORM false positive documented in earlier scorecards is fixed by
 W3a's windowed, receiver-gated detector; the corpus pins both behaviors
 (`multiline-tenant-scope`, `bare-array-method`) so they cannot regress silently.
 
+Known limitations (deliberate v0 tradeoffs, W3b scope): data-access detection is
+receiver-gated to common DB handle names plus raw SQL, so model-first ORM calls
+(e.g. Mongoose-style `User.findOne(`) and unlisted receivers are not yet
+covered; and the 5-line statement window can classify an unscoped query as
+scoped when a neighboring statement's tenant token falls inside the window.
+Framework signature packs and a coverage-honesty field close these in W3b.
+
 Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.tenantguard/benchmark-report.{json,md}`).
 
 ## Quickstart
