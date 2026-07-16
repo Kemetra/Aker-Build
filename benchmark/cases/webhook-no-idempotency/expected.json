@@ -1,0 +1,7 @@
+{
+  "description": "Webhook handler with no signature verification or idempotency tracking fires G5 at suspected.",
+  "gates_under_test": ["TG-G5"],
+  "expected_findings": [
+    { "gate_id": "TG-G5", "path": "src/webhook.ts", "tier": "suspected" }
+  ]
+}
