@@ -26,7 +26,7 @@ TenantGuard's MVP CLI chain is implemented and in release-readiness hardening. T
 ![benchmark](https://img.shields.io/badge/G4_confirmed_recall-100%25-brightgreen)
 
 TenantGuard's detection quality is measured, not asserted. A labeled corpus of
-synthetic multi-tenant failure cases (`benchmark/cases/`, 14 cases) runs through
+synthetic multi-tenant failure cases (`benchmark/cases/`, 15 cases) runs through
 the real `scan → gates` pipeline; precision/recall are computed per gate ×
 confidence tier, and CI fails if they drop below `benchmark/thresholds.json`.
 
@@ -35,13 +35,14 @@ confidence tier, and CI fails if they drop below `benchmark/thresholds.json`.
 | TG-G3 Migration Safety | confirmed | 100% | 100% |
 | TG-G3 Migration Safety | suspected | 100% | 100% |
 | TG-G4 Tenant Isolation | confirmed | 100% | 100% |
-| TG-G4 Tenant Isolation | suspected | 67% | 100% |
+| TG-G4 Tenant Isolation | suspected | 100% | 100% |
 | TG-G5 Idempotency | suspected | 100% | 100% |
 
 The `suspected` tier is the honest-uncertainty channel: it carries findings the
-engine cannot yet structurally prove (they advise, never block). Known gap: one
-suspected-tier false positive from multi-line ORM tenant filters, fixed by the
-windowed detector (spec W3).
+engine cannot yet structurally prove (they advise, never block). The
+multi-line ORM false positive documented in earlier scorecards is fixed by
+W3a's windowed, receiver-gated detector; the corpus pins both behaviors
+(`multiline-tenant-scope`, `bare-array-method`) so they cannot regress silently.
 
 Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.tenantguard/benchmark-report.{json,md}`).
 
