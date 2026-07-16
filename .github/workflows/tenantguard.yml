@@ -65,3 +65,22 @@ jobs:
             echo "::error::TenantGuard: $crit critical gate finding(s) — failing the check."
             exit 1
           fi
+
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node + pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+
+      - name: Install workspace deps
+        run: corepack pnpm install --frozen-lockfile
+
+      # Runs the labeled corpus through the real scan → gates pipeline and fails
+      # on any benchmark/thresholds.json breach (detection-quality regression gate).
+      - name: Run benchmark regression gate
+        run: corepack pnpm dlx tsx packages/eval/src/bin.ts

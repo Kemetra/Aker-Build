@@ -1,0 +1,5 @@
+{
+  "description": "GROUND TRUTH: tenant-scoped (filter on the line after findMany). The current same-line detector misreads this as no_tenant_filter (spec defect D3), so the scorecard shows one suspected-tier FP here until W3 lands windowed detection. Expected stays [] on purpose — benchmarks encode truth, not current behavior.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": []
+}

@@ -1,0 +1,5 @@
+{
+  "description": "Webhook handler protected by signature verification. G5 must fire nothing.",
+  "gates_under_test": ["TG-G5"],
+  "expected_findings": []
+}

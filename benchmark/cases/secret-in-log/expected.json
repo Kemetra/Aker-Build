@@ -1,0 +1,7 @@
+{
+  "description": "A secret-named value printed via console.log fires G4 at confirmed (high confidence), severity critical.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": [
+    { "gate_id": "TG-G4", "path": "src/login.ts", "tier": "confirmed" }
+  ]
+}

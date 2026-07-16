@@ -1,0 +1,7 @@
+{
+  "description": "NOT NULL column added without a DEFAULT fires G3 at suspected (medium).",
+  "gates_under_test": ["TG-G3"],
+  "expected_findings": [
+    { "gate_id": "TG-G3", "path": "migrations/001_add_plan.sql", "tier": "suspected" }
+  ]
+}

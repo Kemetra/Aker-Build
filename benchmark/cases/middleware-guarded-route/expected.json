@@ -1,0 +1,7 @@
+{
+  "description": "Route guarded by file-level middleware (router.use(requireAuth)). G4 cannot prove protection from the route line, so it SHOULD fire at suspected (advisory) — and must NOT fire at confirmed. A confirmed firing scores as confirmed-tier FP and breaches the G4 precision floor.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": [
+    { "gate_id": "TG-G4", "path": "apps/api/routes.ts", "tier": "suspected" }
+  ]
+}

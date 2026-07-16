@@ -20,6 +20,31 @@ TenantGuard's MVP CLI chain is implemented and in release-readiness hardening. T
 - TenantGuard runs against its own repo via a report-only GitHub Action dogfooding workflow.
 - GitHub App, hosted dashboard, auto-fix, auto-commit, and auto-merge remain deferred.
 
+## Benchmark scorecard
+
+![benchmark](https://img.shields.io/badge/G4_confirmed_precision-100%25-brightgreen)
+![benchmark](https://img.shields.io/badge/G4_confirmed_recall-100%25-brightgreen)
+
+TenantGuard's detection quality is measured, not asserted. A labeled corpus of
+synthetic multi-tenant failure cases (`benchmark/cases/`, 14 cases) runs through
+the real `scan → gates` pipeline; precision/recall are computed per gate ×
+confidence tier, and CI fails if they drop below `benchmark/thresholds.json`.
+
+| Gate | Tier | Precision | Recall |
+|---|---|---|---|
+| TG-G3 Migration Safety | confirmed | 100% | 100% |
+| TG-G3 Migration Safety | suspected | 100% | 100% |
+| TG-G4 Tenant Isolation | confirmed | 100% | 100% |
+| TG-G4 Tenant Isolation | suspected | 67% | 100% |
+| TG-G5 Idempotency | suspected | 100% | 100% |
+
+The `suspected` tier is the honest-uncertainty channel: it carries findings the
+engine cannot yet structurally prove (they advise, never block). Known gap: one
+suspected-tier false positive from multi-line ORM tenant filters, fixed by the
+windowed detector (spec W3).
+
+Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.tenantguard/benchmark-report.{json,md}`).
+
 ## Quickstart
 
 From a fresh checkout:
