@@ -88,6 +88,16 @@ function integer(
   if (raw === undefined) return fallback;
   if (!/^[0-9]+$/u.test(raw)) throw new RuntimeConfigError(name);
   const value = Number(raw);
-  if (!Number.isSafeInteger(value) || value < min || value > max) throw new RuntimeConfigError(name);
+  assertSafeInteger(value, name);
+  assertInRange(value, min, max, name);
   return value;
+}
+
+function assertSafeInteger(value: number, name: string): void {
+  if (!Number.isSafeInteger(value)) throw new RuntimeConfigError(name);
+}
+
+function assertInRange(value: number, min: number, max: number, name: string): void {
+  if (value < min) throw new RuntimeConfigError(name);
+  if (value > max) throw new RuntimeConfigError(name);
 }

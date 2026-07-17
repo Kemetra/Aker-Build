@@ -49,17 +49,8 @@ describe("managed Git workspace", () => {
     const git = recordingGit();
     const workspace = makeGitWorkspace({ git, authToken: async () => TOKEN, tmpRoot: tempRoot(), gitTimeoutMs: 3210 });
     await workspace.checkout({ owner: "org", repo: "repo", headSha: "a".repeat(40) });
-
-    const argv = git.calls.map((call) => commandText(call.command)).join(" ");
-    expect(argv).not.toContain(TOKEN);
-    expect(argv).not.toContain("http.extraheader");
-    expect(argv).toContain("https://github.com/org/repo.git");
-    const fetch = git.calls.find((call) => call.command.kind === "fetch");
-    expect(fetch?.options?.timeoutMs).toBe(3210);
-    expect(fetch?.options?.env?.GIT_CONFIG_COUNT).toBe("1");
-    expect(fetch?.options?.env?.GIT_CONFIG_KEY_0).toBe("http.extraheader");
-    expect(fetch?.options?.env?.GIT_CONFIG_VALUE_0).not.toContain(TOKEN);
-    expect(fetch?.options?.env?.GIT_CONFIG_VALUE_0).toContain("AUTHORIZATION: basic ");
+    assertCommandBoundary(git);
+    assertFetchAuthentication(git);
   });
 
   it("uses a marked wrapper and returns its separate repo child", async () => {
@@ -114,6 +105,22 @@ describe("managed Git workspace", () => {
     expect(existsSync(unrelated)).toBe(true);
   });
 });
+
+function assertCommandBoundary(git: ReturnType<typeof recordingGit>): void {
+  const argv = git.calls.map((call) => commandText(call.command)).join(" ");
+  expect(argv).not.toContain(TOKEN);
+  expect(argv).not.toContain("http.extraheader");
+  expect(argv).toContain("https://github.com/org/repo.git");
+}
+
+function assertFetchAuthentication(git: ReturnType<typeof recordingGit>): void {
+  const fetch = git.calls.find((call) => call.command.kind === "fetch");
+  expect(fetch?.options?.timeoutMs).toBe(3210);
+  expect(fetch?.options?.env?.GIT_CONFIG_COUNT).toBe("1");
+  expect(fetch?.options?.env?.GIT_CONFIG_KEY_0).toBe("http.extraheader");
+  expect(fetch?.options?.env?.GIT_CONFIG_VALUE_0).not.toContain(TOKEN);
+  expect(fetch?.options?.env?.GIT_CONFIG_VALUE_0).toContain("AUTHORIZATION: basic ");
+}
 
 function commandText(command: GitCommand): string {
   if (command.kind === "init") return `init ${command.repositoryPath}`;

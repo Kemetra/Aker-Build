@@ -9,6 +9,7 @@ import {
   realpathSync,
   rmSync,
   writeFileSync,
+  type Dirent,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -186,34 +187,66 @@ export function cleanupStaleWorkspaces(args: {
 }): { removed: number; failed: number } {
   const root = resolve(args.tmpRoot);
   if (!existsSync(root)) return { removed: 0, failed: 0 };
-  const resolvedRoot = realpathSync(root);
-  const nowMs = args.nowMs ?? Date.now();
-  let removed = 0;
-  let failed = 0;
+  const context: CleanupContext = { root: realpathSync(root), maxAgeMs: args.maxAgeMs, nowMs: args.nowMs ?? Date.now() };
+  return readdirSync(context.root, { withFileTypes: true }).reduce(cleanupWorkspaceEntry(context), { removed: 0, failed: 0 });
+}
 
-  for (const entry of readdirSync(resolvedRoot, { withFileTypes: true })) {
-    if (!entry.name.startsWith(WORKSPACE_PREFIX) || !entry.isDirectory() || entry.isSymbolicLink()) continue;
-    const candidate = join(resolvedRoot, entry.name);
-    let marker: Marker;
-    try {
-      const wrapper = realpathSync(candidate);
-      if (!isContained(resolvedRoot, wrapper)) continue;
-      try {
-        marker = readMarker(wrapper);
-      } catch {
-        // Prefix alone does not confer ownership. Unmarked or invalid wrappers are ignored.
-        continue;
-      }
-      const createdAt = Date.parse(marker.createdAt);
-      if (!Number.isFinite(createdAt) || nowMs - createdAt <= args.maxAgeMs) continue;
-      validateOwnedWrapper(wrapper, resolvedRoot, marker.nonce);
-      rmSync(wrapper, { recursive: true, force: true });
-      removed += 1;
-    } catch {
-      failed += 1;
-    }
+interface CleanupContext {
+  root: string;
+  maxAgeMs: number;
+  nowMs: number;
+}
+
+interface CleanupStats {
+  removed: number;
+  failed: number;
+}
+
+function cleanupWorkspaceEntry(context: CleanupContext): (stats: CleanupStats, entry: Dirent) => CleanupStats {
+  return (stats, entry) => updateCleanupStats(stats, cleanWorkspaceEntry(context, entry));
+}
+
+function updateCleanupStats(stats: CleanupStats, result: "removed" | "failed" | "ignored"): CleanupStats {
+  if (result === "removed") return { ...stats, removed: stats.removed + 1 };
+  if (result === "failed") return { ...stats, failed: stats.failed + 1 };
+  return stats;
+}
+
+function cleanWorkspaceEntry(context: CleanupContext, entry: Dirent): "removed" | "failed" | "ignored" {
+  const candidate = workspaceCandidate(context.root, entry);
+  if (!candidate) return "ignored";
+  try {
+    const workspace = ownedWorkspace(candidate, context.root);
+    if (!workspace || !isStale(workspace.marker, context)) return "ignored";
+    validateOwnedWrapper(workspace.wrapper, context.root, workspace.marker.nonce);
+    rmSync(workspace.wrapper, { recursive: true, force: true });
+    return "removed";
+  } catch {
+    return "failed";
   }
-  return { removed, failed };
+}
+
+function workspaceCandidate(root: string, entry: Dirent): string | null {
+  if (!entry.name.startsWith(WORKSPACE_PREFIX)) return null;
+  if (!entry.isDirectory()) return null;
+  if (entry.isSymbolicLink()) return null;
+  return join(root, entry.name);
+}
+
+function ownedWorkspace(candidate: string, root: string): { wrapper: string; marker: Marker } | null {
+  const wrapper = realpathSync(candidate);
+  if (!isContained(root, wrapper)) return null;
+  try {
+    return { wrapper, marker: readMarker(wrapper) };
+  } catch {
+    // Prefix alone does not confer ownership. Unmarked or invalid wrappers are ignored.
+    return null;
+  }
+}
+
+function isStale(marker: Marker, context: CleanupContext): boolean {
+  const createdAt = Date.parse(marker.createdAt);
+  return Number.isFinite(createdAt) && context.nowMs - createdAt > context.maxAgeMs;
 }
 
 export class WorkspaceError extends Error {

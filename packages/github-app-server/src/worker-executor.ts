@@ -199,22 +199,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isWorkerResult(value: unknown): value is WorkerResultMessage {
-  if (!value || typeof value !== "object") return false;
+  if (!isRecord(value)) return false;
   const message = value as Partial<WorkerResultMessage>;
-  if (
-    message.type !== "result" ||
-    (message.code !== "success" && message.code !== "failure" && message.code !== "neutral" && message.code !== "worker_failed")
-  ) return false;
-  if (!isCount(message.githubRetries)) return false;
-  if (message.incompleteReason !== undefined && !INCOMPLETE_REASONS.has(message.incompleteReason)) return false;
-  if (message.code !== "neutral" && message.incompleteReason !== undefined) return false;
-  const usage = message.usage;
-  return (
-    !!usage &&
-    isCount(usage.filesConsidered) &&
-    isCount(usage.filesRead) &&
-    isCount(usage.bytesRead)
-  );
+  return message.type === "result" && isWorkerOutcome(message.code) && hasValidResultDetails(message);
+}
+
+function isWorkerOutcome(value: unknown): value is WorkerOutcomeCode {
+  return value === "success" || value === "failure" || value === "neutral" || value === "worker_failed";
+}
+
+function hasValidResultDetails(message: Partial<WorkerResultMessage>): boolean {
+  return isCount(message.githubRetries) && hasValidIncompleteReason(message) && isScanUsage(message.usage);
+}
+
+function hasValidIncompleteReason(message: Partial<WorkerResultMessage>): boolean {
+  if (message.incompleteReason === undefined) return true;
+  if (message.code !== "neutral") return false;
+  return INCOMPLETE_REASONS.has(message.incompleteReason);
+}
+
+function isScanUsage(value: unknown): value is ScanUsage {
+  if (!isRecord(value)) return false;
+  return isCount(value.filesConsidered) && isCount(value.filesRead) && isCount(value.bytesRead);
 }
 
 const EMPTY_USAGE: ScanUsage = { filesConsidered: 0, filesRead: 0, bytesRead: 0 };

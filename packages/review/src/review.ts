@@ -140,7 +140,7 @@ function reviewLocalDiffV1(opts: ReviewOptions, deps: ReviewDeps): ReviewReport 
     ? checkScope(scopedChanged, loadQueueItem(out, opts.item))
     : SCOPE_SKIPPED;
 
-  return assemble("local-diff", changed, attributable, scope, null);
+  return assemble({ mode: "local-diff", changed, attributable, scope, githubAvailable: null });
 }
 
 function scopeForChangedFiles(changed: string[], out: string, item?: string): ScopeResult {
@@ -183,40 +183,42 @@ function gateSortKey(f: AttributableFinding): string {
   return `${f.gate_id} ${first?.path ?? ""} ${first?.signal ?? ""} ${f.status}`;
 }
 
+export interface AssembleReviewInput {
+  mode: ReviewReport["mode"];
+  changed: string[];
+  attributable: readonly AttributableFinding[];
+  scope: ScopeResult;
+  githubAvailable: boolean | null;
+  prMeta?: PrMetadata;
+}
+
 /** Assemble the final report from the parts. Findings ordered deterministically (code-unit). */
-export function assemble(
-  mode: ReviewReport["mode"],
-  changed: string[],
-  attributable: readonly AttributableFinding[],
-  scope: ScopeResult,
-  githubAvailable: boolean | null,
-  prMeta?: PrMetadata,
-): ReviewReport {
+export function assemble(input: AssembleReviewInput): ReviewReport {
   // Code-unit sort (not localeCompare) so re-runs over the same set are byte-identical (SC-007),
   // independent of the order findings arrive in.
-  const gateFindings: ReviewFinding[] = [...attributable]
+  const gateFindings: ReviewFinding[] = [...input.attributable]
     .sort((a, b) => {
       const ka = gateSortKey(a);
       const kb = gateSortKey(b);
       return ka < kb ? -1 : ka > kb ? 1 : 0;
     })
     .map((f) => ({ ...f }));
-  const scopeFindings: ReviewFinding[] = scope.violations.map((v) => ({
+  const scopeFindings: ReviewFinding[] = input.scope.violations.map((v) => ({
     kind: "scope" as const,
     file: v.file,
     reason: v.reason,
-    item_id: scope.item_id ?? "",
+    item_id: input.scope.item_id ?? "",
   }));
   const findings = [...gateFindings, ...scopeFindings];
 
   return {
     schema_version: 1,
-    mode,
-    verdict: decideVerdict(attributable, scope),
-    changed_files: [...changed],
+    mode: input.mode,
+    verdict: decideVerdict(input.attributable, input.scope),
+    changed_files: [...input.changed],
     findings,
-    scope,
-    github_available: githubAvailable,
-    ...(prMeta ? { pr: prMeta } : {}),
+    scope: input.scope,
+    github_available: input.githubAvailable,
+    ...(input.prMeta ? { pr: input.prMeta } : {}),
   };
 }

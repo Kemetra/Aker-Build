@@ -124,7 +124,7 @@ function reviewPrV1(prNumber: number, opts: ReviewOptions, deps: PrReviewDeps): 
     ? checkScope(scopedChanged, loadQueueItem(out, opts.item))
     : SCOPE_SKIPPED;
 
-  return assemble("pr", changed, attributable, scope, true, prMeta);
+  return assemble({ mode: "pr", changed, attributable, scope, githubAvailable: true, prMeta });
 }
 
 function hasExactOids(

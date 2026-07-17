@@ -237,14 +237,19 @@ function pathFromMarker(raw: string, marker: string): string | null {
 
 function validateRelativePath(raw: string): string | null | false {
   const path = normalizePath(raw);
-  if (
-    path.length === 0
-    || isAbsolute(path)
-    || win32.isAbsolute(path)
-    || /[\u0000-\u001f\u007f]/u.test(path)
-    || path.split("/").some((part) => part === ".." || part.length === 0)
-  ) return false;
-  return path;
+  return isSafeDiffPath(path) ? path : false;
+}
+
+function isSafeDiffPath(path: string): boolean {
+  if (path.length === 0) return false;
+  if (isAbsolute(path)) return false;
+  if (win32.isAbsolute(path)) return false;
+  if (/[\u0000-\u001f\u007f]/u.test(path)) return false;
+  return path.split("/").every(isSafeDiffPathPart);
+}
+
+function isSafeDiffPathPart(part: string): boolean {
+  return part !== ".." && part.length > 0;
 }
 
 function ensureFile(files: Map<string, ChangedFileRanges>, path: string): ChangedFileRanges {

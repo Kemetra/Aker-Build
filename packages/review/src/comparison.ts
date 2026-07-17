@@ -160,14 +160,30 @@ function withComparison(
 }
 
 function sourceContext(root: string, path: string, line: number | null, readSource: SourceReader): string {
-  if (!path || line == null || line < 1 || !isSafeRelativePath(path)) return "unavailable";
+  const location = sourceLocation(path, line);
+  if (!location) return "unavailable";
+  const source = readSourceOrNull(root, location.path, readSource);
+  return source === null ? "unavailable" : contextWindow(source, location.line);
+}
+
+function sourceLocation(path: string, line: number | null): { path: string; line: number } | null {
+  if (!path) return null;
+  if (line == null) return null;
+  if (line < 1) return null;
+  return isSafeRelativePath(path) ? { path, line } : null;
+}
+
+function readSourceOrNull(root: string, path: string, readSource: SourceReader): string | null {
   let source: string | null;
   try {
     source = readSource(root, path);
   } catch {
-    return "unavailable";
+    return null;
   }
-  if (source == null) return "unavailable";
+  return source;
+}
+
+function contextWindow(source: string, line: number): string {
   const lines = source.replace(/\r\n?/gu, "\n").split("\n");
   const start = Math.max(0, line - 1 - CONTEXT_RADIUS);
   const end = Math.min(lines.length, line + CONTEXT_RADIUS);

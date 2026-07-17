@@ -91,7 +91,12 @@ export async function run(event: PullRequestEvent, deps: RunnerDeps): Promise<An
       repo: event.repo,
       headSha: event.headSha,
     });
-    snapshots = createCheckoutSnapshots(baseRepoRoot, headRepoRoot, event.baseSha, event.headSha);
+    snapshots = createCheckoutSnapshots({
+      baseRepoRoot,
+      headRepoRoot,
+      expectedBaseSha: event.baseSha,
+      expectedHeadSha: event.headSha,
+    });
     const metadata = deps.prMetadata?.(event.prNumber) ?? {
       title: `Pull request #${event.prNumber}`,
       state: "unknown",
