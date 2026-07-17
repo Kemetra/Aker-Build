@@ -1,12 +1,12 @@
-# TenantGuard dogfoods itself: on every PR it runs its own scan → review-pr over
+# Aker Build dogfoods itself: on every PR it runs its own scan → review-pr over
 # the PR's changed files and publishes the verdict (Ready / Not Ready / Needs
 # Verification) to the run summary. Report-only (008's default) — findings never
-# fail the check; only a TenantGuard *error* (non-zero exit) red-Xes the job.
+# fail the check; only an Aker Build *error* (non-zero exit) red-Xes the job.
 #
-# This is the AC-008 consumer opt-in from spec 008, with TenantGuard as its own
+# This is the AC-008 consumer opt-in from spec 008, with Aker Build as its own
 # first consumer. The tooling IS this repo, so the CLI runs directly via tsx from
 # the checkout (no published binary yet — see ADR-007).
-name: TenantGuard
+name: Aker Build
 
 on:
   pull_request:
@@ -30,39 +30,39 @@ jobs:
           node-version: 22          # pnpm@11 (corepack-pinned) requires Node >=22.13
       - run: corepack enable
 
-      - name: Install workspace deps           # so @tenantguard/* imports resolve under tsx
+      - name: Install workspace deps           # so @aker-build/* imports resolve under tsx
         run: corepack pnpm install --frozen-lockfile
 
       # PR-NUMBER mode (not --local-diff): changed files come from `gh pr view`
       # (relative to the PR base). --local-diff would be empty after a CI checkout
       # (working tree == HEAD) and falsely report "Ready" on every PR.
-      - name: Run TenantGuard (scan → review-pr <number>)
+      - name: Run Aker Build (scan → review-pr <number>)
         env:
           GH_TOKEN: ${{ github.token }}        # `gh` auth in CI (no stored token)
         run: |
-          corepack pnpm dlx tsx packages/cli/src/bin.ts scan --out .tenantguard
+          corepack pnpm dlx tsx packages/cli/src/bin.ts scan --out .aker-build
           corepack pnpm dlx tsx packages/cli/src/bin.ts \
-            review-pr "${{ github.event.pull_request.number }}" --out .tenantguard
+            review-pr "${{ github.event.pull_request.number }}" --out .aker-build
 
       - name: Publish verdict to the run summary
         if: always()
         run: |
-          if [ -f .tenantguard/review.md ]; then
-            cat .tenantguard/review.md >> "$GITHUB_STEP_SUMMARY"
+          if [ -f .aker-build/review.md ]; then
+            cat .aker-build/review.md >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "TenantGuard did not produce a review (see the step logs)." >> "$GITHUB_STEP_SUMMARY"
+            echo "Aker Build did not produce a review (see the step logs)." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       # Report-only: critical-gate-blocking is OFF. To enable it later, set the repo
-      # variable TENANTGUARD_FAIL_ON_CRITICAL=true (Settings → Variables) — then a
+      # variable AKER_BUILD_FAIL_ON_CRITICAL=true (Settings → Variables) — then a
       # severity:"critical" finding fails the check (008 contracts/action-inputs.md).
       - name: Enforce critical gates (opt-in)
-        if: ${{ vars.TENANTGUARD_FAIL_ON_CRITICAL == 'true' }}
+        if: ${{ vars.AKER_BUILD_FAIL_ON_CRITICAL == 'true' }}
         run: |
-          crit=$(jq '[.findings[] | select(.severity == "critical")] | length' .tenantguard/review.json)
+          crit=$(jq '[.findings[] | select(.severity == "critical")] | length' .aker-build/review.json)
           echo "critical findings: $crit"
           if [ "$crit" -gt 0 ]; then
-            echo "::error::TenantGuard: $crit critical gate finding(s) — failing the check."
+            echo "::error::Aker Build: $crit critical gate finding(s) — failing the check."
             exit 1
           fi
 

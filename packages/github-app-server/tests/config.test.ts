@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { loadCredentials, MissingCredentialError } from "../src/config.js";
 
 const FULL = {
-  TENANTGUARD_APP_ID: "123",
-  TENANTGUARD_APP_PRIVATE_KEY: "PRIVATE-KEY-SENTINEL",
-  TENANTGUARD_WEBHOOK_SECRET: "WEBHOOK-SENTINEL",
+  AKER_BUILD_APP_ID: "123",
+  AKER_BUILD_APP_PRIVATE_KEY: "PRIVATE-KEY-SENTINEL",
+  AKER_BUILD_WEBHOOK_SECRET: "WEBHOOK-SENTINEL",
 };
 
 describe("loadCredentials (FR-005/FR-007)", () => {
@@ -16,9 +16,9 @@ describe("loadCredentials (FR-005/FR-007)", () => {
   });
 
   it.each([
-    "TENANTGUARD_APP_ID",
-    "TENANTGUARD_APP_PRIVATE_KEY",
-    "TENANTGUARD_WEBHOOK_SECRET",
+    "AKER_BUILD_APP_ID",
+    "AKER_BUILD_APP_PRIVATE_KEY",
+    "AKER_BUILD_WEBHOOK_SECRET",
   ])("fails fast naming the missing variable %s", (missing) => {
     const env = { ...FULL, [missing]: undefined };
     expect(() => loadCredentials(env)).toThrow(MissingCredentialError);
@@ -30,12 +30,12 @@ describe("loadCredentials (FR-005/FR-007)", () => {
   });
 
   it("treats empty/whitespace as missing", () => {
-    expect(() => loadCredentials({ ...FULL, TENANTGUARD_WEBHOOK_SECRET: "  " })).toThrow(MissingCredentialError);
+    expect(() => loadCredentials({ ...FULL, AKER_BUILD_WEBHOOK_SECRET: "  " })).toThrow(MissingCredentialError);
   });
 
   it("the missing-credential error NEVER contains a credential value (FR-006/FR-007)", () => {
     // Only one present, two missing — assert the present value is not echoed.
-    const env = { TENANTGUARD_APP_PRIVATE_KEY: "PRIVATE-KEY-SENTINEL" };
+    const env = { AKER_BUILD_APP_PRIVATE_KEY: "PRIVATE-KEY-SENTINEL" };
     try {
       loadCredentials(env);
       throw new Error("should have thrown");

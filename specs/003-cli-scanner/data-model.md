@@ -1,7 +1,7 @@
 # Phase 1 Data Model: CLI Scanner
 
 The scanner's own working entities. Its **output** is a `ProjectMap` (defined by 002,
-`@tenantguard/project-map`); this model covers the scanner-internal types and detection rules.
+`@aker-build/project-map`); this model covers the scanner-internal types and detection rules.
 
 ---
 
@@ -12,7 +12,7 @@ One invocation against a target repo path.
 | Field | Type | Meaning |
 |-------|------|---------|
 | `targetPath` | string | Absolute path of the repo being scanned. |
-| `outPath` | string | Designated output path (outside scanned tracked source; default `./.tenantguard/`). |
+| `outPath` | string | Designated output path (outside scanned tracked source; default `./.aker-build/`). |
 | `map` | ProjectMap (002) | The assembled, validated map. |
 | `notes` | RunNote[] | Skips, warnings, insufficient-evidence + flagged-secret signals. |
 | `readOnly` | true | Invariant — the run never mutates scanned files (FR-003). |

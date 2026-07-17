@@ -6,7 +6,7 @@ import { buildReport, renderReportMarkdown, validateReport, writeReportToFiles }
 
 function tempRepo(): { repoRoot: string; outDir: string } {
   const repoRoot = mkdtempSync(join(tmpdir(), "tg-report-repo-"));
-  const outDir = join(repoRoot, ".tenantguard");
+  const outDir = join(repoRoot, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   return { repoRoot, outDir };
 }
@@ -97,7 +97,7 @@ function seedReview(outDir: string): void {
   });
 }
 
-describe("TenantGuard report", () => {
+describe("Aker Build report", () => {
   it("summarizes a full artifact set into valid JSON and Markdown", () => {
     const { repoRoot, outDir } = tempRepo();
     seedProjectMap(outDir);
@@ -117,7 +117,7 @@ describe("TenantGuard report", () => {
     expect(report.spec_kit.present).toBe(true);
 
     const markdown = renderReportMarkdown(report);
-    expect(markdown).toContain("# TenantGuard Report");
+    expect(markdown).toContain("# Aker Build Report");
     expect(markdown).toContain("TG-G4-DEMO-001");
     expect(markdown).toContain("Spec Kit artifacts: 1");
   });
@@ -137,7 +137,7 @@ describe("TenantGuard report", () => {
     const { repoRoot, outDir } = tempRepo();
     seedProjectMap(outDir);
     seedRisks(outDir);
-    writeFileSync(join(repoRoot, "tenantguard.config.json"), JSON.stringify({ version: 1, token: "0123456789abcdef0123456789abcdef" }), "utf8");
+    writeFileSync(join(repoRoot, "aker-build.config.json"), JSON.stringify({ version: 1, token: "0123456789abcdef0123456789abcdef" }), "utf8");
     mkdirSync(join(repoRoot, "specs", "012-demo"), { recursive: true });
     writeFileSync(join(repoRoot, "specs", "012-demo", "spec.md"), "api_key = '0123456789abcdef0123456789abcdef'\n", "utf8");
 
@@ -154,7 +154,7 @@ describe("TenantGuard report", () => {
     const { jsonPath, mdPath, report } = writeReportToFiles(repoRoot, { out: outDir });
 
     expect(JSON.parse(readFileSync(jsonPath, "utf8")).schema_version).toBe(1);
-    expect(readFileSync(mdPath, "utf8")).toContain("# TenantGuard Report");
+    expect(readFileSync(mdPath, "utf8")).toContain("# Aker Build Report");
     expect(report.artifacts.present).toContain("project-map.json");
   });
 });

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make TenantGuard's findings *believed* — derive a confidence tier from existing evidence, make gate confidence honest (fix the G4 file-level false positive + audit), and thread the tier into routing, PR blocking, and config thresholds.
+**Goal:** Make Aker Build's findings *believed* — derive a confidence tier from existing evidence, make gate confidence honest (fix the G4 file-level false positive + audit), and thread the tier into routing, PR blocking, and config thresholds.
 
-**Architecture:** A shared pure `confidenceTier(finding)` in `@tenantguard/gates` collapses a finding's evidence confidences (max rule) into `confirmed`/`suspected`. Gate judgment is made honest (route-precise G4, confidence audit). Three consumers read the tier: the queue scorer (new factor), the review/PR verdict (only `confirmed` blocks), and config per-gate `min_tier` thresholds.
+**Architecture:** A shared pure `confidenceTier(finding)` in `@aker-build/gates` collapses a finding's evidence confidences (max rule) into `confirmed`/`suspected`. Gate judgment is made honest (route-precise G4, confidence audit). Three consumers read the tier: the queue scorer (new factor), the review/PR verdict (only `confirmed` blocks), and config per-gate `min_tier` thresholds.
 
 **Tech Stack:** TypeScript (ESM, `.js` specifiers), Vitest, Zod. pnpm workspace.
 
@@ -20,7 +20,7 @@
 
 ---
 
-### Task 1: Shared `confidenceTier(finding)` in `@tenantguard/gates`
+### Task 1: Shared `confidenceTier(finding)` in `@aker-build/gates`
 
 **Files:**
 - Create: `packages/gates/src/confidence.ts`
@@ -64,7 +64,7 @@ describe("confidenceTier", () => {
 
 - [ ] **Step 2: Run to verify fail**
 
-Run: `pnpm --filter @tenantguard/gates exec vitest run tests/confidence.test.ts`
+Run: `pnpm --filter @aker-build/gates exec vitest run tests/confidence.test.ts`
 Expected: FAIL — cannot import `confidenceTier`.
 
 - [ ] **Step 3: Implement**
@@ -89,7 +89,7 @@ In `packages/gates/src/index.ts`, add: `export { confidenceTier } from "./confid
 
 - [ ] **Step 5: Run to verify pass**
 
-Run: `pnpm --filter @tenantguard/gates exec vitest run tests/confidence.test.ts`
+Run: `pnpm --filter @aker-build/gates exec vitest run tests/confidence.test.ts`
 Expected: PASS (4 tests).
 
 - [ ] **Step 6: Commit**
@@ -184,7 +184,7 @@ describe("G4 route precision", () => {
 
 - [ ] **Step 2: Run to verify fail**
 
-Run: `pnpm --filter @tenantguard/gates exec vitest run tests/g4-route-precision.test.ts`
+Run: `pnpm --filter @aker-build/gates exec vitest run tests/g4-route-precision.test.ts`
 Expected: FAIL — current file-level logic flags both routes / flags guarded ones.
 
 - [ ] **Step 3: Make G4 route-precise**
@@ -214,7 +214,7 @@ Tasks 1/4/5 then routes/blocks on the confidence.)
 
 - [ ] **Step 4: Run to verify pass + existing g4 suite**
 
-Run: `pnpm --filter @tenantguard/gates exec vitest run tests/g4-route-precision.test.ts && pnpm --filter @tenantguard/gates test`
+Run: `pnpm --filter @aker-build/gates exec vitest run tests/g4-route-precision.test.ts && pnpm --filter @aker-build/gates test`
 Expected: PASS. If an existing g4 test asserted the old file-wide behavior, update it deliberately (the old behavior was the bug) and note it in the commit.
 
 - [ ] **Step 5: Commit**
@@ -253,7 +253,7 @@ Adjust only the confidence args that violate the rule. Targeted edits, not rewri
 
 - [ ] **Step 4: Run gates suite**
 
-Run: `pnpm --filter @tenantguard/gates test`
+Run: `pnpm --filter @aker-build/gates test`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -288,7 +288,7 @@ git commit -m "fix(gates): audit evidence confidence to reflect structural vs he
 
 - [ ] **Step 2: Run to verify fail**
 
-Run: `pnpm --filter @tenantguard/queue exec vitest run tests/confidence-routing.test.ts`
+Run: `pnpm --filter @aker-build/queue exec vitest run tests/confidence-routing.test.ts`
 Expected: FAIL.
 
 - [ ] **Step 3: Add the optional field (types + schema)**
@@ -298,7 +298,7 @@ Expected: FAIL.
 
 - [ ] **Step 4: Set it in derive**
 
-In `derive.ts`, import `confidenceTier` from `@tenantguard/gates`; in the item map, add `confidence_tier: confidenceTier(f)`.
+In `derive.ts`, import `confidenceTier` from `@aker-build/gates`; in the item map, add `confidence_tier: confidenceTier(f)`.
 
 - [ ] **Step 5: Add the scoring factor**
 
@@ -308,7 +308,7 @@ In `score.ts`: reduce the `risk` factor weight from 0.2 to 0.1 and add a new fac
 
 - [ ] **Step 6: Run + full queue suite**
 
-Run: `pnpm --filter @tenantguard/queue exec vitest run tests/confidence-routing.test.ts && pnpm --filter @tenantguard/queue test`
+Run: `pnpm --filter @aker-build/queue exec vitest run tests/confidence-routing.test.ts && pnpm --filter @aker-build/queue test`
 Expected: PASS.
 
 - [ ] **Step 7: Commit**
@@ -340,16 +340,16 @@ git commit -m "feat(queue): route by confidence tier (confirmed outranks suspect
 
 - [ ] **Step 3: Run to verify fail**
 
-Run: `pnpm --filter @tenantguard/review exec vitest run tests/confidence-gating.test.ts`
+Run: `pnpm --filter @aker-build/review exec vitest run tests/confidence-gating.test.ts`
 Expected: FAIL (today any attributable risk can flip the verdict).
 
 - [ ] **Step 4: Apply the gating rule**
 
-In `pr.ts`, when computing the verdict, only findings with `confidenceTier(f) === "confirmed"` may drive *Not Ready*. `suspected` findings still render in the report as advisory, but do not flip the verdict. Import `confidenceTier` from `@tenantguard/gates`.
+In `pr.ts`, when computing the verdict, only findings with `confidenceTier(f) === "confirmed"` may drive *Not Ready*. `suspected` findings still render in the report as advisory, but do not flip the verdict. Import `confidenceTier` from `@aker-build/gates`.
 
 - [ ] **Step 5: Run + full review suite**
 
-Run: `pnpm --filter @tenantguard/review exec vitest run tests/confidence-gating.test.ts && pnpm --filter @tenantguard/review test`
+Run: `pnpm --filter @aker-build/review exec vitest run tests/confidence-gating.test.ts && pnpm --filter @aker-build/review test`
 Expected: PASS. Update `risk-blocks.test.ts` if it asserted suspected findings blocking — deliberately.
 
 - [ ] **Step 6: Commit**

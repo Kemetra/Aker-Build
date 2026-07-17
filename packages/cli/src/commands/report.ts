@@ -5,7 +5,7 @@ import {
   renderReportMarkdown,
   InvalidReportError,
   InvalidReportInputError,
-} from "@tenantguard/report";
+} from "@aker-build/report";
 
 export interface ReportCmdOptions {
   out?: string;
@@ -15,7 +15,7 @@ export interface ReportCmdOptions {
   errSink?: (line: string) => void;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the `report` command. Returns an exit code (no process.exit, testable).

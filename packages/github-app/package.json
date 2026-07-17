@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/github-app",
+  "name": "@aker-build/github-app",
   "version": "0.0.0",
-  "description": "TenantGuard report-only GitHub App — runs the review-pr chain on a PR and posts a Checks run + annotations (no repository mutation)",
+  "description": "Aker Build report-only GitHub App — runs the review-pr chain on a PR and posts a Checks run + annotations (no repository mutation)",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/review": "workspace:*",
+    "@aker-build/config": "workspace:*",
+    "@aker-build/review": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { checkScope } from "../src/scope.js";
-import type { QueueItem } from "@tenantguard/queue";
+import type { QueueItem } from "@aker-build/queue";
 
 function item(over: Partial<QueueItem>): QueueItem {
   return {

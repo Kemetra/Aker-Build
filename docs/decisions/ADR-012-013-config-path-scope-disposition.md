@@ -2,7 +2,7 @@
 
 - **Status**: Accepted (with follow-ups)
 - **Date**: 2026-07-16
-- **Deciders**: TenantGuard maintainers
+- **Deciders**: Aker Build maintainers
 - **Context tasks**: W1 prove-it audit task 1 (`.superpowers/sdd/task-1-brief.md`), pre-dating the
   W2 benchmark work on branch `w2-prove-it-benchmark`.
 
@@ -67,7 +67,7 @@ Source: `specs/013-config-path-scope-enforcement/tasks.md` (merged at `ab5a523`,
 
 ### 2. One config schema — does 013 share P2's schema file, or fork a second config surface?
 
-Single shared schema. `packages/config/src/index.ts:30-66` (`tenantGuardConfigSchema`) defines
+Single shared schema. `packages/config/src/index.ts:30-66` (`akerBuildConfigSchema`) defines
 `paths.include`/`paths.exclude` (`index.ts:39-45`, added by 013) in the same `z.object` as P2's
 per-gate `min_tier` (`index.ts:56`, `gates[gateId].min_tier`). No second schema, no parallel
 config loader: `loadConfig()` (`index.ts:137-151`) is the single read path both features go
@@ -113,7 +113,7 @@ are two different, intentionally different, models:
   silently; reporting remains responsible for showing configured filters and suppressions"
   (`spec.md:23`). This is satisfied: `packages/report/src/index.ts:92-113`
   (`summarizeConfig()`) echoes the active `config.paths.include`/`config.paths.exclude` into
-  `tenantguard-report.json`'s `config` block (`index.ts:101-102`) alongside
+  `aker-build-report.json`'s `config` block (`index.ts:101-102`) alongside
   `suppressions_configured`. An operator reading the report can always see which path scope was
   active — excluded findings don't vanish from the system's visible state, they're disclosed at
   the config-summary level rather than the per-finding level.
@@ -148,7 +148,7 @@ functional completeness. Concrete follow-up requirements for a future task (not 
 urgent):
 
 - Add a test in `packages/gates/tests/` that configures both `paths.exclude`/`paths.include` and a
-  `gates.*.min_tier` in the same `tenantguard.config.json`, asserting the documented
+  `gates.*.min_tier` in the same `aker-build.config.json`, asserting the documented
   composition (path-filtered-out files never reach the `min_tier` check; a file that passes the
   path filter is still subject to `min_tier`). Closes checklist item 3's test gap.
 - Tick `specs/013-config-path-scope-enforcement/tasks.md` T014–T016 to reflect the validation that

@@ -3,7 +3,7 @@
 **Feature Branch**: `008-github-action`
 **Created**: 2026-06-18
 **Status**: Draft
-**Input**: User description: "Run TenantGuard in CI and produce PR summaries. Depends on 001, 003, 004, 007. Docs only; no production code."
+**Input**: User description: "Run Aker Build in CI and produce PR summaries. Depends on 001, 003, 004, 007. Docs only; no production code."
 
 **Depends on**: `001-product-foundation`, `003-cli-scanner`, `004-saas-gates-v0`, `007-pr-reviewer`
 **Blocks**: — (last foundation-roadmap spec; GitHub App / dashboard are deferred waves)
@@ -12,7 +12,7 @@
 
 ## Purpose *(mandatory)*
 
-The GitHub Action lets a repository run TenantGuard in CI (on `pull_request`) and surface a summary of
+The GitHub Action lets a repository run Aker Build in CI (on `pull_request`) and surface a summary of
 the scan, gates, and review verdict on the change. It reuses the same CLI and gates that run locally —
 CI is a delivery surface, not a different engine.
 
@@ -29,17 +29,17 @@ specification; per repo rules, no `.github/workflows/*` file is created by this 
 - Q: What does 008 actually deliver, given AC-008 forbids a live `.github/workflows/*.yml` in four places (and creating one auto-activates CI)? → A: **Docs + an example workflow shown as documentation** — the integration contract, an ADR for runtime/packaging, and a concrete example workflow YAML embedded in quickstart/contracts (NOT a live file under `.github/`). No CI is auto-activated; adopting the workflow is the consumer's separately-gated opt-in.
 - Q: Does 008 produce any new TypeScript code? → A: **No.** 008 is pure CI wiring/documentation over 007's existing `review.json` + `review.md` outputs (FR-002 "no separate engine"; Integration Surface "no new core behavior"). No new package, no TS, no TDD suite — the feature is the contract + example workflow + ADR.
 - Q: What drives the CI check's pass/fail for critical-gate-blocking (FR-004), given 007 makes ANY diff-attributable risk `not_ready`? → A: **`severity: "critical"` in `review.json` findings** (plus 004's TG-G9 critical aggregator) — NOT the verdict and NOT the exit code. The **verdict drives the summary** (FR-003); **`severity:"critical"` drives the check status** (FR-004). This satisfies SC-002 (critical → fail) AND SC-003 (non-critical findings → pass while reported). The verdict is independent of the process exit code (a Not-Ready review still exits 0).
-- Q: What command chain should the example workflow document? → A: **checkout PR head → `tenantguard scan` → `tenantguard review-pr <number>`** (which runs the gates internally). CI MUST use **PR-number mode**, NOT `--local-diff`: `--local-diff` compares the working tree to HEAD, which after a CI checkout is empty (false "Ready" every run); PR mode sources changed files from `gh pr view` (base-relative). The PR-head checkout is still **load-bearing** because the gates read file **contents** from the working tree. An explicit `tenantguard gates` step is redundant (review-pr already runs the gates).
+- Q: What command chain should the example workflow document? → A: **checkout PR head → `aker-build scan` → `aker-build review-pr <number>`** (which runs the gates internally). CI MUST use **PR-number mode**, NOT `--local-diff`: `--local-diff` compares the working tree to HEAD, which after a CI checkout is empty (false "Ready" every run); PR mode sources changed files from `gh pr view` (base-relative). The PR-head checkout is still **load-bearing** because the gates read file **contents** from the working tree. An explicit `aker-build gates` step is redundant (review-pr already runs the gates).
 
 ---
 
 ## User Scenarios & Testing *(mandatory)*
 
-"User" is a maintainer who wants TenantGuard feedback automatically on every PR.
+"User" is a maintainer who wants Aker Build feedback automatically on every PR.
 
-### User Story 1 - See TenantGuard results on a PR (Priority: P1)
+### User Story 1 - See Aker Build results on a PR (Priority: P1)
 
-On opening/updating a PR, CI runs TenantGuard and produces a summary (scan + gate findings + review
+On opening/updating a PR, CI runs Aker Build and produces a summary (scan + gate findings + review
 verdict) visible in the CI run.
 
 **Why this priority**: Automatic per-PR feedback is the value of the Action — it brings the local
@@ -79,7 +79,7 @@ findings reported.
 ### Edge Cases
 
 - **No detectable change / empty diff**: the Action reports "nothing to review," does not fail.
-- **TenantGuard error in CI**: surfaces a clear error in the summary; does not silently pass.
+- **Aker Build error in CI**: surfaces a clear error in the summary; does not silently pass.
 - **Secret-like content in the change**: flagged; the secret value never appears in the CI summary or
   logs.
 - **Missing/limited GitHub permissions**: degrades to the information it can access; never stores tokens.
@@ -91,7 +91,7 @@ findings reported.
 
 ```text
 Trigger        runs on pull_request events (and re-runs on update)
-Engine         reuses the TenantGuard CLI: checkout PR head → scan → review-pr <number> (PR-number mode, not --local-diff; review-pr runs gates internally)
+Engine         reuses the Aker Build CLI: checkout PR head → scan → review-pr <number> (PR-number mode, not --local-diff; review-pr runs gates internally)
 Summary        verdict (Ready/Not Ready/Needs Verification) + contributing findings + evidence (from review.json/review.md)
 Enforcement    optional critical-gate-blocking driven by severity:"critical" in review.json (NOT the verdict / exit code)
 Side effects   none on the repo (read-only; no commit/push/merge/auto-comment in MVP)
@@ -105,8 +105,8 @@ Deliverable    integration contract + example workflow (as docs, not a live .git
 ### Functional Requirements
 
 - **FR-001**: The integration MUST run on `pull_request` events and re-run when the PR updates.
-- **FR-002**: The integration MUST reuse the existing TenantGuard CLI (the minimal chain
-  **checkout PR head → `tenantguard scan` → `tenantguard review-pr <number>`** — PR-number mode, not
+- **FR-002**: The integration MUST reuse the existing Aker Build CLI (the minimal chain
+  **checkout PR head → `aker-build scan` → `aker-build review-pr <number>`** — PR-number mode, not
   `--local-diff`, which is empty after a CI checkout), not a separate engine, and MUST introduce **no new
   TypeScript / core behavior** — it consumes 007's existing `review.json` + `review.md` outputs.
 - **FR-003**: The integration MUST produce a CI summary containing the review **verdict** and
@@ -121,7 +121,7 @@ Deliverable    integration contract + example workflow (as docs, not a live .git
 - **FR-006**: The summary and logs MUST NOT contain secrets; secret-like content MUST be flagged, never
   printed.
 - **FR-007**: The integration MUST store no tokens or credentials; it uses CI-provided permissions only.
-- **FR-008**: On TenantGuard error, the integration MUST surface a clear failure in the summary, not a
+- **FR-008**: On Aker Build error, the integration MUST surface a clear failure in the summary, not a
   silent pass.
 - **FR-009**: The integration MUST be domain-neutral — no Retail Tower/ERPNext/POS specifics.
 
@@ -138,7 +138,7 @@ Deliverable    integration contract + example workflow (as docs, not a live .git
 The Action wraps the existing commands; no new core behavior beyond CI wiring:
 
 ```text
-checkout PR head → tenantguard scan → tenantguard review-pr <number>  → CI summary
+checkout PR head → aker-build scan → aker-build review-pr <number>  → CI summary
 ```
 
 In CI the Action MUST use **PR-number mode** (`review-pr <number>`), NOT `--local-diff`: PR mode sources
@@ -146,7 +146,7 @@ the changed files from `gh pr view` (relative to the PR base), whereas `--local-
 working tree to HEAD — which, after a CI checkout, is empty (every run would falsely report "Ready").
 The **PR-head checkout is still load-bearing**: the gates read file **contents** from the working tree,
 so the PR's code must be present (the changed-files *set* comes from `gh`, the *contents* from the tree).
-An explicit `tenantguard gates` step is **not** needed — `review-pr` runs the gates internally.
+An explicit `aker-build gates` step is **not** needed — `review-pr` runs the gates internally.
 
 Configuration (enabling critical-gate-blocking, selecting gates, the out-dir) is exposed through the
 documented workflow's inputs/env. This feature delivers the **integration contract + an example
@@ -190,7 +190,7 @@ check status        pass / fail (fail only when critical-gate-blocking is enable
 - **SC-004**: The Action performs 0 writes to the repository (no commit/push/merge/comment).
 - **SC-005**: 0 secrets appear in any CI summary or log.
 - **SC-006**: The Action stores 0 tokens; it uses only CI-provided permissions.
-- **SC-007**: A TenantGuard error surfaces as a clear CI failure, never a silent pass.
+- **SC-007**: A Aker Build error surfaces as a clear CI failure, never a silent pass.
 
 ---
 
@@ -213,7 +213,7 @@ check status        pass / fail (fail only when critical-gate-blocking is enable
 - **The workflow file and packaging are deferred** to the implementation layer and are separately
   gated; this spec defines *what the CI integration must do*, not the YAML.
 - **Critical vs non-critical gate** classification aligns with 004/007; "critical" = a blocking gate.
-- **CI permissions** are provided by the host (e.g. the standard CI token); TenantGuard stores nothing.
+- **CI permissions** are provided by the host (e.g. the standard CI token); Aker Build stores nothing.
 - **PR-comment / label / issue creation** is intentionally out of scope and belongs to the deferred
   GitHub App wave.
 - **Report content** matches 007's verdict model and 001's required outputs.

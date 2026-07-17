@@ -21,12 +21,12 @@ registry keyed by gate id. No YAML/JSON rule-config format and no OPA/Rego polic
 ## Rationale
 
 - **Simplest thing that works**: ten hand-written gates are fully testable and type-safe against the
-  shared `evidenceSchema` (imported from `@tenantguard/project-map`) without a new dependency or
+  shared `evidenceSchema` (imported from `@aker-build/project-map`) without a new dependency or
   config-language surface.
 - **Constitution alignment**: CLI-First (II) and the MVP "OPA/Rego deferred, no full static-analysis
   engine" posture. Evidence-Based Findings (III) is enforced at the type level by the discriminated
   `findingSchema`.
-- **Reuse over reinvention**: gates read repo files through `@tenantguard/scanner`'s already-audited
+- **Reuse over reinvention**: gates read repo files through `@aker-build/scanner`'s already-audited
   read-only `io.ts`, centralizing the No-Hidden-Mutation (VI) guarantee.
 
 ## Alternatives considered

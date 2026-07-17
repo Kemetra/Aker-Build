@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { ChecksPayload, ReviewReport } from "@tenantguard/review";
+import type { ChecksPayload, ReviewReport } from "@aker-build/review";
 import { buildPayload, postCheck, type ChecksClient } from "../src/checks.js";
 import { handleEvent, type HandlerDeps } from "../src/index.js";
 import type { PullRequestEvent } from "../src/types.js";
@@ -120,7 +120,7 @@ describe("buildPayload (US1/US2 — reuse renderer + draft override)", () => {
 });
 
 describe("postCheck (FR-012 idempotency, FR-007 allowlist)", () => {
-  const payload: ChecksPayload = { name: "TenantGuard", conclusion: "success", title: "Ready", summary: "", annotations: [] };
+  const payload: ChecksPayload = { name: "Aker Build", conclusion: "success", title: "Ready", summary: "", annotations: [] };
 
   it("creates a check when none exists", async () => {
     const c = fakeClient({ existing: null });

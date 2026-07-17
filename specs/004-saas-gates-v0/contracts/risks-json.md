@@ -2,7 +2,7 @@
 
 The shape of the gate runner's output artifact. This is what 005 (router) and 007 (reviewer) consume.
 The schema lives in `packages/gates` (`risksSchema`) and **imports** `evidenceSchema` from
-`@tenantguard/project-map` — it does not redefine the evidence shape (FR-003, R3).
+`@aker-build/project-map` — it does not redefine the evidence shape (FR-003, R3).
 
 ---
 

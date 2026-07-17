@@ -1,7 +1,7 @@
 import { resolve, relative, isAbsolute } from "node:path";
-import { filterPaths, loadConfig } from "@tenantguard/config";
-import { runGates as realRunGates } from "@tenantguard/gates";
-import type { RunGatesResult } from "@tenantguard/gates";
+import { filterPaths, loadConfig } from "@aker-build/config";
+import { runGates as realRunGates } from "@aker-build/gates";
+import type { RunGatesResult } from "@aker-build/gates";
 import { changedFiles as realChangedFiles } from "./git.js";
 import { diffAttributableFindings, type AttributableFinding } from "./attribute.js";
 import { checkScope, SCOPE_SKIPPED } from "./scope.js";
@@ -22,7 +22,7 @@ export interface ReviewDeps {
   repoRoot?: string;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Review the current local diff and return a ReviewReport (FR-001). Read-only: runs the real

@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/review",
+  "name": "@aker-build/review",
   "version": "0.0.0",
-  "description": "TenantGuard PR Reviewer — review a local diff or GitHub PR against the SaaS gates and declared scope, returning a Ready / Not Ready / Needs Verification verdict",
+  "description": "Aker Build PR Reviewer — review a local diff or GitHub PR against the SaaS gates and declared scope, returning a Ready / Not Ready / Needs Verification verdict",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,11 +15,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/gates": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/queue": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
+    "@aker-build/config": "workspace:*",
+    "@aker-build/gates": "workspace:*",
+    "@aker-build/project-map": "workspace:*",
+    "@aker-build/queue": "workspace:*",
+    "@aker-build/scanner": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

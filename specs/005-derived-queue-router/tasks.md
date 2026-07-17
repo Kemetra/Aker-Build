@@ -10,7 +10,7 @@ description: "Task list for 005-derived-queue-router implementation"
 
 **Organization**: Grouped by the three user stories in `spec.md` (US1 P1 derive queue, US2 P1 route,
 US3 P2 lock scope/blast radius), each independently testable. Output is `queue.json` + `route.json`
-validated with the queue package's Zod schemas; evidence is imported from `@tenantguard/project-map`.
+validated with the queue package's Zod schemas; evidence is imported from `@aker-build/project-map`.
 
 > **GATE**: Writing this file creates no code. Implementation begins only after `plan.md` + `tasks.md`
 > are reviewed. Package/lockfile changes (T002) are gated on explicit approval. The queue/router is
@@ -27,7 +27,7 @@ validated with the queue package's Zod schemas; evidence is imported from `@tena
 ## Phase 1: Setup (Shared Infrastructure)
 
 - [x] T001 Author `docs/decisions/ADR-004-queue-scoring.md` recording the **transparent weighted-sum** scoring model (resolves the spec's deferred formula), citing `research.md` R1 and the spec's pinned selection ordering. (Docs-only.)
-- [x] T002 Initialize `packages/queue/` (`package.json` depending on `@tenantguard/project-map` + `@tenantguard/gates` + `@tenantguard/scanner` workspace deps + `zod`; `tsconfig.json` with `exclude: ["tests/fixtures"]`) and add `queue` + `route` command surfaces to the existing `packages/cli`. **Approved package/lockfile change.**
+- [x] T002 Initialize `packages/queue/` (`package.json` depending on `@aker-build/project-map` + `@aker-build/gates` + `@aker-build/scanner` workspace deps + `zod`; `tsconfig.json` with `exclude: ["tests/fixtures"]`) and add `queue` + `route` command surfaces to the existing `packages/cli`. **Approved package/lockfile change.**
 - [x] T003 [P] Configure Vitest for `packages/queue` (`vitest.config.ts`), reusing the workspace toolchain.
 
 **Checkpoint**: `packages/queue` skeletoned; ADR-004 recorded. No derivation/routing logic yet.
@@ -38,7 +38,7 @@ validated with the queue package's Zod schemas; evidence is imported from `@tena
 
 **⚠️ CRITICAL**: No user-story work begins until this phase is complete.
 
-- [x] T004 [P] Define the Zod schemas in `packages/queue/src/schema.ts`: `queueItemSchema` (full item contract + `status`/`type` enums), `queueSchema` (`schema_version`, `items[]`), `routeDecisionSchema` (`next` nullable + `blocked[]` + `no_safe_task_reasons[]`), **importing `evidenceSchema` from `@tenantguard/project-map`** (FR-003, FR-014, FR-015; data-model).
+- [x] T004 [P] Define the Zod schemas in `packages/queue/src/schema.ts`: `queueItemSchema` (full item contract + `status`/`type` enums), `queueSchema` (`schema_version`, `items[]`), `routeDecisionSchema` (`next` nullable + `blocked[]` + `no_safe_task_reasons[]`), **importing `evidenceSchema` from `@aker-build/project-map`** (FR-003, FR-014, FR-015; data-model).
 - [x] T005 [P] Define types (`QueueItem`, `Queue`, `RouterDecision`, `LockScope`, `ScoreFactors`) in `packages/queue/src/types.ts` per `data-model.md`.
 - [x] T006 Implement context construction in `packages/queue/src/context.ts`: load + validate `project-map.json` (002) and `risks.json` (004 `validateRisks`); wire **read-only** scanner io incl. optional local-diff read (FR-011, R2; depends on T005).
 - [x] T007 Create synthetic test fixtures (`project-map.json` + `risks.json` pairs) under `packages/queue/tests/fixtures/` yielding a mixed-readiness queue: ready, dep-blocked, lock-overlap, circular-dep (R6).
@@ -49,7 +49,7 @@ validated with the queue package's Zod schemas; evidence is imported from `@tena
 
 ## Phase 3: User Story 1 - Derive a queue from evidence (Priority: P1) 🎯 MVP
 
-**Goal**: `tenantguard queue` produces `queue.json` where every item carries the full contract, each
+**Goal**: `aker-build queue` produces `queue.json` where every item carries the full contract, each
 finding-derived item traces to evidence, and no-safe-action findings become `blocked` items.
 
 **Independent Test**: From a map + risk list, derive the queue and confirm each item has id, status,
@@ -67,7 +67,7 @@ type, evidence, dependencies, lock scope, allowed/forbidden files, gates, valida
 - [x] T012 [US1] Implement derivation (findings + map → queue items: type from gate, priority/risk from severity, scope/allowed/forbidden from evidence paths, gates/validation/stop/final_report defaults) in `packages/queue/src/derive.ts` per `data-model.md` (depends on T006).
 - [x] T013 [US1] Implement dependency graph + **circular-dependency detection** in `packages/queue/src/deps.ts` (FR-010, R5; depends on T005).
 - [x] T014 [US1] **Validate the produced queue with `queueSchema` before returning/writing**; on failure, error and emit nothing (depends on T004, T012).
-- [x] T015 [US1] Implement output write (`queue.json` to designated `--out`, default `./.tenantguard/`, outside scanned tracked source) in `packages/queue/src/io.ts` (FR-016; delegates reads to scanner io; depends on T014).
+- [x] T015 [US1] Implement output write (`queue.json` to designated `--out`, default `./.aker-build/`, outside scanned tracked source) in `packages/queue/src/io.ts` (FR-016; delegates reads to scanner io; depends on T014).
 - [x] T016 [US1] Public surface `deriveQueue(opts): Queue` in `packages/queue/src/index.ts` (depends on T014).
 
 **Checkpoint**: MVP — a map + risks produce an evidence-traced, contract-complete, secret-safe queue.
@@ -76,7 +76,7 @@ type, evidence, dependencies, lock scope, allowed/forbidden files, gates, valida
 
 ## Phase 4: User Story 2 - Route to one next safest task (Priority: P1)
 
-**Goal**: `tenantguard route` returns exactly one next-safest item with an explicit reason, a blocked
+**Goal**: `aker-build route` returns exactly one next-safest item with an explicit reason, a blocked
 list with reasons, or an explicit "no safe task" — never an arbitrary pick.
 
 **Independent Test**: From a mixed-readiness queue, route and confirm exactly one next + reason; blocked
@@ -120,9 +120,9 @@ overlapping item is deprioritized/blocked in favor of a non-overlapping safer it
 
 ---
 
-## Phase 6: CLI (`tenantguard queue` / `route`)
+## Phase 6: CLI (`aker-build queue` / `route`)
 
-**Goal**: Wire the queue library into the `tenantguard` CLI per `contracts/queue-route-cli.md`.
+**Goal**: Wire the queue library into the `aker-build` CLI per `contracts/queue-route-cli.md`.
 
 ### Tests (write FIRST; must FAIL) ⚠️
 
@@ -189,5 +189,5 @@ on the approved branch, only when requested.
 - **No code is written by generating this file.** Implementation waits on plan+tasks review.
 - TDD: verify each test fails before implementing.
 - Queue/router is **read-only on the scanned repo** — output goes to a designated path outside tracked source.
-- Output **must validate against the queue `schemas`** before being written; the evidence shape is **imported** from `@tenantguard/project-map` (never redefined).
+- Output **must validate against the queue `schemas`** before being written; the evidence shape is **imported** from `@aker-build/project-map` (never redefined).
 - [P] = different files, no dependency; [US#] maps task → user story.

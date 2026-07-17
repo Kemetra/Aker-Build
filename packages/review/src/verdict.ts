@@ -1,4 +1,4 @@
-import { confidenceTier } from "@tenantguard/gates";
+import { confidenceTier } from "@aker-build/gates";
 import type { AttributableFinding } from "./attribute.js";
 import type { Verdict, ScopeResult } from "./types.js";
 

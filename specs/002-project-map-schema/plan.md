@@ -5,7 +5,7 @@
 
 ## Summary
 
-Define and validate TenantGuard's canonical **Project Map** — the versioned, evidence-derived model
+Define and validate Aker Build's canonical **Project Map** — the versioned, evidence-derived model
 of a target repository that every downstream capability (scanner, gates, queue/router, prompt
 compiler, PR reviewer) reads. This plan covers the *contract and its validation behavior only*: the
 logical schema, the required `project-map.json` (canonical) and `project-map.yaml` (convenience)
@@ -41,7 +41,7 @@ after `plan.md` + `tasks.md` are reviewed (Constitution §Development Workflow).
   gates that read it (004).
 
 **Tech-decision provenance (Principle III — evidence)**: The stack (TypeScript / Node LTS / pnpm /
-Vitest / Zod / JSON+YAML) is recorded in `docs/tenantguard_project_blueprint.md` (tech-stack table
+Vitest / Zod / JSON+YAML) is recorded in `docs/aker-build_project_blueprint.md` (tech-stack table
 and "Why TypeScript first") and in this spec's Assumptions. **`docs/decisions/ADR-001-tech-stack.md`
 does not yet exist** — the CLAUDE.md "Implementation Boundary" references it, but it has not been
 authored. This plan cites the blueprint + spec Assumptions as the decision source and flags

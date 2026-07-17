@@ -7,26 +7,26 @@ Type: Product capability / output contract / CLI report
 
 ## Purpose
 
-TenantGuard should produce one human-readable and machine-readable report that summarizes the current run artifacts.
+Aker Build should produce one human-readable and machine-readable report that summarizes the current run artifacts.
 
-This feature closes the MVP output gap by adding `tenantguard report` over existing outputs without changing scanner, gates, queue, route, prompt, or review behavior.
+This feature closes the MVP output gap by adding `aker-build report` over existing outputs without changing scanner, gates, queue, route, prompt, or review behavior.
 
 ## User stories
 
-### US1: User can read one final TenantGuard report
+### US1: User can read one final Aker Build report
 
-A developer runs the MVP chain and then runs `tenantguard report` to see project, risk, queue, route, review, suppression, config, and Spec Kit context in one place.
+A developer runs the MVP chain and then runs `aker-build report` to see project, risk, queue, route, review, suppression, config, and Spec Kit context in one place.
 
 Acceptance:
 
-- Report reads existing `.tenantguard` artifacts.
-- Report writes `tenantguard-report.json` and `tenantguard-report.md`.
+- Report reads existing `.aker-build` artifacts.
+- Report writes `aker-build-report.json` and `aker-build-report.md`.
 - Markdown names missing optional artifacts instead of crashing.
 - JSON validates against a versioned schema.
 
 ### US2: Maintainer can consume stable report JSON
 
-A maintainer or CI job can consume `tenantguard-report.json` without parsing Markdown.
+A maintainer or CI job can consume `aker-build-report.json` without parsing Markdown.
 
 Acceptance:
 
@@ -36,8 +36,8 @@ Acceptance:
 
 ## Functional requirements
 
-- FR-001: Add `tenantguard report [path] [--out <dir>] [--stdout] [--format json|yaml|md]`.
-- FR-002: Add a versioned `tenantguard-report.json` contract and `contracts/report.schema.json`.
+- FR-001: Add `aker-build report [path] [--out <dir>] [--stdout] [--format json|yaml|md]`.
+- FR-002: Add a versioned `aker-build-report.json` contract and `contracts/report.schema.json`.
 - FR-003: Read `project-map.json`, `risks.json`, `queue.json`, `route.json`, and optional `review.json` from the output directory.
 - FR-004: Missing artifacts must be visible in the report and non-fatal.
 - FR-005: Suppressed findings must remain visible in report output.

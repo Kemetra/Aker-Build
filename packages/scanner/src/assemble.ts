@@ -1,5 +1,5 @@
-import type { ProjectMap } from "@tenantguard/project-map";
-import { SCHEMA_VERSION } from "@tenantguard/project-map";
+import type { ProjectMap } from "@aker-build/project-map";
+import { SCHEMA_VERSION } from "@aker-build/project-map";
 import type { RunNote } from "./types.js";
 import { detectStack } from "./detect/stack.js";
 import { detectRepos } from "./detect/repos.js";

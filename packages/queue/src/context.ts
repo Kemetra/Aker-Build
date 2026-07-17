@@ -1,9 +1,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { loadJson, validate, type ProjectMap } from "@tenantguard/project-map";
-import { validateRisks, type RiskList } from "@tenantguard/gates";
-import { isGitRepo } from "@tenantguard/scanner";
-import { readSpecKitArtifacts } from "@tenantguard/spec-kit-adapter";
+import { loadJson, validate, type ProjectMap } from "@aker-build/project-map";
+import { validateRisks, type RiskList } from "@aker-build/gates";
+import { isGitRepo } from "@aker-build/scanner";
+import { readSpecKitArtifacts } from "@aker-build/spec-kit-adapter";
 import type { QueueContext, RouterInputs } from "./types.js";
 
 /** Raised when project-map.json is missing — CLI maps to "run scan first" (exit 1). */
@@ -29,7 +29,7 @@ export function buildContext(repoRoot: string, outDir: string, inputs?: Partial<
 
   const mapPath = resolve(outDir, "project-map.json");
   if (!existsSync(mapPath)) {
-    throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`tenantguard scan\` first.`);
+    throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`aker-build scan\` first.`);
   }
   const parsedMap = loadJson(readFileSync(mapPath, "utf8"));
   const mapResult = validate(parsedMap);
@@ -41,7 +41,7 @@ export function buildContext(repoRoot: string, outDir: string, inputs?: Partial<
 
   const risksPath = resolve(outDir, "risks.json");
   if (!existsSync(risksPath)) {
-    throw new MissingRisksError(`No produced risks at ${risksPath}. Run \`tenantguard gates\` first.`);
+    throw new MissingRisksError(`No produced risks at ${risksPath}. Run \`aker-build gates\` first.`);
   }
   const parsedRisks = loadJson(readFileSync(risksPath, "utf8"));
   const risksResult = validateRisks(parsedRisks);

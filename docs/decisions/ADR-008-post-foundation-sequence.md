@@ -2,12 +2,12 @@
 
 - Status: Proposed
 - Date: 2026-06-19
-- Deciders: TenantGuard maintainers
+- Deciders: Aker Build maintainers
 - Related specs: `001` through `009`, proposed `010-release-readiness-and-first-run-demo`
 
 ## Context
 
-TenantGuard has completed the foundation and the initial nine-spec roadmap has moved the product from product foundation into MVP implementation / dogfooding.
+Aker Build has completed the foundation and the initial nine-spec roadmap has moved the product from product foundation into MVP implementation / dogfooding.
 
 Current evidence shows the CLI now wires the core MVP chain:
 
@@ -15,7 +15,7 @@ Current evidence shows the CLI now wires the core MVP chain:
 scan -> map -> gates -> queue -> route -> prompt -> review-pr
 ```
 
-The remaining risk is not that TenantGuard lacks features. The main risk is public release before the first-run path, output contracts, docs, and distribution story are reliable.
+The remaining risk is not that Aker Build lacks features. The main risk is public release before the first-run path, output contracts, docs, and distribution story are reliable.
 
 There is also doc drift:
 
@@ -25,7 +25,7 @@ There is also doc drift:
 
 ## Decision
 
-After foundation, TenantGuard will prioritize release confidence over new surfaces.
+After foundation, Aker Build will prioritize release confidence over new surfaces.
 
 Adopt this sequence:
 

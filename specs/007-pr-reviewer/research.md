@@ -1,7 +1,7 @@
 # Phase 0 Research: PR Reviewer
 
 Decisions resolvable from the clarified spec, the constitution, ADR-001/002, and the shipped 003/004/005
-packages (`@tenantguard/scanner`, `@tenantguard/gates`, `@tenantguard/queue`). Research inline (no
+packages (`@aker-build/scanner`, `@aker-build/gates`, `@aker-build/queue`). Research inline (no
 subagents). Format: **Decision / Rationale / Alternatives**.
 
 ---
@@ -29,10 +29,10 @@ subagents). Format: **Decision / Rationale / Alternatives**.
 ## R2 — Run the gates verbatim, attribute findings by evidence `path`
 
 - **Decision**: Run the **full shipped 004 gate set over current (post-change) repo state** via
-  `@tenantguard/gates` `runGates(target, { out })`, then keep only findings whose **evidence `path` is
+  `@aker-build/gates` `runGates(target, { out })`, then keep only findings whose **evidence `path` is
   in the changed-files set** ("diff-attributable"). 004 is consumed **verbatim** — no new fields, no
   diff-native engine. 007 imports `Finding`/`RiskList` types and the `runGates` entry from
-  `@tenantguard/gates`.
+  `@aker-build/gates`.
 - **Rationale**: Mirrors the 005/006 additive-consumer pattern. Evidence `path` is the **only**
   per-finding location 004 exposes (`Finding` carries `gate_id`, `status`, `severity`, `evidence[]`;
   each evidence has `path`/`line?`), so set-membership on `path` is the only available attribution
@@ -64,8 +64,8 @@ subagents). Format: **Decision / Rationale / Alternatives**.
   by `id`, and compare the **changed files** against its `allowed_files`/`forbidden_files`: a changed
   file **inside `forbidden_files`** or **outside a non-empty `allowed_files`** is an out-of-scope
   finding. Without `--item`, **skip** the scope check and record a note in the report (gate review +
-  verdict still run). Missing `queue.json` with `--item` → "run `tenantguard queue` first"; unknown
-  `<ID>` → clear error. Reuses scanner read-only io and imports `QueueItem` from `@tenantguard/queue`.
+  verdict still run). Missing `queue.json` with `--item` → "run `aker-build queue` first"; unknown
+  `<ID>` → clear error. Reuses scanner read-only io and imports `QueueItem` from `@aker-build/queue`.
 - **Rationale**: Matches FR-003 and the clarified CLI surface. Keeping scope **optional** preserves the
   always-available local-first review (US1) — a bare `review-pr --local-diff` needs no queue. `allowed_files`
   empty (the 005 deriver may emit `[]`) means "no allow-list constraint", so only `forbidden_files`
@@ -92,7 +92,7 @@ subagents). Format: **Decision / Rationale / Alternatives**.
 
 - **Decision**: Emit a **machine-readable `review.json`** (verdict + contributing findings + evidence +
   scope result + mode) validated by a small **Zod** schema, and a **human-readable Markdown** report.
-  Both printed to stdout / written to `.tenantguard/` (FR-013). Secret-like content is flagged, never
+  Both printed to stdout / written to `.aker-build/` (FR-013). Secret-like content is flagged, never
   echoed (FR-009) — inherited from upstream evidence which is already secret-safe.
 - **Rationale**: Matches FR-013 and 001's human+machine output requirement; a validated `review.json`
   gives 008 (the Action) a stable verdict to parse. A Zod schema here (unlike 006, which emitted only

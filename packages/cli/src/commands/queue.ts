@@ -6,7 +6,7 @@ import {
   MissingRisksError,
   NotGitRepoError,
   InvalidQueueError,
-} from "@tenantguard/queue";
+} from "@aker-build/queue";
 
 export interface QueueCmdOptions {
   out?: string;
@@ -16,7 +16,7 @@ export interface QueueCmdOptions {
   errSink?: (line: string) => void;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the `queue` command. Returns an exit code (no process.exit, testable).

@@ -32,7 +32,7 @@ A developer runs the scan command against a local repo and gets a `project-map.j
 against the 002 schema, describing detected stack, repos/areas, and (where detectable) tenant model
 and critical surfaces.
 
-**Why this priority**: This is the core deliverable — the first time TenantGuard produces source
+**Why this priority**: This is the core deliverable — the first time Aker Build produces source
 truth. Everything downstream (gates, queue, router) reads this output.
 
 **Independent Test**: Run the scan against a sample multi-tenant repo and validate the emitted
@@ -142,8 +142,8 @@ detection over time.
 The scanner is exposed through the MVP CLI (names are product surface; behavior is binding):
 
 ```text
-tenantguard scan        scan the current/target repo and produce the project map
-tenantguard map         show / re-emit the produced project map
+aker-build scan        scan the current/target repo and produce the project map
+aker-build map         show / re-emit the produced project map
 ```
 
 The scan command operates on a target repo path (defaulting to the current directory) and writes its

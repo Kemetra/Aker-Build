@@ -22,10 +22,10 @@ Alternatives**.
 ## R2 — Input edge: read `queue.json`, look up `<ID>`, reuse scanner io
 
 - **Decision**: `packages/prompt` loads `queue.json` (005) from the out-dir, finds the item whose `id`
-  matches `<ID>`, and reuses `@tenantguard/scanner`'s read-only `io.ts` for the optional `prompt-<ID>.md`
-  write. It imports the `QueueItem` type from `@tenantguard/queue`.
+  matches `<ID>`, and reuses `@aker-build/scanner`'s read-only `io.ts` for the optional `prompt-<ID>.md`
+  write. It imports the `QueueItem` type from `@aker-build/queue`.
 - **Rationale**: Mirrors the 004/005 evidence-edge pattern (consume a written artifact, centralize
-  read-only io). Missing `queue.json` → "run `tenantguard queue` first"; unknown `<ID>` → clear error.
+  read-only io). Missing `queue.json` → "run `aker-build queue` first"; unknown `<ID>` → clear error.
   No re-derivation, keeping the route→prompt boundary clean.
 - **Alternatives considered**:
   - *Compiler re-derives the queue* — couples prompt to queue/gates/scan; the CLI can chain

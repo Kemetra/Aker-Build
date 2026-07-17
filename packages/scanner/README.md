@@ -1,24 +1,24 @@
-# @tenantguard/scanner
+# @aker-build/scanner
 
 Read-only repo scanner — the producer half of the 002↔003 pair. It reads a local Git repository and
-produces a Project Map that **validates against `@tenantguard/project-map`**, plus run notes.
+produces a Project Map that **validates against `@aker-build/project-map`**, plus run notes.
 
 Spec: [`specs/003-cli-scanner`](../../specs/003-cli-scanner/spec.md)
 
 ## Usage
 
 ```ts
-import { scan, scanToFile } from "@tenantguard/scanner";
+import { scan, scanToFile } from "@aker-build/scanner";
 
 const { map, notes } = scan("/path/to/repo");        // in-memory
-const { outPath } = scanToFile("/path/to/repo", ".tenantguard"); // writes project-map.json
+const { outPath } = scanToFile("/path/to/repo", ".aker-build"); // writes project-map.json
 ```
 
 ## Guarantees
 
 - **Read-only** on the scanned repo — never creates/modifies/deletes a tracked file (FR-003). Output
   is written only to a designated dir outside tracked source.
-- **002-conforming** — the assembled map is validated with `@tenantguard/project-map` before return;
+- **002-conforming** — the assembled map is validated with `@aker-build/project-map` before return;
   an invalid map is a scanner bug (throws), never emitted (R5).
 - **Honest** — empty/`null`/`not_detected` + low-confidence when no evidence; never fabricates a
   stack, repos, tenant model, or surfaces (FR-004, FR-006). Emits an `insufficient_evidence` note.

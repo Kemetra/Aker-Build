@@ -5,7 +5,7 @@
 
 ## Summary
 
-The CI delivery surface for the kernel. 008 documents how a repository runs TenantGuard on
+The CI delivery surface for the kernel. 008 documents how a repository runs Aker Build on
 `pull_request` and surfaces the scan + gate + **review verdict** in the CI run — reusing the existing
 CLI (007's `review-pr`), not a new engine. Per the spec's four-place carve-out (Purpose, Non-Goals,
 Assumptions, AC-008), **008 creates no live `.github/workflows/*.yml`** and **no new TypeScript**; the
@@ -14,8 +14,8 @@ the CI runtime/packaging. Adopting the workflow is the consumer's separately-gat
 
 **Technical approach** (decided at this plan layer; see research.md):
 
-1. **Pure CI wiring over 007's outputs** — the Action runs **checkout PR head → `tenantguard scan` →
-   `tenantguard review-pr <number>`** and renders `review.md` (human summary) into the CI run, reading
+1. **Pure CI wiring over 007's outputs** — the Action runs **checkout PR head → `aker-build scan` →
+   `aker-build review-pr <number>`** and renders `review.md` (human summary) into the CI run, reading
    `review.json` for the machine verdict. No new package, no TS, no TDD suite (FR-002). See Research R1.
 2. **PR-NUMBER mode in CI, not `--local-diff`** — `--local-diff` compares the working tree to HEAD,
    which after a CI checkout is empty (false "Ready" every run). PR mode sources changed files from
@@ -25,7 +25,7 @@ the CI runtime/packaging. Adopting the workflow is the consumer's separately-gat
    aggregator) — NOT the verdict (any risk → `not_ready`) and NOT the exit code (Not-Ready exits 0).
    Documented as a small `jq` step over `review.json`. Satisfies SC-002 ∧ SC-003. See R3.
 4. **CLI invocation in CI** — the CLI bin is a TypeScript file (`./src/bin.ts`); there is no published
-   binary yet, so the example workflow runs it from a checkout of the TenantGuard tooling via a TS
+   binary yet, so the example workflow runs it from a checkout of the Aker Build tooling via a TS
    runner (pnpm + `tsx`). The runtime/packaging choice is recorded as **ADR-007**. See R4.
 
 **No production code, no `.github/workflows/*.yml`, no `package.json`, no lockfile is created by this
@@ -36,9 +36,9 @@ feature** (AC-008). Implementation = documentation artifacts only, after `plan.m
 **Language/Version**: N/A for new code — 008 produces **documentation** (Markdown contracts + an example
   YAML workflow embedded in docs). The wrapped engine is the existing TypeScript CLI (Node ≥20, per
   ADR-001 / root `engines`).
-**Primary Dependencies**: The existing `tenantguard` CLI (007 `review-pr`, 004 gates, 003 scan); GitHub
+**Primary Dependencies**: The existing `aker-build` CLI (007 `review-pr`, 004 gates, 003 scan); GitHub
   Actions as the host; the CI-provided token only (no stored credentials). For invoking the unbuilt TS
-  CLI in CI: pnpm (corepack) + `tsx` (a TS runner) — recorded in ADR-007. **No new TenantGuard package.**
+  CLI in CI: pnpm (corepack) + `tsx` (a TS runner) — recorded in ADR-007. **No new Aker Build package.**
 **Storage**: The Action writes only `review.json`/`review.md` to a CI workspace out-dir (007's
   read-only-on-repo guarantee carries over); nothing is committed.
 **Testing**: No new unit suite (no new code). Validation is **documentation-level**: the example

@@ -3,7 +3,7 @@ import { isAbsolute, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
-export const CONFIG_FILENAMES = ["tenantguard.config.json", "tenantguard.config.yaml"] as const;
+export const CONFIG_FILENAMES = ["aker-build.config.json", "aker-build.config.yaml"] as const;
 export const CONFIG_VERSION = 1;
 
 const severitySchema = z.enum(["low", "medium", "high", "critical"]);
@@ -27,7 +27,7 @@ const suppressionSchema = z
     }
   });
 
-export const tenantGuardConfigSchema = z.object({
+export const akerBuildConfigSchema = z.object({
   version: z.literal(CONFIG_VERSION),
   project: z
     .object({
@@ -65,26 +65,26 @@ export const tenantGuardConfigSchema = z.object({
     .optional(),
 }).strict();
 
-export type TenantGuardConfig = z.infer<typeof tenantGuardConfigSchema>;
-export type GateConfig = NonNullable<TenantGuardConfig["gates"]>[string];
+export type AkerBuildConfig = z.infer<typeof akerBuildConfigSchema>;
+export type GateConfig = NonNullable<AkerBuildConfig["gates"]>[string];
 export type SuppressionConfig = NonNullable<GateConfig["suppressions"]>[number];
 export type Severity = z.infer<typeof severitySchema>;
 
 export interface ConfigValidationResult {
   ok: boolean;
-  config?: TenantGuardConfig;
+  config?: AkerBuildConfig;
   errors: string[];
 }
 
 export interface LoadedConfig {
   path: string | null;
-  config: TenantGuardConfig;
+  config: AkerBuildConfig;
 }
 
 export class ConfigError extends Error {}
 export class ConfigValidationError extends ConfigError {
   constructor(public readonly errors: string[]) {
-    super(`tenantguard config failed validation: ${errors.join("; ")}`);
+    super(`aker-build config failed validation: ${errors.join("; ")}`);
     this.name = "ConfigValidationError";
   }
 }
@@ -96,12 +96,12 @@ export class ConfigSecretError extends ConfigError {
 }
 export class ConfigNotFoundError extends ConfigError {
   constructor(public readonly path: string) {
-    super(`tenantguard config not found: ${path}`);
+    super(`aker-build config not found: ${path}`);
     this.name = "ConfigNotFoundError";
   }
 }
 
-const DEFAULT_CONFIG: TenantGuardConfig = { version: CONFIG_VERSION };
+const DEFAULT_CONFIG: AkerBuildConfig = { version: CONFIG_VERSION };
 
 const SECRET_PATTERNS: RegExp[] = [
   /AKIA[0-9A-Z]{16}/,
@@ -110,7 +110,7 @@ const SECRET_PATTERNS: RegExp[] = [
 ];
 
 export function validateConfig(input: unknown): ConfigValidationResult {
-  const result = tenantGuardConfigSchema.safeParse(input);
+  const result = akerBuildConfigSchema.safeParse(input);
   if (result.success) return { ok: true, config: result.data, errors: [] };
   return {
     ok: false,
@@ -162,7 +162,7 @@ export function matchesPathPattern(path: string, pattern: string): boolean {
   return globToRegex(normalizedPattern).test(normalizedPath);
 }
 
-export function isPathAllowed(path: string, config: TenantGuardConfig): boolean {
+export function isPathAllowed(path: string, config: AkerBuildConfig): boolean {
   const include = config.paths?.include ?? [];
   const exclude = config.paths?.exclude ?? [];
   const included = include.length === 0 || include.some((pattern) => matchesPathPattern(path, pattern));
@@ -170,7 +170,7 @@ export function isPathAllowed(path: string, config: TenantGuardConfig): boolean 
   return !exclude.some((pattern) => matchesPathPattern(path, pattern));
 }
 
-export function filterPaths(paths: readonly string[], config: TenantGuardConfig): string[] {
+export function filterPaths(paths: readonly string[], config: AkerBuildConfig): string[] {
   return paths.filter((path) => isPathAllowed(path, config));
 }
 

@@ -6,30 +6,30 @@ no code exists yet.
 ## Scan a repo
 
 ```bash
-# Scan the current repo; writes ./.tenantguard/project-map.json (read-only on the repo)
-tenantguard scan
+# Scan the current repo; writes ./.aker-build/project-map.json (read-only on the repo)
+aker-build scan
 
 # Scan a specific path, emit YAML, custom output dir
-tenantguard scan ../some-repo --format yaml --out ./out
+aker-build scan ../some-repo --format yaml --out ./out
 
 # Pipe the map to another tool without writing a file
-tenantguard scan --stdout
+aker-build scan --stdout
 ```
 
 ## Show the produced map
 
 ```bash
-tenantguard map                 # print ./.tenantguard/project-map.json
-tenantguard map --format yaml    # render as YAML
+aker-build map                 # print ./.aker-build/project-map.json
+aker-build map --format yaml    # render as YAML
 ```
 
 ## Validate the output (library)
 
 ```ts
-import { validate } from "@tenantguard/project-map";
+import { validate } from "@aker-build/project-map";
 import { readFileSync } from "node:fs";
 
-const map = JSON.parse(readFileSync(".tenantguard/project-map.json", "utf8"));
+const map = JSON.parse(readFileSync(".aker-build/project-map.json", "utf8"));
 const result = validate(map);          // the scanner already validates before writing (R5)
 console.log(result.ok ? "valid" : result.errors);
 ```

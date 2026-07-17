@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, it, expect } from "vitest";
 import type { Server } from "node:http";
-import type { Workspace } from "@tenantguard/github-app";
+import type { Workspace } from "@aker-build/github-app";
 import type { GitHubApi } from "../src/github-api.js";
 import { start, MAX_BODY_BYTES } from "../src/http-server.js";
 import type { DispatchDeps } from "../src/server.js";
@@ -57,19 +57,19 @@ describe("start() default-composition path (the chain bin.ts actually fires)", (
     // printed) WITHOUT binding a port or making a network call — it throws synchronously as the
     // default argument evaluates, before `listen` is reached.
     const saved = {
-      TENANTGUARD_APP_ID: process.env.TENANTGUARD_APP_ID,
-      TENANTGUARD_APP_PRIVATE_KEY: process.env.TENANTGUARD_APP_PRIVATE_KEY,
-      TENANTGUARD_WEBHOOK_SECRET: process.env.TENANTGUARD_WEBHOOK_SECRET,
-      TENANTGUARD_INSTALLATION_ID: process.env.TENANTGUARD_INSTALLATION_ID,
+      AKER_BUILD_APP_ID: process.env.AKER_BUILD_APP_ID,
+      AKER_BUILD_APP_PRIVATE_KEY: process.env.AKER_BUILD_APP_PRIVATE_KEY,
+      AKER_BUILD_WEBHOOK_SECRET: process.env.AKER_BUILD_WEBHOOK_SECRET,
+      AKER_BUILD_INSTALLATION_ID: process.env.AKER_BUILD_INSTALLATION_ID,
     };
-    delete process.env.TENANTGUARD_APP_ID;
-    delete process.env.TENANTGUARD_APP_PRIVATE_KEY;
-    delete process.env.TENANTGUARD_WEBHOOK_SECRET;
-    delete process.env.TENANTGUARD_INSTALLATION_ID;
+    delete process.env.AKER_BUILD_APP_ID;
+    delete process.env.AKER_BUILD_APP_PRIVATE_KEY;
+    delete process.env.AKER_BUILD_WEBHOOK_SECRET;
+    delete process.env.AKER_BUILD_INSTALLATION_ID;
     try {
       // Names a missing required credential; never prints a value (FR-007). Throwing here proves the
       // default-composition path is wired end-to-end up to credential loading.
-      expect(() => start(undefined, 0)).toThrow(/TENANTGUARD_/);
+      expect(() => start(undefined, 0)).toThrow(/AKER_BUILD_/);
     } finally {
       for (const [k, v] of Object.entries(saved)) {
         if (v === undefined) delete process.env[k];

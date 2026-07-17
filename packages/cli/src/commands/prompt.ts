@@ -4,8 +4,8 @@ import {
   ScopeIncompleteError,
   MissingQueueError,
   UnknownItemError,
-} from "@tenantguard/prompt";
-import { NotGitRepoError } from "@tenantguard/queue";
+} from "@aker-build/prompt";
+import { NotGitRepoError } from "@aker-build/queue";
 
 export interface PromptCmdOptions {
   agent?: string;
@@ -15,7 +15,7 @@ export interface PromptCmdOptions {
   errSink?: (line: string) => void;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the `prompt` command. Returns an exit code (no process.exit, testable).

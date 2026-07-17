@@ -1,6 +1,6 @@
 # Multi-Tenant SaaS Basic Example
 
-This is a small, sanitized SaaS-shaped fixture for TenantGuard first-run demos.
+This is a small, sanitized SaaS-shaped fixture for Aker Build first-run demos.
 
 It intentionally includes detectable signals:
 

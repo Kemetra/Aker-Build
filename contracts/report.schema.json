@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tenantguard.dev/contracts/report.schema.json",
-  "title": "TenantGuard Report",
+  "$id": "https://github.com/Kemetra/Aker-Build/blob/main/contracts/report.schema.json",
+  "title": "Aker Build Report",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "artifacts", "config", "spec_kit", "summary", "suppressions"],

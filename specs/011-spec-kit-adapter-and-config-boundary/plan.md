@@ -6,7 +6,7 @@ Date: 2026-06-19
 
 ## Technical summary
 
-Add a safe configuration layer and read-only Spec Kit adapter so TenantGuard can use formal specs when present but remain useful without them.
+Add a safe configuration layer and read-only Spec Kit adapter so Aker Build can use formal specs when present but remain useful without them.
 
 ## Architecture
 
@@ -53,7 +53,7 @@ specs:
 
 ```text
 packages/config
-  read and validate tenantguard config
+  read and validate aker-build config
 
 packages/spec-kit-adapter
   read Spec Kit artifacts and normalize evidence
@@ -69,7 +69,7 @@ Exact package placement should be decided during tasks based on current workspac
 Allowed areas, subject to tasks approval:
 
 ```text
-contracts/tenantguard-config.schema.json
+contracts/aker-build-config.schema.json
 packages/config/**
 packages/spec-kit-adapter/**
 packages/project-map/** only for typed context integration
@@ -106,12 +106,12 @@ pnpm typecheck
 Focused:
 
 ```bash
-pnpm --filter @tenantguard/config test
-pnpm --filter @tenantguard/spec-kit-adapter test
-pnpm --filter @tenantguard/gates test
-pnpm --filter @tenantguard/queue test
-pnpm --filter @tenantguard/prompt test
-pnpm --filter @tenantguard/cli test
+pnpm --filter @aker-build/config test
+pnpm --filter @aker-build/spec-kit-adapter test
+pnpm --filter @aker-build/gates test
+pnpm --filter @aker-build/queue test
+pnpm --filter @aker-build/prompt test
+pnpm --filter @aker-build/cli test
 ```
 
 Suggested focused tests:

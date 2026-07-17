@@ -8,7 +8,7 @@ new code API — 008 ships no new package (FR-002). The example workflow (quicks
 | Input (env) | Meaning | Default | Maps to |
 |-------------|---------|---------|---------|
 | `fail-on-critical` | Enable critical-gate-blocking: the check FAILS when any `review.json` finding has `severity:"critical"`. | `false` | the post-review `jq` gate step |
-| `out-dir` | Workspace dir for `review.json` / `review.md`. Outside the repo's tracked source. | `.tenantguard` | `--out` on scan/review-pr |
+| `out-dir` | Workspace dir for `review.json` / `review.md`. Outside the repo's tracked source. | `.aker-build` | `--out` on scan/review-pr |
 | `gates` | Comma-separated gate ids to run (subset). Empty = full set. | (all) | `--gates` (where supported) |
 | `item` | Optional queue item id for the scope check. | (none) | `--item` on review-pr |
 
@@ -24,7 +24,7 @@ No input accepts or stores a token; CI uses the host-provided token only (FR-007
 ## Check-status rule (authoritative)
 
 ```text
-1. TenantGuard could not run (review.json absent / a step exited non-zero)  → FAIL  (surface the error)   [FR-008/SC-007]
+1. Aker Build could not run (review.json absent / a step exited non-zero)  → FAIL  (surface the error)   [FR-008/SC-007]
 2. fail-on-critical = true  AND  ∃ finding with severity == "critical"      → FAIL  (name the gate(s))     [SC-002]
 3. otherwise                                                                → PASS  (findings reported)    [SC-003]
 ```

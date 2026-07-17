@@ -17,7 +17,7 @@ foundational spec all features assume.
 ## Purpose *(mandatory)*
 
 The Prompt Compiler turns a routed queue item into a **safe, narrow, copy-paste-ready** prompt for an
-AI coding agent (Claude, Codex, or a generic agent). Safe-by-default prompts are TenantGuard's core
+AI coding agent (Claude, Codex, or a generic agent). Safe-by-default prompts are Aker Build's core
 mechanism for preventing agents from changing too many files.
 
 This spec defines the **required prompt structure**, **default git rules and stop conditions**, and the
@@ -29,8 +29,8 @@ This spec defines the **required prompt structure**, **default git rules and sto
 
 ### Session 2026-06-18
 
-- Q: What is the prompt output shape/format? → A: Plain **Markdown** (copy-paste-ready) printed to stdout; when not `--stdout`, also written to `.tenantguard/prompt-<ID>.md`. The safety contract is the section structure, not a JSON envelope.
-- Q: How does the compiler obtain the item for `tenantguard prompt <ID>`? → A: It reads `queue.json` (005) from the out-dir and looks up the item by `id`. Missing `queue.json` → "run `tenantguard queue` first"; unknown `<ID>` → clear error.
+- Q: What is the prompt output shape/format? → A: Plain **Markdown** (copy-paste-ready) printed to stdout; when not `--stdout`, also written to `.aker-build/prompt-<ID>.md`. The safety contract is the section structure, not a JSON envelope.
+- Q: How does the compiler obtain the item for `aker-build prompt <ID>`? → A: It reads `queue.json` (005) from the out-dir and looks up the item by `id`. Missing `queue.json` → "run `aker-build queue` first"; unknown `<ID>` → clear error.
 - Q: When an item lacks required scope info (FR-009), refuse or mark the gap? → A: **Refuse** with a non-zero exit and a message naming the missing scope fields — never emit a partial/unsafe prompt.
 - Q: What differs between the claude / codex / generic renderers? → A: Only **presentation** (heading style / agent-appropriate framing preamble). The section set, git rules, stop conditions, allowed/forbidden files, and final-report are identical in meaning across all renderers (SC-005). Unknown agent → generic + a note (FR-010).
 - Q: Is compilation deterministic? → A: Yes — for the same (item, agent) input the output is byte-stable (fixed section order; no clock/randomness), so prompts are diffable and testable.
@@ -157,10 +157,10 @@ Final report format
 - **FR-011**: Compilation MUST run with no network access and no credentials (local-first).
 - **FR-012**: The compiler MUST be domain-neutral — no Retail Tower/ERPNext/POS specifics.
 - **FR-013**: The compiler MUST read the routed queue item by `id` from `queue.json` (005) in the
-  designated out-dir; a missing `queue.json` MUST signal "run `tenantguard queue` first" and an unknown
+  designated out-dir; a missing `queue.json` MUST signal "run `aker-build queue` first" and an unknown
   `<ID>` MUST error clearly (no prompt emitted).
 - **FR-014**: The prompt MUST be emitted as **Markdown** (copy-paste-ready) to stdout; when not
-  `--stdout`, it MUST also be written to `.tenantguard/prompt-<ID>.md` (outside the scanned repo's
+  `--stdout`, it MUST also be written to `.aker-build/prompt-<ID>.md` (outside the scanned repo's
   tracked source).
 - **FR-015**: Per-renderer differences MUST be limited to **presentation** (heading style / framing);
   the section set, git rules, stop conditions, allowed/forbidden files, and final-report MUST be
@@ -171,7 +171,7 @@ Final report format
 ### Key Entities
 
 - **Prompt**: the compiled, scope-limited Markdown instruction set for an agent (printed; optionally
-  written to `.tenantguard/prompt-<ID>.md`).
+  written to `.aker-build/prompt-<ID>.md`).
 - **Renderer**: an agent-specific formatter (claude/codex/generic) that varies **presentation only**
   over the same safety contract; unknown agent → generic + note.
 - **Queue Item** (from 005): the input the prompt is compiled from, looked up by `id` in `queue.json`.
@@ -181,14 +181,14 @@ Final report format
 ## CLI Surface *(mandatory)*
 
 ```text
-tenantguard prompt <ID> --agent claude     compile a safe prompt for queue item <ID> for Claude
-tenantguard prompt <ID> --agent codex      compile a safe prompt for Codex
-tenantguard prompt <ID>                    compile a safe prompt for a generic agent
-tenantguard prompt <ID> --stdout           print the prompt only (no file written)
+aker-build prompt <ID> --agent claude     compile a safe prompt for queue item <ID> for Claude
+aker-build prompt <ID> --agent codex      compile a safe prompt for Codex
+aker-build prompt <ID>                    compile a safe prompt for a generic agent
+aker-build prompt <ID> --stdout           print the prompt only (no file written)
 ```
 
-The item `<ID>` is looked up in `<out>/queue.json` (default `.tenantguard/`). The compiled Markdown is
-printed to stdout and, unless `--stdout`, also written to `.tenantguard/prompt-<ID>.md`.
+The item `<ID>` is looked up in `<out>/queue.json` (default `.aker-build/`). The compiled Markdown is
+printed to stdout and, unless `--stdout`, also written to `.aker-build/prompt-<ID>.md`.
 
 ---
 
@@ -196,7 +196,7 @@ printed to stdout and, unless `--stdout`, also written to `.tenantguard/prompt-<
 
 ```text
 safe agent prompt   copy-paste-ready Markdown, scope-limited, all required sections present.
-                    Printed to stdout; also written to .tenantguard/prompt-<ID>.md unless --stdout.
+                    Printed to stdout; also written to .aker-build/prompt-<ID>.md unless --stdout.
 ```
 
 ---

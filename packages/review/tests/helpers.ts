@@ -11,8 +11,8 @@ function git(dir: string, ...args: string[]): string {
 /** Make `dir` a self-contained Git repo. */
 function initGitRepo(dir: string): void {
   execFileSync("git", ["init", "-q"], { cwd: dir, stdio: "ignore" });
-  execFileSync("git", ["config", "user.email", "test@tenantguard.local"], { cwd: dir, stdio: "ignore" });
-  execFileSync("git", ["config", "user.name", "TenantGuard Test"], { cwd: dir, stdio: "ignore" });
+  execFileSync("git", ["config", "user.email", "test@aker-build.local"], { cwd: dir, stdio: "ignore" });
+  execFileSync("git", ["config", "user.name", "Aker Build Test"], { cwd: dir, stdio: "ignore" });
 }
 
 /**

@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { scanToFile } from "@tenantguard/scanner";
+import { scanToFile } from "@aker-build/scanner";
 
 /**
  * Scan a freshly-checked-out repo and produce its project-map so the gates can run against it.
@@ -12,10 +12,10 @@ import { scanToFile } from "@tenantguard/scanner";
  *
  * The out-dir lives under the ephemeral checkout, so the workspace's `dispose` removes it with the
  * rest of the source — nothing is persisted (FR-011). Read-only on the repo apart from writing the
- * map under `<repoRoot>/.tenantguard`.
+ * map under `<repoRoot>/.aker-build`.
  */
 export function prepareRepo(repoRoot: string): string {
-  const out = join(repoRoot, ".tenantguard");
+  const out = join(repoRoot, ".aker-build");
   scanToFile(repoRoot, out);
   return out;
 }

@@ -7,7 +7,7 @@ Research inline (no subagents). Format: **Decision / Rationale / Alternatives**.
 
 ## R1 — CLI framework: Commander (resolves ADR-001 deferral → ADR-002)
 
-- **Decision**: **Commander** for the `tenantguard` CLI.
+- **Decision**: **Commander** for the `aker-build` CLI.
 - **Rationale**: The MVP CLI is a small, flat command set (`scan`, `map`, later `gates`, `queue`,
   `route`, `prompt`, `review-pr`, `report`). Commander is lightweight, zero-config, widely used, and
   adds minimal dependency surface — fitting CLI-First (Principle II) and the "no heavy scaffolding"
@@ -44,18 +44,18 @@ Research inline (no subagents). Format: **Decision / Rationale / Alternatives**.
 ## R4 — Output location (no mutation of scanned repo)
 
 - **Decision**: Write `project-map.json` (and optional `project-map.yaml` / run-notes) to a
-  **designated path outside the scanned repo's tracked source**, default `./.tenantguard/`
+  **designated path outside the scanned repo's tracked source**, default `./.aker-build/`
   (configurable via a `--out` flag). Writing there is **not** a modification of the scanned repo's
   tracked files (FR-003 explicitly allows output to a designated location).
 - **Rationale**: Keeps the read-only guarantee on tracked source while still producing a useful
-  artifact. `.tenantguard/` is a conventional tool-output dir; projects can `.gitignore` it.
+  artifact. `.aker-build/` is a conventional tool-output dir; projects can `.gitignore` it.
 - **Alternatives considered**: *stdout-only* — good for piping, kept as an option (`--stdout`), but a
-  file default matches `tenantguard map` re-emit and downstream consumers (004 reads the file).
+  file default matches `aker-build map` re-emit and downstream consumers (004 reads the file).
 
 ## R5 — Output conformance + validation against 002
 
 - **Decision**: The scanner builds a `ProjectMap` and **validates it with
-  `@tenantguard/project-map`'s `validate()` before writing**; if assembly ever produces an invalid
+  `@aker-build/project-map`'s `validate()` before writing**; if assembly ever produces an invalid
   map, that is a scanner bug (fail the run with the field-level errors), never emit an invalid file.
 - **Rationale**: FR-002 / SC-001 — output MUST conform to 002. Reusing 002's validator (single source
   of truth) prevents drift between producer and contract.
@@ -90,4 +90,4 @@ Research inline (no subagents). Format: **Decision / Rationale / Alternatives**.
 - **ADR-002 (CLI framework = Commander)** authored as 003 task T001 before CLI package code.
 - **Exact `.gitignore`-awareness** of traversal (whether to honor the scanned repo's `.gitignore`)
   settled at tasks time; default MVP skips `node_modules`, `.git/` internals, and common build dirs.
-- **`tenantguard` bin wiring** (single CLI package vs per-command) confirmed at `/speckit.tasks`.
+- **`aker-build` bin wiring** (single CLI package vs per-command) confirmed at `/speckit.tasks`.

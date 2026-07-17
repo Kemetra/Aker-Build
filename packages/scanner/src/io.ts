@@ -8,7 +8,7 @@ const SKIP_DIRS = new Set([
   "build",
   ".next",
   "coverage",
-  ".tenantguard",
+  ".aker-build",
 ]);
 
 /** Read-only: list repo-relative file paths under `root`, skipping noise dirs. Stable (sorted). */

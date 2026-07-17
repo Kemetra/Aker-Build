@@ -43,7 +43,7 @@ The Action **reads** this (and `review.md` for the human summary); it never writ
 ## Check-status decision (the core rule, R3 / FR-004)
 
 ```text
-if (tenantguard error: review.json absent or job step failed)        → CHECK FAILS (surface the error; FR-008/SC-007)
+if (aker-build error: review.json absent or job step failed)        → CHECK FAILS (surface the error; FR-008/SC-007)
 elif (fail_on_critical enabled AND any finding.severity == "critical") → CHECK FAILS (name the critical gate(s); SC-002)
 else                                                                   → CHECK PASSES (findings still reported; SC-003)
 ```
@@ -60,7 +60,7 @@ else                                                                   → CHECK
 | Input | Meaning | Default |
 |-------|---------|---------|
 | `fail-on-critical` | Enable critical-gate-blocking (fail the check on a `severity:"critical"` finding). | `false` (report-only) |
-| `out-dir` | Where `review.json`/`review.md` are written in the workspace. | `.tenantguard` |
+| `out-dir` | Where `review.json`/`review.md` are written in the workspace. | `.aker-build` |
 | `gates` | Optional subset of gate ids (passed through to the CLI). | all |
 | `item` | Optional queue item id for the scope check (`--item`). | none |
 

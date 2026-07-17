@@ -1,6 +1,6 @@
-# TenantGuard Project Blueprint
+# Aker Build Project Blueprint
 
-**Working name:** TenantGuard  
+**Working name:** Aker Build
 **Product type:** CLI-first SaaS Build Kernel  
 **Status:** Product foundation / source-ready planning file  
 **Primary audience:** founders, SaaS teams, agencies, and engineering teams using GitHub + specs + AI coding agents  
@@ -10,7 +10,7 @@
 
 ## 1. Executive Decision
 
-TenantGuard is a side product derived from the operating lessons of Retail Tower OS.
+Aker Build is a side product derived from the operating lessons of Retail Tower OS.
 
 It is **not** a SaaS boilerplate and it is **not** a generic task manager. It is a control kernel that helps teams build and maintain multi-tenant SaaS systems without losing architecture control when using GitHub, specs, CI, and AI coding agents such as Claude Code, Codex, Cursor, or similar tools.
 
@@ -29,13 +29,13 @@ We will not copy the Retail Tower Orchestrator as-is, and we will not start from
 ```text
 Retail Tower OS operating discipline
 → generalized SaaS rules and workflows
-→ TenantGuard Kernel
+→ Aker Build Kernel
 → reusable product for any SaaS repo
 ```
 
-### What TenantGuard should control
+### What Aker Build should control
 
-TenantGuard should help answer:
+Aker Build should help answer:
 
 ```text
 What is the current repo truth?
@@ -52,7 +52,7 @@ Did docs/specs drift from code?
 
 ## 2. Product Goals
 
-TenantGuard should provide a practical build-control workflow for SaaS teams.
+Aker Build should provide a practical build-control workflow for SaaS teams.
 
 ### Goals
 
@@ -67,7 +67,7 @@ TenantGuard should provide a practical build-control workflow for SaaS teams.
 
 ### Non-goals for MVP
 
-TenantGuard MVP will not include:
+Aker Build MVP will not include:
 
 ```text
 - Hosted SaaS dashboard
@@ -117,7 +117,7 @@ These principles should be treated as the initial project constitution.
 
 ### P1 — Source truth first
 
-TenantGuard must inspect current repo state, local diff, GitHub PR state, or CI evidence before claiming status, readiness, or blockers.
+Aker Build must inspect current repo state, local diff, GitHub PR state, or CI evidence before claiming status, readiness, or blockers.
 
 ### P2 — CLI first
 
@@ -129,7 +129,7 @@ Every risk, gate failure, and recommendation should include evidence: file path,
 
 ### P4 — Spec-compatible, not Spec Kit dependent
 
-TenantGuard should read Spec Kit artifacts when present, but should work without Spec Kit.
+Aker Build should read Spec Kit artifacts when present, but should work without Spec Kit.
 
 ### P5 — Agent safety by default
 
@@ -141,17 +141,17 @@ MVP must not execute agents, commit, push, open PRs, or mutate GitHub state unle
 
 ### P7 — No secrets
 
-TenantGuard must not store, print, transmit, or include secrets in reports/prompts.
+Aker Build must not store, print, transmit, or include secrets in reports/prompts.
 
 ### P8 — General SaaS kernel
 
-TenantGuard must not leak Retail Tower-specific domain logic. Retail Tower can be a private dogfooding source, not the public product model.
+Aker Build must not leak Retail Tower-specific domain logic. Retail Tower can be a private dogfooding source, not the public product model.
 
 ---
 
 ## 5. Core Workflow
 
-TenantGuard follows this operating flow:
+Aker Build follows this operating flow:
 
 ```text
 scan sources
@@ -167,17 +167,17 @@ scan sources
 ### CLI command model
 
 ```bash
-tenantguard init
-tenantguard scan
-tenantguard map
-tenantguard gates
-tenantguard queue
-tenantguard route
-tenantguard prompt Q-001 --agent claude
-tenantguard prompt Q-001 --agent codex
-tenantguard review-pr --local-diff
-tenantguard review-pr 123
-tenantguard report
+aker-build init
+aker-build scan
+aker-build map
+aker-build gates
+aker-build queue
+aker-build route
+aker-build prompt Q-001 --agent claude
+aker-build prompt Q-001 --agent codex
+aker-build review-pr --local-diff
+aker-build review-pr 123
+aker-build report
 ```
 
 ---
@@ -203,14 +203,14 @@ The MVP is a local CLI that can run against a repository and produce useful repo
 
 ### MVP success criteria
 
-TenantGuard MVP is successful when this works:
+Aker Build MVP is successful when this works:
 
 ```bash
-tenantguard scan
-tenantguard queue
-tenantguard route
-tenantguard prompt Q-001 --agent claude
-tenantguard review-pr --local-diff
+aker-build scan
+aker-build queue
+aker-build route
+aker-build prompt Q-001 --agent claude
+aker-build review-pr --local-diff
 ```
 
 And outputs:
@@ -305,7 +305,7 @@ packages/core
   lock-scopes
 
 packages/cli
-  tenantguard command entrypoints
+  aker-build command entrypoints
 
 packages/github
   PR metadata
@@ -340,7 +340,7 @@ packages/reporters
 
 ## 9. Project Map Schema
 
-TenantGuard needs a canonical map of the target project.
+Aker Build needs a canonical map of the target project.
 
 ### Example
 
@@ -408,7 +408,7 @@ critical_surfaces:
 
 ## 10. SaaS Gates v0
 
-TenantGuard gates are generalized from real multi-repo SaaS operating discipline.
+Aker Build gates are generalized from real multi-repo SaaS operating discipline.
 
 ```text
 TG-G0 Source Truth Gate
@@ -560,7 +560,7 @@ Examples:
 
 ## 11. Queue Item Contract
 
-TenantGuard queue items should be explicit and safe for agent handoff.
+Aker Build queue items should be explicit and safe for agent handoff.
 
 ```yaml
 id: Q-004
@@ -702,7 +702,7 @@ Final report format
 ## 14. Example Agent Prompt Template
 
 ```text
-You are working in the TenantGuard repository.
+You are working in the Aker Build repository.
 
 Objective:
 Implement only the selected queue item: {{QUEUE_ID}} — {{TITLE}}.
@@ -752,7 +752,7 @@ Return:
 
 ## 15. Spec Kit Position
 
-TenantGuard should use Spec Kit for its own build workflow, but should not require users to use Spec Kit.
+Aker Build should use Spec Kit for its own build workflow, but should not require users to use Spec Kit.
 
 ### Internal build workflow
 
@@ -773,9 +773,9 @@ Do not use:
 
 until the generated spec, plan, and tasks have been reviewed.
 
-### TenantGuard product behavior
+### Aker Build product behavior
 
-TenantGuard should support:
+Aker Build should support:
 
 ```text
 - projects with .specify/
@@ -884,7 +884,7 @@ Review local diff and GitHub PR changes against scope and gates.
 Purpose:
 
 ```text
-Run TenantGuard in CI and produce PR summaries.
+Run Aker Build in CI and produce PR summaries.
 ```
 
 ### 009-spec-kit-adapter
@@ -892,7 +892,7 @@ Run TenantGuard in CI and produce PR summaries.
 Purpose:
 
 ```text
-Read Spec Kit artifacts and map them to TenantGuard project map, queue, and prompt context.
+Read Spec Kit artifacts and map them to Aker Build project map, queue, and prompt context.
 ```
 
 ### 010-example-project
@@ -938,10 +938,10 @@ Exit gate:
 Deliverables:
 
 ```text
-tenantguard --version
-tenantguard init
-tenantguard scan
-tenantguard map
+aker-build --version
+aker-build init
+aker-build scan
+aker-build map
 project-map.json
 basic markdown report
 ```
@@ -957,9 +957,9 @@ CLI runs locally without GitHub credentials.
 Deliverables:
 
 ```text
-tenantguard gates
-tenantguard queue
-tenantguard route
+aker-build gates
+aker-build queue
+aker-build route
 risks.json
 queue.json
 ```
@@ -975,8 +975,8 @@ Tool produces useful risks and a next safe task from a local repo.
 Deliverables:
 
 ```text
-tenantguard prompt Q-001 --agent claude
-tenantguard prompt Q-001 --agent codex
+aker-build prompt Q-001 --agent claude
+aker-build prompt Q-001 --agent codex
 ```
 
 Exit gate:
@@ -990,8 +990,8 @@ Generated prompts are copy-paste-ready and scope-limited.
 Deliverables:
 
 ```text
-tenantguard review-pr --local-diff
-tenantguard review-pr 123
+aker-build review-pr --local-diff
+aker-build review-pr 123
 ```
 
 Exit gate:
@@ -1013,7 +1013,7 @@ critical gate failure support
 Exit gate:
 
 ```text
-A repository can run TenantGuard in pull_request workflows.
+A repository can run Aker Build in pull_request workflows.
 ```
 
 ### Wave 6 — GitHub App
@@ -1049,7 +1049,7 @@ billing
 ## 18. Suggested Repository Structure
 
 ```text
-tenantguard/
+aker-build/
   README.md
   CLAUDE.md
   package.json
@@ -1114,7 +1114,7 @@ tenantguard/
   .github/
     workflows/
       ci.yml
-      tenantguard.yml
+      aker-build.yml
 ```
 
 ---
@@ -1146,9 +1146,9 @@ Do not create package code until `001-product-foundation`, `002-project-map-sche
 ## 20. Initial README Draft
 
 ```markdown
-# TenantGuard
+# Aker Build
 
-TenantGuard is a CLI-first SaaS Build Kernel for teams building multi-tenant SaaS systems with GitHub, specs, CI, and AI coding agents.
+Aker Build is a CLI-first SaaS Build Kernel for teams building multi-tenant SaaS systems with GitHub, specs, CI, and AI coding agents.
 
 It helps teams answer:
 
@@ -1159,18 +1159,18 @@ It helps teams answer:
 - What files may an AI agent touch?
 - Is this PR ready to merge?
 
-TenantGuard is not a SaaS boilerplate. It does not generate a full app. It controls the build process around architecture, gates, queues, prompts, and verification.
+Aker Build is not a SaaS boilerplate. It does not generate a full app. It controls the build process around architecture, gates, queues, prompts, and verification.
 
 ## MVP
 
 The first version is a local CLI:
 
 ```bash
-tenantguard scan
-tenantguard queue
-tenantguard route
-tenantguard prompt Q-001 --agent claude
-tenantguard review-pr --local-diff
+aker-build scan
+aker-build queue
+aker-build route
+aker-build prompt Q-001 --agent claude
+aker-build review-pr --local-diff
 ```
 
 ## Core flow
@@ -1197,13 +1197,13 @@ Product foundation stage. No production code yet.
 ```markdown
 # CLAUDE.md
 
-You are working in the TenantGuard repository.
+You are working in the Aker Build repository.
 
-TenantGuard is a CLI-first SaaS Build Kernel. It helps teams build multi-tenant SaaS systems with GitHub, specs, gates, derived queues, PR verification, and safe AI-agent prompts.
+Aker Build is a CLI-first SaaS Build Kernel. It helps teams build multi-tenant SaaS systems with GitHub, specs, gates, derived queues, PR verification, and safe AI-agent prompts.
 
 ## Product direction
 
-TenantGuard is not a SaaS boilerplate and not a generic task manager. It is a build-control kernel.
+Aker Build is not a SaaS boilerplate and not a generic task manager. It is a build-control kernel.
 
 Core flow:
 
@@ -1234,7 +1234,7 @@ Docs-first product foundation. Do not implement production code unless a reviewe
 
 ## Spec workflow
 
-Use Spec Kit for TenantGuard planning when available:
+Use Spec Kit for Aker Build planning when available:
 
 1. constitution
 2. specify
@@ -1242,7 +1242,7 @@ Use Spec Kit for TenantGuard planning when available:
 4. tasks
 5. implementation only after approval
 
-TenantGuard itself must be Spec Kit compatible but not Spec Kit dependent.
+Aker Build itself must be Spec Kit compatible but not Spec Kit dependent.
 
 ## Hard rules
 
@@ -1291,9 +1291,9 @@ Use this as the first Spec Kit prompt.
 ```text
 /speckit.constitution
 
-Create governing principles for TenantGuard, a CLI-first SaaS Build Kernel that helps teams build multi-tenant SaaS systems with GitHub, specs, gates, PR verification, and AI-agent prompt compilation.
+Create governing principles for Aker Build, a CLI-first SaaS Build Kernel that helps teams build multi-tenant SaaS systems with GitHub, specs, gates, PR verification, and AI-agent prompt compilation.
 
-TenantGuard must be:
+Aker Build must be:
 - CLI-first for MVP
 - GitHub-first but locally usable
 - Spec Kit compatible but not Spec Kit dependent
@@ -1302,7 +1302,7 @@ TenantGuard must be:
 - agent-safe by default
 - general SaaS focused
 
-TenantGuard must not:
+Aker Build must not:
 - copy Retail Tower domain logic
 - expose private project details
 - behave as a SaaS boilerplate
@@ -1320,7 +1320,7 @@ TenantGuard must not:
 
 Feature: 001-product-foundation
 
-Define the product foundation for TenantGuard, a CLI-first SaaS Build Kernel extracted from Retail Tower OS operating practices through clean extraction, not copy-paste.
+Define the product foundation for Aker Build, a CLI-first SaaS Build Kernel extracted from Retail Tower OS operating practices through clean extraction, not copy-paste.
 
 The feature must define:
 1. Product vision.
@@ -1395,14 +1395,14 @@ Do not implement CLI scanner before the Project Map schema exists.
 ## 25. Final Working Plan
 
 ```text
-TenantGuard
+Aker Build
 = CLI-first SaaS Build Kernel
 
 Stack:
 TypeScript + Node.js LTS + pnpm + Vitest + Zod
 
 Workflow:
-Spec Kit for building TenantGuard
+Spec Kit for building Aker Build
 Spec-compatible product behavior for users
 
 Architecture:

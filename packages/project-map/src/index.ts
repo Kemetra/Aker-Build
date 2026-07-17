@@ -1,5 +1,5 @@
-// Public surface for @tenantguard/project-map (T015).
-// The Project Map is TenantGuard's canonical, evidence-derived model of a target repo.
+// Public surface for @aker-build/project-map (T015).
+// The Project Map is Aker Build's canonical, evidence-derived model of a target repo.
 
 export {
   SCHEMA_VERSION,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { evidenceSchema } from "@tenantguard/project-map";
+import { evidenceSchema } from "@aker-build/project-map";
 
 /** Canonical risks.json schema version. */
 export const RISKS_SCHEMA_VERSION = 1;

@@ -2,13 +2,13 @@
 
 Entities, the `queue.json` / `route.json` shapes, derivation rules, and the scoring model. Grounded in
 the spec's item contract and the **real exported** `evidenceSchema` (imported from
-`@tenantguard/project-map`). No code is created here.
+`@aker-build/project-map`). No code is created here.
 
 ---
 
 ## Shared Evidence Object (imported, NOT redefined)
 
-Queue-item `source.evidence` uses `@tenantguard/project-map`'s `evidenceSchema`
+Queue-item `source.evidence` uses `@aker-build/project-map`'s `evidenceSchema`
 (`{type, path, line?, signal, confidence}`) verbatim (FR-003). `.strip()` keeps secrets out (FR-012).
 
 ---

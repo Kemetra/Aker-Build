@@ -27,8 +27,8 @@ existing artifacts. Format: **Decision / Rationale / Alternatives**.
 ## R2 — Evidence-consumption edge: consume `project-map.json`, reuse scanner `io.ts` for file reads
 
 - **Decision**: `packages/gates` consumes an **already-written `project-map.json`** (loaded +
-  validated via `@tenantguard/project-map`'s `loadJson` + `validate`) for structural facts, and gets
-  **file-level reads** by **reusing `@tenantguard/scanner`'s read-only `io.ts` primitives**
+  validated via `@aker-build/project-map`'s `loadJson` + `validate`) for structural facts, and gets
+  **file-level reads** by **reusing `@aker-build/scanner`'s read-only `io.ts` primitives**
   (`listFiles`, `fileExists`, `readFileSafe`). It does **not** re-run a full scan and does **not**
   introduce new fs primitives.
 - **Rationale**: FR-008 requires gates to read the Project Map *and* repo evidence, read-only. Several
@@ -47,7 +47,7 @@ existing artifacts. Format: **Decision / Rationale / Alternatives**.
 ## R3 — Schema home: `risks.json` schema lives in `packages/gates`, imports `evidenceSchema` from 002
 
 - **Decision**: Define `findingSchema` and `risksSchema` (Zod) **in `packages/gates`**, **importing
-  `evidenceSchema` from `@tenantguard/project-map`** and never redefining the evidence shape.
+  `evidenceSchema` from `@aker-build/project-map`** and never redefining the evidence shape.
 - **Rationale**: 002's scope is the Project Map; `risks.json` is a distinct downstream artifact, so its
   schema belongs with the producer (`packages/gates`). Importing the shared `evidenceSchema` satisfies
   FR-003 ("MUST reuse the shared shape and MUST NOT define a divergent evidence/finding shape") and
@@ -96,10 +96,10 @@ existing artifacts. Format: **Decision / Rationale / Alternatives**.
 
 ## R7 — CLI surface & subset selection
 
-- **Decision**: `tenantguard gates [--gates TG-G4,TG-G5] [--out <dir>]`. With no `--gates`, run the
+- **Decision**: `aker-build gates [--gates TG-G4,TG-G5] [--out <dir>]`. With no `--gates`, run the
   full set; with `--gates`, run only the named ids (comma-separated, validated against the registry —
   unknown id → non-zero exit with a clear message). If no `project-map.json` exists in the out-dir,
-  exit non-zero with a "run `tenantguard scan` first" message (mirroring how `tenantguard map`
+  exit non-zero with a "run `aker-build scan` first" message (mirroring how `aker-build map`
   signals a missing map).
 - **Rationale**: FR-006 + the clarified CLI surface. Reuses 003's `map` "run scan first" UX pattern for
   consistency.

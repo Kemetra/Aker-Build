@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/gates",
+  "name": "@aker-build/gates",
   "version": "0.0.0",
-  "description": "TenantGuard SaaS Gates v0 — evidence-backed risk detection producing risks.json",
+  "description": "Aker Build SaaS Gates v0 — evidence-backed risk detection producing risks.json",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,9 +15,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
+    "@aker-build/config": "workspace:*",
+    "@aker-build/project-map": "workspace:*",
+    "@aker-build/scanner": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

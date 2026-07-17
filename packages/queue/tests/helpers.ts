@@ -2,8 +2,8 @@ import { join } from "node:path";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
-import type { RiskList, Finding } from "@tenantguard/gates";
-import type { ProjectMap } from "@tenantguard/project-map";
+import type { RiskList, Finding } from "@aker-build/gates";
+import type { ProjectMap } from "@aker-build/project-map";
 
 /** A minimal valid 002 ProjectMap for tests (empty/honest). */
 export function minimalMap(): ProjectMap {
@@ -50,10 +50,10 @@ export function fixtureRepo(map: ProjectMap, risks: RiskList): { repoRoot: strin
   mkdirSync(repoRoot, { recursive: true });
   const git = (...a: string[]) => execFileSync("git", a, { cwd: repoRoot, stdio: "ignore" });
   git("init", "-q");
-  git("config", "user.email", "test@tenantguard.local");
-  git("config", "user.name", "TenantGuard Test");
+  git("config", "user.email", "test@aker-build.local");
+  git("config", "user.name", "Aker Build Test");
 
-  const outDir = join(repoRoot, ".tenantguard");
+  const outDir = join(repoRoot, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "project-map.json"), JSON.stringify(map, null, 2), "utf8");
   writeFileSync(join(outDir, "risks.json"), JSON.stringify(risks, null, 2), "utf8");

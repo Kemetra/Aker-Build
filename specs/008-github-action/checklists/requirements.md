@@ -7,7 +7,7 @@
 ## Content Quality
 
 - [x] No prescribed implementation details — CI runtime/packaging/YAML deferred to implementation
-- [x] Focused on automatic per-PR TenantGuard feedback (core value)
+- [x] Focused on automatic per-PR Aker Build feedback (core value)
 - [~] Written for stakeholders — readable, but CI/developer tooling; some terms inherent (caveat)
 - [x] All mandatory sections completed
 
@@ -18,7 +18,7 @@
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic
 - [x] All acceptance scenarios are defined
-- [x] Edge cases are identified (empty diff, TenantGuard error, secrets, limited permissions)
+- [x] Edge cases are identified (empty diff, Aker Build error, secrets, limited permissions)
 - [x] Scope is clearly bounded (CI summary + optional blocking; NO workflow file created here)
 - [x] Dependencies and assumptions identified (depends on 001/003/004/007)
 

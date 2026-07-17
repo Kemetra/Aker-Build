@@ -9,7 +9,7 @@ description: "Task list for 003-cli-scanner implementation"
 **Tests**: INCLUDED — TDD per the constitution (Development Workflow) and the feature request.
 
 **Organization**: Grouped by the three user stories in `spec.md` (US1 P1, US2 P2, US3 P3), each
-independently testable. Output is a `ProjectMap` validated with `@tenantguard/project-map` (002).
+independently testable. Output is a `ProjectMap` validated with `@aker-build/project-map` (002).
 
 > **GATE**: Writing this file creates no code. Implementation begins only after `plan.md` + `tasks.md`
 > are reviewed. Package/lockfile changes (T002–T003) are gated on explicit approval (granted for this
@@ -26,7 +26,7 @@ independently testable. Output is a `ProjectMap` validated with `@tenantguard/pr
 ## Phase 1: Setup (Shared Infrastructure)
 
 - [x] T001 Author `docs/decisions/ADR-002-cli-framework.md` recording **Commander** as the CLI framework (resolves the choice ADR-001 deferred), citing `research.md` R1 and the blueprint. (Docs-only.)
-- [x] T002 Initialize `packages/scanner/` (`package.json` depending on `@tenantguard/project-map` workspace + `yaml`; `tsconfig.json`) and `packages/cli/` (`package.json` depending on `commander` + `@tenantguard/project-map` + scanner; `bin` entry; `tsconfig.json`). **Approved package/lockfile change.**
+- [x] T002 Initialize `packages/scanner/` (`package.json` depending on `@aker-build/project-map` workspace + `yaml`; `tsconfig.json`) and `packages/cli/` (`package.json` depending on `commander` + `@aker-build/project-map` + scanner; `bin` entry; `tsconfig.json`). **Approved package/lockfile change.**
 - [x] T003 [P] Configure Vitest for both packages (`vitest.config.ts` each), reusing the workspace toolchain.
 
 **Checkpoint**: Both packages skeletoned; ADR-002 recorded. No detection logic yet.
@@ -47,10 +47,10 @@ independently testable. Output is a `ProjectMap` validated with `@tenantguard/pr
 
 ## Phase 3: User Story 1 - Scan a repo into a conforming map (Priority: P1) 🎯 MVP
 
-**Goal**: `tenantguard scan` on a real repo produces a `project-map.json` that validates against 002,
+**Goal**: `aker-build scan` on a real repo produces a `project-map.json` that validates against 002,
 with every populated value traceable to a detection signal, and the scanned repo unchanged.
 
-**Independent Test**: Scan the multi-tenant fixture → emitted map passes `@tenantguard/project-map`
+**Independent Test**: Scan the multi-tenant fixture → emitted map passes `@aker-build/project-map`
 `validate()`; assert 0 scanned files changed; assert each populated value has a signal.
 
 ### Tests for User Story 1 (write FIRST; must FAIL before implementation) ⚠️
@@ -65,8 +65,8 @@ with every populated value traceable to a detection signal, and the scanned repo
 - [x] T011 [P] [US1] Implement stack detection (runtime/package_manager/frameworks from manifests) in `packages/scanner/src/detect/stack.ts` per `data-model.md` rules (depends on T005).
 - [x] T012 [P] [US1] Implement repos/area + monorepo detection in `packages/scanner/src/detect/repos.ts` (depends on T005).
 - [x] T013 [US1] Implement map assembly → a 002 `ProjectMap` from signals, with **deterministic stable ordering**, in `packages/scanner/src/assemble.ts` (depends on T011, T012).
-- [x] T014 [US1] **Validate the assembled map with `@tenantguard/project-map` `validate()` before returning**; on failure, error with field-level errors and emit nothing (R5), in `packages/scanner/src/scan.ts` (depends on T013).
-- [x] T015 [US1] Implement output write (`project-map.json` to designated `--out`, default `./.tenantguard/`, outside scanned tracked source) in `packages/scanner/src/io.ts` (FR-003; depends on T014).
+- [x] T014 [US1] **Validate the assembled map with `@aker-build/project-map` `validate()` before returning**; on failure, error with field-level errors and emit nothing (R5), in `packages/scanner/src/scan.ts` (depends on T013).
+- [x] T015 [US1] Implement output write (`project-map.json` to designated `--out`, default `./.aker-build/`, outside scanned tracked source) in `packages/scanner/src/io.ts` (FR-003; depends on T014).
 - [x] T016 [US1] Public surface `scan(targetPath, opts): ScanResult` in `packages/scanner/src/index.ts` (depends on T014).
 
 **Checkpoint**: MVP — a repo can be scanned into a 002-valid, evidence-traced, read-only map.
@@ -123,9 +123,9 @@ non-deterministic metadata like timestamps).
 
 ---
 
-## Phase 7: CLI (`tenantguard scan` / `map`)
+## Phase 7: CLI (`aker-build scan` / `map`)
 
-**Goal**: Wire the scanner library into the `tenantguard` CLI per `contracts/cli-commands.md`.
+**Goal**: Wire the scanner library into the `aker-build` CLI per `contracts/cli-commands.md`.
 
 ### Tests (write FIRST; must FAIL) ⚠️
 
@@ -136,9 +136,9 @@ non-deterministic metadata like timestamps).
 
 - [x] T028 [US1] Implement the Commander program + `scan` command (`[path]`, `--out`, `--stdout`, `--format`) in `packages/cli/src/commands/scan.ts` + `packages/cli/src/index.ts` (depends on T016).
 - [x] T029 [US3] Implement the `map` command (read + render produced map, `--format`) in `packages/cli/src/commands/map.ts` (depends on T015).
-- [x] T030 Wire the `#!` bin entry (`packages/cli/src/bin.ts`) to the program and `package.json` `bin: { tenantguard }`.
+- [x] T030 Wire the `#!` bin entry (`packages/cli/src/bin.ts`) to the program and `package.json` `bin: { aker-build }`.
 
-**Checkpoint**: `tenantguard scan` / `map` work end-to-end against fixtures.
+**Checkpoint**: `aker-build scan` / `map` work end-to-end against fixtures.
 
 ---
 
@@ -203,5 +203,5 @@ polish. Commit after each task or logical group, on the approved branch, only wh
 - **No code is written by generating this file.** Implementation waits on plan+tasks review.
 - TDD: verify each test fails before implementing.
 - Scanner is **read-only on the scanned repo** — output goes to a designated path outside tracked source.
-- Output **must validate against `@tenantguard/project-map`** before being written (no invalid maps).
+- Output **must validate against `@aker-build/project-map`** before being written (no invalid maps).
 - [P] = different files, no dependency; [US#] maps task → user story.

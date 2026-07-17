@@ -8,8 +8,8 @@
 Turn evidence into action. A new package `packages/queue` **derives `queue.json`** — safe, scoped work
 items — from the Project Map (002) and gate findings (004, `risks.json`), then **routes** to exactly
 one next-safest task (`route.json`, also printed) with an explicit reason and a blocked list. v0 is
-deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `tenantguard queue`
-and `tenantguard route`.
+deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `aker-build queue`
+and `aker-build route`.
 
 **Technical approach** (decided at this plan layer):
 
@@ -19,9 +19,9 @@ and `tenantguard route`.
    The **selection ordering is already pinned by the spec**: primary sort `score desc`, ties broken by
    `blast_radius asc` → `risk asc` → `id asc`. See Research R1.
 2. **Package boundary**: new `packages/queue` consumes a written `risks.json` (validated via
-   `@tenantguard/gates` `risksSchema`) + `project-map.json` (validated via `@tenantguard/project-map`),
-   and reuses `@tenantguard/scanner`'s read-only `io.ts` for optional diff/PR evidence + output writes.
-   It **imports `evidenceSchema` from `@tenantguard/project-map`** for queue-item `source.evidence`
+   `@aker-build/gates` `risksSchema`) + `project-map.json` (validated via `@aker-build/project-map`),
+   and reuses `@aker-build/scanner`'s read-only `io.ts` for optional diff/PR evidence + output writes.
+   It **imports `evidenceSchema` from `@aker-build/project-map`** for queue-item `source.evidence`
    (never redefined, FR-003). See Research R2.
 3. **Schema home**: the `queueItemSchema` / `queueSchema` / `routeDecisionSchema` (Zod) live in
    `packages/queue`. See Research R3.
@@ -32,13 +32,13 @@ are reviewed (AC-009; constitution §Development Workflow).
 ## Technical Context
 
 **Language/Version**: TypeScript on Node.js LTS (per ADR-001).
-**Primary Dependencies**: `@tenantguard/project-map` (map contract + `evidenceSchema` + `validate`);
-  `@tenantguard/gates` (`risksSchema` + `Finding` types — the queue's evidence source);
-  `@tenantguard/scanner` (read-only `io.ts`, optional diff via git read); **Commander** (CLI, ADR-002);
+**Primary Dependencies**: `@aker-build/project-map` (map contract + `evidenceSchema` + `validate`);
+  `@aker-build/gates` (`risksSchema` + `Finding` types — the queue's evidence source);
+  `@aker-build/scanner` (read-only `io.ts`, optional diff via git read); **Commander** (CLI, ADR-002);
   **Zod** (queue/route schemas). No network client.
 **Storage**: Reads `project-map.json` + `risks.json` from the out-dir; optionally reads the local diff
   (read-only). Writes `queue.json` + `route.json` to the **designated out-dir outside tracked source**
-  (default `./.tenantguard/`, FR-016) — never mutates scanned files.
+  (default `./.aker-build/`, FR-016) — never mutates scanned files.
 **Testing**: Vitest. Fixtures = a synthetic map+risks pair producing a mixed-readiness queue (ready,
   blocked-by-dep, blocked-by-lock-overlap, circular-dep), reusing the 003/004 fixture-prep helper
   pattern where a real repo is needed.
@@ -59,7 +59,7 @@ are reviewed (AC-009; constitution §Development Workflow).
 | Principle | Relevance | Status |
 |-----------|-----------|--------|
 | I. Source Truth First | Queue/route derive only from current map + findings (+ optional diff); "no safe task" is explicit, never an arbitrary pick (FR-007). | ✅ Pass |
-| II. CLI First | Delivered as `tenantguard queue` / `route`; local, no network/credentials (FR-011). | ✅ Pass |
+| II. CLI First | Delivered as `aker-build queue` / `route`; local, no network/credentials (FR-011). | ✅ Pass |
 | III. Evidence-Based | Every finding-derived item traces to its source evidence; reasons cite why (FR-003, FR-005, SC-002). | ✅ Pass |
 | IV. Spec-Compatible | Operates on any scanned repo's map + risks; no methodology requirement. | ✅ Pass |
 | V. Agent Safety | Queue items carry scope, allowed/forbidden files, gates, validation, stop conditions — the raw material 006 compiles into safe prompts. | ✅ Pass |
@@ -114,15 +114,15 @@ packages/queue/               # queue derivation + router + schemas (created at 
     ├── lock-overlap.test.ts          # lock-scope overlap with diff → deprioritized/blocked (US3)
     └── secrets.test.ts               # no secret in queue/route output (SC-007)
 
-packages/cli/                 # extend the existing tenantguard CLI (no new package)
-├── src/commands/queue.ts     # `tenantguard queue` → deriveQueue → write queue.json
-├── src/commands/route.ts     # `tenantguard route` → route → write route.json + print decision
+packages/cli/                 # extend the existing aker-build CLI (no new package)
+├── src/commands/queue.ts     # `aker-build queue` → deriveQueue → write queue.json
+├── src/commands/route.ts     # `aker-build route` → route → write route.json + print decision
 └── tests/cli.queue-route.test.ts  # commands produce valid outputs; exit codes; run-queue-first path
 ```
 
 **Structure Decision**: A new `packages/queue` library (pure derivation + scoring + routing + schemas)
 plus thin new commands in the **existing** `packages/cli`. `packages/queue` depends on
-`@tenantguard/project-map`, `@tenantguard/gates`, and `@tenantguard/scanner`, keeping the read-only
+`@aker-build/project-map`, `@aker-build/gates`, and `@aker-build/scanner`, keeping the read-only
 guarantee centralized and letting 006 (prompt compiler) consume queue items + the router decision
 directly. This plan **does not create** any of the above; the split is confirmable at `/speckit-tasks`.
 

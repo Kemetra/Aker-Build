@@ -1,4 +1,4 @@
-import { writeOutput } from "@tenantguard/scanner";
+import { writeOutput } from "@aker-build/scanner";
 import type { RiskList } from "./types.js";
 
 /** Canonical risks.json filename. */

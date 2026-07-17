@@ -2,7 +2,7 @@
 
 The review entities, the **finding-attribution rule**, the **status-based verdict rule**, the scope
 check, and the `review.json` shape. Grounded in the **real shipped types**: `Finding`/`RiskList` from
-`@tenantguard/gates` (`packages/gates/src/types.ts`), `QueueItem` from `@tenantguard/queue`
+`@aker-build/gates` (`packages/gates/src/types.ts`), `QueueItem` from `@aker-build/queue`
 (`packages/queue/src/types.ts`), and the 002 `Evidence` shape. No code is created here.
 
 ---
@@ -66,7 +66,7 @@ out_of_scope(file, item) =
 (`allowed_files` empty = "no allow-list constraint" — only `forbidden_files` applies, mirroring 006's
 forbidden-empty handling.) Any out-of-scope changed file is a scope violation contributing to the
 verdict. **Without `--item`**, the scope check is **skipped** and `scope.checked = false` is recorded in
-the report (FR-003). Missing `queue.json` (with `--item`) → "run `tenantguard queue` first"; unknown
+the report (FR-003). Missing `queue.json` (with `--item`) → "run `aker-build queue` first"; unknown
 `<ID>` → clear error.
 
 ---

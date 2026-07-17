@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, it, expect } from "vitest";
-import type { Workspace } from "@tenantguard/github-app";
+import type { Workspace } from "@aker-build/github-app";
 import { dispatch, type DispatchDeps } from "../src/server.js";
 import type { GitHubApi } from "../src/github-api.js";
 

@@ -58,8 +58,8 @@ function initGitRepo(dir: string): void {
   };
   git("init", "-q");
   // Local identity so the repo is self-contained on any runner; values are irrelevant.
-  git("config", "user.email", "test@tenantguard.local");
-  git("config", "user.name", "TenantGuard Test");
+  git("config", "user.email", "test@aker-build.local");
+  git("config", "user.name", "Aker Build Test");
 }
 
 /** Snapshot of every file path + size + mtime under a dir (for read-only verification). */

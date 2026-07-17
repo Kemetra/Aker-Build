@@ -34,7 +34,7 @@ describe("review is read-only on the repo/diff (T014, SC-006, FR-008)", () => {
     // Use the real changedFiles (the only path that touches the repo); inject runGates so the
     // test doesn't depend on a project-map (real gate behavior is covered in 004 + the e2e task).
     const report = reviewLocalDiff(
-      { out: resolve(repo, ".tenantguard") },
+      { out: resolve(repo, ".aker-build") },
       {
         changedFiles: () => changedFiles(repo),
         runGates: () => ({ risks: { schema_version: 1, findings: [] } }),

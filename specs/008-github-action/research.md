@@ -8,15 +8,15 @@ Alternatives**.
 
 ## R1 — Pure CI wiring over 007's outputs (no new engine, no new TS)
 
-- **Decision**: The Action runs the existing CLI — **checkout PR head → `tenantguard scan` →
-  `tenantguard review-pr`** — and surfaces `review.md` (human summary) into the CI run, reading
+- **Decision**: The Action runs the existing CLI — **checkout PR head → `aker-build scan` →
+  `aker-build review-pr`** — and surfaces `review.md` (human summary) into the CI run, reading
   `review.json` for the machine verdict + findings. **No new TypeScript, no new package, no TDD suite.**
 - **Rationale**: FR-002 ("reuse the existing CLI, not a separate engine") + the Integration Surface
   ("no new core behavior beyond CI wiring") + AC-008 (no live workflow) leave 008 as pure
   documentation/wiring. 007 already emits both a human (`review.md`) and machine (`review.json`) artifact
   precisely so a CI surface can consume them — the forward-design from 007 is the substrate here.
 - **Alternatives considered**:
-  - *A new `@tenantguard/action` package that re-implements the chain* — violates FR-002 ("no separate
+  - *A new `@aker-build/action` package that re-implements the chain* — violates FR-002 ("no separate
     engine") and adds a maintenance surface for zero new behavior. Rejected.
 
 ## R2 — CI uses PR-NUMBER mode (not `--local-diff`); PR-head checkout supplies the file contents
@@ -78,16 +78,16 @@ Alternatives**.
 ## R4 — CLI-in-CI invocation: run the unbuilt TS CLI via pnpm + tsx (ADR-007)
 
 - **Decision**: The CLI bin is `packages/cli/src/bin.ts` — a **TypeScript** entry with **no build step
-  and no published npm binary**. The example workflow therefore obtains the TenantGuard tooling (a
+  and no published npm binary**. The example workflow therefore obtains the Aker Build tooling (a
   checkout / future published package) and runs the CLI via **corepack pnpm + a TS runner (`tsx`)**,
   e.g. `pnpm dlx tsx packages/cli/src/bin.ts review-pr ...`. Recorded as **ADR-007** (CI runtime/
-  packaging). A published `tenantguard` binary / a packaged composite Action is a later, additive step.
+  packaging). A published `aker-build` binary / a packaged composite Action is a later, additive step.
 - **Rationale**: Grounding the example on what actually runs today avoids documenting a `npm i -g
-  tenantguard` step that does not exist. pnpm is already the workspace manager (corepack-pinned
+  aker-build` step that does not exist. pnpm is already the workspace manager (corepack-pinned
   `pnpm@11.0.8`); `tsx` runs the ESM TS directly with no build. The spec defers "CI runtime/packaging"
   to the implementation layer (Non-Goals / Assumptions) — ADR-007 is where that lands.
 - **Alternatives considered**:
-  - *Assume a published `tenantguard` binary* — none exists yet; would document a broken setup step.
+  - *Assume a published `aker-build` binary* — none exists yet; would document a broken setup step.
     Rejected for v0 (revisit when the CLI is published / packaged as a composite action).
   - *Add a build step to compile the CLI in CI* — heavier; `tsx` runs the source directly. Deferred.
 
@@ -96,7 +96,7 @@ Alternatives**.
 - **Decision**: The summary/logs carry only `review.md` content (secret-safe by construction —
   evidence names `signal`, never raw values, inherited from 002/004/007). The Action is **read-only on
   the repo** (007 writes only to the out-dir; the workflow does no commit/push/merge/comment). On a
-  TenantGuard error (non-zero exit ≠ a Not-Ready verdict), the **job fails with the error surfaced** —
+  Aker Build error (non-zero exit ≠ a Not-Ready verdict), the **job fails with the error surfaced** —
   never a silent pass (FR-008, SC-007). No tokens are stored; only the CI-provided token is used
   (FR-007).
 - **Rationale**: FR-005..FR-008 + SC-004..SC-007 are satisfied by inheriting 007's guarantees and by

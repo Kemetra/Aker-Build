@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
-import { scanToFile } from "@tenantguard/scanner";
-import { runGatesToFile } from "@tenantguard/gates";
+import { scanToFile } from "@aker-build/scanner";
+import { runGatesToFile } from "@aker-build/gates";
 import { reviewLocalDiff } from "../src/review.js";
 import { renderReport } from "../src/render.js";
 
@@ -32,7 +32,7 @@ describe("e2e: scan → gates → review-pr --local-diff (T036)", () => {
       "utf8",
     );
 
-    const out = join(root, ".tenantguard");
+    const out = join(root, ".aker-build");
     scanToFile(root, out); // → project-map.json (real scanner)
     runGatesToFile(root, { out }); // → risks.json (real gates)
 
@@ -42,7 +42,7 @@ describe("e2e: scan → gates → review-pr --local-diff (T036)", () => {
     expect(report.mode).toBe("local-diff");
     expect(report.changed_files).toContain("apps/api/routes/admin.ts");
     // out-dir artifacts must not pollute the changed files (SC-007)
-    expect(report.changed_files.some((f) => f.startsWith(".tenantguard/"))).toBe(false);
+    expect(report.changed_files.some((f) => f.startsWith(".aker-build/"))).toBe(false);
     expect(report.verdict).toBe("not_ready");
     expect(report.findings.some((f) => "gate_id" in f && f.gate_id === "TG-G4")).toBe(true);
 

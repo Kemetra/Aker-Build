@@ -1,4 +1,4 @@
-import type { Evidence, ProjectMap } from "@tenantguard/project-map";
+import type { Evidence, ProjectMap } from "@aker-build/project-map";
 
 /** Severity for a `risk` finding (ordered low→critical). Null for non-risk findings. */
 export type Severity = "low" | "medium" | "high" | "critical";
@@ -35,7 +35,7 @@ export interface RiskList {
 
 /**
  * Read-only context handed to every gate. Exposes the Project Map plus read-only file
- * primitives reused from @tenantguard/scanner — gates never mutate the scanned repo (FR-008).
+ * primitives reused from @aker-build/scanner — gates never mutate the scanned repo (FR-008).
  */
 export interface GateContext {
   projectMap: ProjectMap;
@@ -54,11 +54,11 @@ export interface Gate {
 }
 
 export interface RunGatesOptions {
-  /** Output/input directory (outside scanned tracked source). Default ".tenantguard". */
+  /** Output/input directory (outside scanned tracked source). Default ".aker-build". */
   out?: string;
   /** Subset of gate ids to run; omitted/empty = full set. */
   gates?: string[];
-  /** Optional explicit config path. If omitted, tenantguard.config.json/yaml is auto-discovered. */
+  /** Optional explicit config path. If omitted, aker-build.config.json/yaml is auto-discovered. */
   configPath?: string;
 }
 

@@ -3,10 +3,10 @@
 Use this only after 011 spec, plan, and tasks are reviewed.
 
 ```text
-You are working in the TenantGuard repository.
+You are working in the Aker Build repository.
 
 Objective:
-Implement only the approved 011 slice for a read-only Spec Kit adapter and safe TenantGuard config boundary. Keep TenantGuard Spec Kit compatible, not Spec Kit dependent.
+Implement only the approved 011 slice for a read-only Spec Kit adapter and safe Aker Build config boundary. Keep Aker Build Spec Kit compatible, not Spec Kit dependent.
 
 First, verify repo state:
 - Run: git status --short
@@ -20,11 +20,11 @@ First, verify repo state:
 - Stop if unrelated uncommitted changes exist.
 
 Context:
-TenantGuard must read Spec Kit artifacts when present and still work when they are absent. Config suppressions must be explicit, owned, reasoned, and visible in reports. The adapter is read-only.
+Aker Build must read Spec Kit artifacts when present and still work when they are absent. Config suppressions must be explicit, owned, reasoned, and visible in reports. The adapter is read-only.
 
 Allowed files:
 Use only files explicitly listed by the reviewed 011 tasks. Expected areas may include:
-- contracts/tenantguard-config.schema.json
+- contracts/aker-build-config.schema.json
 - packages/config/**
 - packages/spec-kit-adapter/**
 - narrowly scoped integration points in project-map/gates/queue/prompt/reporters/cli

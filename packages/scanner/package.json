@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/scanner",
+  "name": "@aker-build/scanner",
   "version": "0.0.0",
-  "description": "TenantGuard CLI Scanner — read-only repo scan producing a 002-conforming Project Map",
+  "description": "Aker Build CLI Scanner — read-only repo scan producing a 002-conforming Project Map",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
+    "@aker-build/config": "workspace:*",
+    "@aker-build/project-map": "workspace:*",
     "yaml": "^2.6.1"
   },
   "devDependencies": {

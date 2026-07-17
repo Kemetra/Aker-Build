@@ -1,14 +1,14 @@
 # CLAUDE.md
 
-You are working in the TenantGuard repository.
+You are working in the Aker Build repository.
 
-TenantGuard is a CLI-first SaaS Build Kernel. It helps teams build multi-tenant SaaS systems with GitHub, specs, gates, derived queues, PR verification, and safe AI-agent prompts.
+Aker Build is a CLI-first SaaS Build Kernel. It helps teams build multi-tenant SaaS systems with GitHub, specs, gates, derived queues, PR verification, and safe AI-agent prompts.
 
 ---
 
 ## Product Direction
 
-TenantGuard is not a SaaS boilerplate and not a generic task manager. It is a build-control kernel.
+Aker Build is not a SaaS boilerplate and not a generic task manager. It is a build-control kernel.
 
 Core flow:
 
@@ -36,7 +36,7 @@ The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, 
 
 Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
 
-A report-only GitHub Action dogfood workflow exists (TenantGuard runs against its own repo and reports; it does not auto-fix or auto-merge).
+A report-only GitHub Action dogfood workflow exists (Aker Build runs against its own repo and reports; it does not auto-fix or auto-merge).
 
 The "Fortify, then Expand" roadmap is approved (2026-06-21) and FORTIFY (P1–P3) is shipped. Per constitution v1.1.0, a **report-only GitHub App (P4)** is now an approved post-MVP surface — see `specs/014-github-app-report-only/`. It must stay report-only (Checks run + annotations only; no mutation), stateless, and secret-safe. The hosted dashboard / org view (P5) and any enforcing/blocking-merge check (P6) remain deferred and unapproved.
 
@@ -58,7 +58,7 @@ The "Fortify, then Expand" roadmap is approved (2026-06-21) and FORTIFY (P1–P3
 
 ## Spec Workflow
 
-Use Spec Kit for TenantGuard planning when available:
+Use Spec Kit for Aker Build planning when available:
 
 1. constitution
 2. specify
@@ -66,7 +66,7 @@ Use Spec Kit for TenantGuard planning when available:
 4. tasks
 5. implementation only after approval
 
-TenantGuard itself must be Spec Kit compatible but not Spec Kit dependent.
+Aker Build itself must be Spec Kit compatible but not Spec Kit dependent.
 
 ---
 
@@ -75,16 +75,16 @@ TenantGuard itself must be Spec Kit compatible but not Spec Kit dependent.
 MVP commands:
 
 ```bash
-tenantguard init
-tenantguard scan
-tenantguard map
-tenantguard gates
-tenantguard queue
-tenantguard route
-tenantguard prompt Q-001 --agent claude
-tenantguard prompt Q-001 --agent codex
-tenantguard review-pr --local-diff
-tenantguard report
+aker-build init
+aker-build scan
+aker-build map
+aker-build gates
+aker-build queue
+aker-build route
+aker-build prompt Q-001 --agent claude
+aker-build prompt Q-001 --agent codex
+aker-build review-pr --local-diff
+aker-build report
 ```
 
 MVP outputs:
@@ -93,8 +93,8 @@ MVP outputs:
 project-map.json
 risks.json
 queue.json
-tenantguard-report.md
-tenantguard-report.json
+aker-build-report.md
+aker-build-report.json
 safe agent prompt
 PR/readiness report
 ```

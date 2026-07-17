@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Workspace } from "@tenantguard/github-app";
+import type { Workspace } from "@aker-build/github-app";
 
 /**
  * A git runner the workspace shells out through. Injectable so tests drive a REAL local git repo

@@ -7,7 +7,7 @@ import { fixture } from "./helpers.js";
 describe("013 config path scope in scanner", () => {
   it("excludes files from scanner discovery", () => {
     const root = fixture("saas");
-    const configPath = join(root, "tenantguard.config.json");
+    const configPath = join(root, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify({ version: 1, paths: { exclude: ["apps/api/**"] } }),

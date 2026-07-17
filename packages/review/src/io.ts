@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { writeOutput } from "@tenantguard/scanner";
-import type { Queue, QueueItem } from "@tenantguard/queue";
+import { writeOutput } from "@aker-build/scanner";
+import type { Queue, QueueItem } from "@aker-build/queue";
 import { validateReview } from "./schema.js";
 import type { ReviewReport } from "./types.js";
 
@@ -16,7 +16,7 @@ export class InvalidReviewError extends Error {}
 export function loadQueueItem(outDir: string, id: string): QueueItem {
   const queuePath = resolve(outDir, "queue.json");
   if (!existsSync(queuePath)) {
-    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`tenantguard queue\` first.`);
+    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`aker-build queue\` first.`);
   }
   const queue = JSON.parse(readFileSync(queuePath, "utf8")) as Queue;
   const item = queue.items.find((it) => it.id === id);

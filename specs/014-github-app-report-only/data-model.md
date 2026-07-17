@@ -25,7 +25,7 @@ What the App hands to the existing `review-pr` chain.
 |---|---|---|
 | repoRoot/ref | string | resolved PR head (R5) |
 | changedFiles | string[] | from the PR diff |
-| config | TenantGuardConfig | loaded via existing defaults incl. 013 path scope |
+| config | AkerBuildConfig | loaded via existing defaults incl. 013 path scope |
 
 Relationship: one WebhookEvent → at most one ReviewRequest. No request is created for ignored actions.
 
