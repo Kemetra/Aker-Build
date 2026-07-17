@@ -4,6 +4,14 @@
 
 ![Aker Build logo](docs/aker-logo.png)
 
+<p align="center">
+  <a href="https://github.com/sponsors/Kemetra">
+    <img src="https://img.shields.io/badge/Sponsor%20Aker%20Build-Support%20the%20public%20roadmap-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor Aker Build through GitHub Sponsors" height="46" />
+  </a>
+  <br />
+  <sub>Fund benchmark coverage, framework support, documentation, and GitHub-native integrations.</sub>
+</p>
+
 Aker Build is a CLI-first SaaS Build Kernel for teams building multi-tenant SaaS systems with GitHub, specs, CI, and AI coding agents.
 
 It helps teams answer:
