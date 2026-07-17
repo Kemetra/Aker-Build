@@ -1,4 +1,4 @@
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 import type { Finding, GateContext, Severity } from "../types.js";
 
 /** Build a `risk` finding with one or more evidence objects. */

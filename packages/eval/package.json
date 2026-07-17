@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/eval",
+  "name": "@aker-build/eval",
   "version": "0.0.0",
-  "description": "TenantGuard detection-quality benchmark harness (precision/recall per confidence tier)",
+  "description": "Aker Build detection-quality benchmark harness (precision/recall per confidence tier)",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -10,7 +10,7 @@
     ".": "./src/index.ts"
   },
   "bin": {
-    "tenantguard-benchmark": "./src/bin.ts"
+    "aker-build-benchmark": "./src/bin.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -18,9 +18,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/gates": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/scanner": "workspace:*"
+    "@aker-build/gates": "workspace:*",
+    "@aker-build/project-map": "workspace:*",
+    "@aker-build/scanner": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

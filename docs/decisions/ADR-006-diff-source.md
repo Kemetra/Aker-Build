@@ -34,7 +34,7 @@ verbatim — the reviewer runs the full gate set over current repo state, then f
   a `path`). A patch parser would add a dependency and machinery for data v0 doesn't consume.
 - **Already-required, local-first tooling**: `git` is assumed by 003/004 (`isGitRepo`); `--name-only`
   output is deterministic and runs with no credentials (FR-004, SC-005). `gh` reuses the user's own
-  auth, keeping TenantGuard token-free and the PR path *additive* (FR-005/FR-006).
+  auth, keeping Aker Build token-free and the PR path *additive* (FR-005/FR-006).
 - **Read-only / No Hidden Mutation**: `git diff --name-only` and `gh` reads never mutate the repo, the
   diff, or the PR (Principle VI; FR-008).
 - **No 004 edit**: running the shipped gate set over current state + path-attribution avoids any change

@@ -10,28 +10,28 @@ importers:
 
   packages/cli:
     dependencies:
-      '@tenantguard/config':
+      '@aker-build/config':
         specifier: workspace:*
         version: link:../config
-      '@tenantguard/gates':
+      '@aker-build/gates':
         specifier: workspace:*
         version: link:../gates
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
-      '@tenantguard/prompt':
+      '@aker-build/prompt':
         specifier: workspace:*
         version: link:../prompt
-      '@tenantguard/queue':
+      '@aker-build/queue':
         specifier: workspace:*
         version: link:../queue
-      '@tenantguard/report':
+      '@aker-build/report':
         specifier: workspace:*
         version: link:../report
-      '@tenantguard/review':
+      '@aker-build/review':
         specifier: workspace:*
         version: link:../review
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
       commander:
@@ -72,13 +72,13 @@ importers:
 
   packages/eval:
     dependencies:
-      '@tenantguard/gates':
+      '@aker-build/gates':
         specifier: workspace:*
         version: link:../gates
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
     devDependencies:
@@ -94,13 +94,13 @@ importers:
 
   packages/gates:
     dependencies:
-      '@tenantguard/config':
+      '@aker-build/config':
         specifier: workspace:*
         version: link:../config
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
       zod:
@@ -119,10 +119,10 @@ importers:
 
   packages/github-app:
     dependencies:
-      '@tenantguard/config':
+      '@aker-build/config':
         specifier: workspace:*
         version: link:../config
-      '@tenantguard/review':
+      '@aker-build/review':
         specifier: workspace:*
         version: link:../review
       zod:
@@ -147,10 +147,10 @@ importers:
       '@octokit/rest':
         specifier: ^21.1.1
         version: 21.1.1
-      '@tenantguard/github-app':
+      '@aker-build/github-app':
         specifier: workspace:*
         version: link:../github-app
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
       zod:
@@ -188,10 +188,10 @@ importers:
 
   packages/prompt:
     dependencies:
-      '@tenantguard/queue':
+      '@aker-build/queue':
         specifier: workspace:*
         version: link:../queue
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
     devDependencies:
@@ -207,16 +207,16 @@ importers:
 
   packages/queue:
     dependencies:
-      '@tenantguard/gates':
+      '@aker-build/gates':
         specifier: workspace:*
         version: link:../gates
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
-      '@tenantguard/spec-kit-adapter':
+      '@aker-build/spec-kit-adapter':
         specifier: workspace:*
         version: link:../spec-kit-adapter
       zod:
@@ -235,25 +235,25 @@ importers:
 
   packages/report:
     dependencies:
-      '@tenantguard/config':
+      '@aker-build/config':
         specifier: workspace:*
         version: link:../config
-      '@tenantguard/gates':
+      '@aker-build/gates':
         specifier: workspace:*
         version: link:../gates
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
-      '@tenantguard/queue':
+      '@aker-build/queue':
         specifier: workspace:*
         version: link:../queue
-      '@tenantguard/review':
+      '@aker-build/review':
         specifier: workspace:*
         version: link:../review
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
-      '@tenantguard/spec-kit-adapter':
+      '@aker-build/spec-kit-adapter':
         specifier: workspace:*
         version: link:../spec-kit-adapter
       zod:
@@ -272,19 +272,19 @@ importers:
 
   packages/review:
     dependencies:
-      '@tenantguard/config':
+      '@aker-build/config':
         specifier: workspace:*
         version: link:../config
-      '@tenantguard/gates':
+      '@aker-build/gates':
         specifier: workspace:*
         version: link:../gates
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
-      '@tenantguard/queue':
+      '@aker-build/queue':
         specifier: workspace:*
         version: link:../queue
-      '@tenantguard/scanner':
+      '@aker-build/scanner':
         specifier: workspace:*
         version: link:../scanner
       zod:
@@ -303,10 +303,10 @@ importers:
 
   packages/scanner:
     dependencies:
-      '@tenantguard/config':
+      '@aker-build/config':
         specifier: workspace:*
         version: link:../config
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
       yaml:
@@ -325,7 +325,7 @@ importers:
 
   packages/spec-kit-adapter:
     dependencies:
-      '@tenantguard/project-map':
+      '@aker-build/project-map':
         specifier: workspace:*
         version: link:../project-map
     devDependencies:

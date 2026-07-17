@@ -23,7 +23,7 @@ description: "Task list for 014-github-app-report-only"
 
 - [ ] T001 Verify repo state, branch, and confirm allowed/forbidden files from `specs/014-github-app-report-only/plan.md` before any edit.
 - [ ] T002 Scaffold `packages/github-app/` workspace package (package.json, tsconfig, vitest config) matching the existing `packages/report` package conventions.
-- [ ] T003 [P] Add `@tenantguard/github-app` to the pnpm workspace and declare read-only deps on `@tenantguard/review`, `@tenantguard/report`, `@tenantguard/config` (update `pnpm-lock.yaml` for the new manifest only).
+- [ ] T003 [P] Add `@aker-build/github-app` to the pnpm workspace and declare read-only deps on `@aker-build/review`, `@aker-build/report`, `@aker-build/config` (update `pnpm-lock.yaml` for the new manifest only).
 
 ---
 
@@ -41,7 +41,7 @@ description: "Task list for 014-github-app-report-only"
 
 ## Phase 3: User Story 1 — Findings on a PR with no local setup (Priority: P1) 🎯 MVP
 
-**Goal**: An opened PR gets a TenantGuard Checks run at the head ref with findings at the correct `file:line`; the App makes no repo write beyond the check.
+**Goal**: An opened PR gets an Aker Build Checks run at the head ref with findings at the correct `file:line`; the App makes no repo write beyond the check.
 
 **Independent Test**: Fire a faked `pull_request.opened` payload introducing a known `confirmed` finding → assert a check is created at `headSha` with an annotation at the correct file:line and zero other writes.
 
@@ -54,7 +54,7 @@ description: "Task list for 014-github-app-report-only"
 ### Implementation (GREEN)
 
 - [ ] T010 [US1] Implement `packages/github-app/src/webhook.ts` — HMAC verify then parse to `WebhookEvent`, drop ignored actions (R2, Contract A).
-- [ ] T011 [US1] Implement `packages/github-app/src/review-runner.ts` — resolve PR head ref, compute changed files, invoke `@tenantguard/review` review-pr; per-event fetch-and-discard, no persistence (R5/FR-008).
+- [ ] T011 [US1] Implement `packages/github-app/src/review-runner.ts` — resolve PR head ref, compute changed files, invoke `@aker-build/review` review-pr; per-event fetch-and-discard, no persistence (R5/FR-008).
 - [ ] T012 [US1] Implement `packages/github-app/src/checks.ts` (core path) — map findings to a check-run + annotations via the merged Checks renderer; route ALL writes through `safety.ts` (FR-007).
 - [ ] T013 [US1] Implement `packages/github-app/src/index.ts` — deployable handler wiring webhook → runner → checks, returning the Checks result.
 
@@ -110,7 +110,7 @@ description: "Task list for 014-github-app-report-only"
 ## Phase 6: Polish & Cross-Cutting
 
 - [ ] T027 [P] Update `README.md` and `packages/cli/README.md` to document the App surface (report-only, self-hostable) — no command behavior change.
-- [ ] T028 Run focused package tests: `pnpm --filter @tenantguard/github-app test`.
+- [ ] T028 Run focused package tests: `pnpm --filter @aker-build/github-app test`.
 - [ ] T029 Run full suite + typecheck: `pnpm test` and `pnpm typecheck` (must be green).
 - [ ] T030 Final status: confirm no forbidden surfaces touched (no mutation code, no persistence, no P5/P6 drift) and `git status` is limited to allowed files.
 

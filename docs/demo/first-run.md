@@ -1,6 +1,6 @@
 # First-Run Demo
 
-This demo proves the local MVP chain against a sanitized example repo. It does not require GitHub credentials and does not mutate the TenantGuard repository.
+This demo proves the local MVP chain against a sanitized example repo. It does not require GitHub credentials and does not mutate the Aker Build repository.
 
 ## One Command
 
@@ -18,8 +18,8 @@ route.json
 prompt-Q-001.md
 review.json
 review.md
-tenantguard-report.json
-tenantguard-report.md
+aker-build-report.json
+aker-build-report.md
 ```
 
 ## Manual Flow
@@ -44,8 +44,8 @@ Expected value:
 - `route.json` selects the next safe task and explains why.
 - `prompt-Q-001.md` gives an AI agent a bounded objective, allowed files, forbidden files, validation, git rules, stop conditions, and final report requirements.
 - `review.json` and `review.md` summarize whether the current local diff is ready.
-- `tenantguard-report.json` and `tenantguard-report.md` summarize the run artifacts, suppressions, config, and Spec Kit evidence.
+- `aker-build-report.json` and `aker-build-report.md` summarize the run artifacts, suppressions, config, and Spec Kit evidence.
 
 ## Boundaries
 
-The demo is intentionally report-only. TenantGuard does not execute agents, commit, push, open PRs, auto-fix, auto-merge, or require hosted infrastructure.
+The demo is intentionally report-only. Aker Build does not execute agents, commit, push, open PRs, auto-fix, auto-merge, or require hosted infrastructure.

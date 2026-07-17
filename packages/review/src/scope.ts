@@ -1,4 +1,4 @@
-import type { QueueItem } from "@tenantguard/queue";
+import type { QueueItem } from "@aker-build/queue";
 import type { ScopeResult, ScopeViolation } from "./types.js";
 
 /** The skipped scope result — used when no `--item` is supplied (FR-003 skip-and-note). */

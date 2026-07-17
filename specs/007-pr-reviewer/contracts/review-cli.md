@@ -1,4 +1,4 @@
-# Contract: `tenantguard review-pr` CLI
+# Contract: `aker-build review-pr` CLI
 
 The command surface for the PR reviewer. Mirrors the established `run*Command(): number` pattern (scan/
 gates/queue/route/prompt): testable, no `process.exit`, exit codes + injectable `sink`/`errSink`.
@@ -6,10 +6,10 @@ gates/queue/route/prompt): testable, no `process.exit`, exit codes + injectable 
 ## Invocation
 
 ```text
-tenantguard review-pr --local-diff                 review the current local diff (no credentials)
-tenantguard review-pr --local-diff --item Q-001     ...and check scope against queue item Q-001
-tenantguard review-pr <number>                      review a GitHub PR by number (uses the user's gh CLI)
-tenantguard review-pr <number> --item Q-001         ...with scope checked against Q-001
+aker-build review-pr --local-diff                 review the current local diff (no credentials)
+aker-build review-pr --local-diff --item Q-001     ...and check scope against queue item Q-001
+aker-build review-pr <number>                      review a GitHub PR by number (uses the user's gh CLI)
+aker-build review-pr <number> --item Q-001         ...with scope checked against Q-001
 ```
 
 ## Options
@@ -19,7 +19,7 @@ tenantguard review-pr <number> --item Q-001         ...with scope checked agains
 | `--local-diff` | Review the working-tree diff (P1). Mutually exclusive with `<number>`. | — |
 | `<number>` | Review GitHub PR #`<number>` (P2, additive). | — |
 | `--item <ID>` | **Optional.** Check changed files against this queue item's scope (read from `queue.json`). Omitted → scope skipped + noted. | none |
-| `--out <dir>` | Out-dir for `queue.json` input and `review.json`/`review.md` output. | `.tenantguard` |
+| `--out <dir>` | Out-dir for `queue.json` input and `review.json`/`review.md` output. | `.aker-build` |
 | `--stdout` | Print the report only; do not write files. | off |
 | `--format json\|yaml` | Machine-output format when printing. | `json` |
 
@@ -29,7 +29,7 @@ Exactly one of `--local-diff` / `<number>` MUST be given (else bad input).
 
 1. Resolve **changed files** — local: read-only `git diff --name-only`; PR: the user's `gh` CLI
    (`gh pr view <n> --json files`).
-2. Run the **full 004 gate set** over the **current working tree** (`@tenantguard/gates.runGates`),
+2. Run the **full 004 gate set** over the **current working tree** (`@aker-build/gates.runGates`),
    then **keep findings whose evidence `path` ∈ changed files** (diff-attribution).
 3. If `--item`, load the item from `queue.json` and compute scope violations; else skip + note.
 4. Derive the **verdict** off `status` (risk/out-of-scope → Not Ready; else needs_verification → Needs
@@ -49,7 +49,7 @@ changed files (so it never reviews its own output).
 | Code | Meaning |
 |------|---------|
 | `0` | Review completed; a verdict was produced (Ready / Not Ready / Needs Verification). |
-| `1` | Required upstream input missing — no `project-map.json` (run `tenantguard scan`), or `--item` given but no `queue.json` (run `tenantguard queue`). |
+| `1` | Required upstream input missing — no `project-map.json` (run `aker-build scan`), or `--item` given but no `queue.json` (run `aker-build queue`). |
 | `2` | Bad input — not a Git repo, both/neither of `--local-diff`/`<number>`, unknown `--item` id, or (PR mode) **GitHub access unavailable** (gap reported; local-diff remains available, FR-006). |
 | `3` | Internal error — produced `review.json` failed its own schema (a reviewer bug; nothing written). |
 

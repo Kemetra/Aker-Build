@@ -17,7 +17,7 @@ quality. P3 turns assertion into proof and creates a regression net.
   self-contained synthetic repos. The corpus is this pattern, scaled and labeled.
 - **Run pipeline:** `runGatesToFile(repoRoot, {out})` (gates) and `scanToFile` (scanner) produce
   the real `risks.json` — the harness consumes these public outputs only.
-- **Matching key:** `findingId(finding)` = `gate_id:path:signal:status` (in `@tenantguard/gates`)
+- **Matching key:** `findingId(finding)` = `gate_id:path:signal:status` (in `@aker-build/gates`)
   is the natural identity for comparing actual vs expected findings.
 - **Tier:** `confidenceTier(finding)` (P2) gives the per-tier breakdown the metric needs.
 
@@ -73,7 +73,7 @@ to one (documented behavior, asserted in a harness test).
 
 **Boundary discipline:** the harness imports only public package surfaces (`scanToFile`,
 `runGatesToFile`, `confidenceTier`, `findingId`) — never reaches into detector/gate internals. It
-tests the *contract*, so it doubles as the external "does TenantGuard work on my repo?" proof.
+tests the *contract*, so it doubles as the external "does Aker Build work on my repo?" proof.
 
 ## Decision 3 — Metric: precision/recall PER TIER
 
@@ -96,7 +96,7 @@ will gate on.
   debugging. The markdown is the human-facing launch evidence.
 - **`benchmark/thresholds.json`** — floors/ceilings, e.g.
   `{ "confirmed": { "min_recall": 0.85, "min_precision": 0.95 } }`. The runner exits non-zero if a
-  threshold is breached, so the **dogfood CI** gates TenantGuard's own quality by the discipline it
+  threshold is breached, so the **dogfood CI** gates Aker Build's own quality by the discipline it
   sells. Absence of a threshold for a tier ≡ report-only (no gating) — honest default.
 
 ## Non-goals

@@ -6,13 +6,13 @@ Date: 2026-06-19
 
 ## Technical summary
 
-Add `@tenantguard/report` and wire `tenantguard report` so users can summarize the current `.tenantguard` artifact set as validated JSON and Markdown.
+Add `@aker-build/report` and wire `aker-build report` so users can summarize the current `.aker-build` artifact set as validated JSON and Markdown.
 
 ## Package boundary
 
 ```text
 packages/report
-  read existing TenantGuard artifacts
+  read existing Aker Build artifacts
   validate and summarize report JSON
   render deterministic Markdown
 
@@ -54,8 +54,8 @@ Broad rewrites unrelated to report output
 Required:
 
 ```bash
-pnpm --filter @tenantguard/report test
-pnpm --filter @tenantguard/cli test
+pnpm --filter @aker-build/report test
+pnpm --filter @aker-build/cli test
 pnpm test
 pnpm typecheck
 ```

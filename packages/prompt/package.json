@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/prompt",
+  "name": "@aker-build/prompt",
   "version": "0.0.0",
-  "description": "TenantGuard Agent Prompt Compiler — compile safe, scoped agent prompts from a routed queue item",
+  "description": "Aker Build Agent Prompt Compiler — compile safe, scoped agent prompts from a routed queue item",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/queue": "workspace:*",
-    "@tenantguard/scanner": "workspace:*"
+    "@aker-build/queue": "workspace:*",
+    "@aker-build/scanner": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

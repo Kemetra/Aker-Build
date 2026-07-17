@@ -1,4 +1,4 @@
-import { reviewPr, GitHubUnavailableError, type ReviewReport, type PrReviewDeps } from "@tenantguard/review";
+import { reviewPr, GitHubUnavailableError, type ReviewReport, type PrReviewDeps } from "@aker-build/review";
 import type { PullRequestEvent } from "./types.js";
 
 /** The gates runner shape `reviewPr` accepts (injectable for the runner↔engine seam). */

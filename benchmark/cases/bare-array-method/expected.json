@@ -1,5 +1,5 @@
 {
-  "description": "Bare array/Map method calls (users.find, cache.delete) are not DB queries. Ground truth: nothing fires. Hard negative pinning W3a receiver gating — before W3a these were the dominant false-positive class on TenantGuard's own source.",
+  "description": "Bare array/Map method calls (users.find, cache.delete) are not DB queries. Ground truth: nothing fires. Hard negative pinning W3a receiver gating — before W3a these were the dominant false-positive class on Aker Build's own source.",
   "gates_under_test": ["TG-G4"],
   "expected_findings": []
 }

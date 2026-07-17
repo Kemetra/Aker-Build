@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import type { ChecksPayload } from "@tenantguard/github-app";
+import type { ChecksPayload } from "@aker-build/github-app";
 import { makeGitHubApi, type OctokitLike } from "../src/octokit-api.js";
 
 const payload: ChecksPayload = {
-  name: "TenantGuard",
+  name: "Aker Build",
   conclusion: "success",
   title: "ok",
   summary: "ok",
@@ -55,20 +55,20 @@ describe("makeGitHubApi — concrete GitHubApi over octokit", () => {
     expect(meta).toEqual({ title: "PR title", state: "open", baseRefName: "main" });
   });
 
-  it("findCheckRun returns null when no TenantGuard run exists for the head", async () => {
+  it("findCheckRun returns null when no Aker Build run exists for the head", async () => {
     const api = makeGitHubApi(fakeOctokit());
     const found = await api.findCheckRun({ owner: "o", repo: "r", headSha: "sha1" });
     expect(found).toBeNull();
   });
 
-  it("findCheckRun returns the existing TenantGuard run id when present", async () => {
+  it("findCheckRun returns the existing Aker Build run id when present", async () => {
     const octo = fakeOctokit({
       rest: {
         ...fakeOctokit().rest,
         checks: {
           ...fakeOctokit().rest.checks,
           listForRef: async () => ({
-            data: { check_runs: [{ id: 7, name: "TenantGuard" }, { id: 8, name: "other" }] },
+            data: { check_runs: [{ id: 7, name: "Aker Build" }, { id: 8, name: "other" }] },
           }),
         },
       },

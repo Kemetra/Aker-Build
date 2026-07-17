@@ -7,26 +7,26 @@ Type: Product capability / adapter / config model
 
 ## Purpose
 
-TenantGuard must read Spec Kit artifacts when present, but must not require users to adopt Spec Kit.
+Aker Build must read Spec Kit artifacts when present, but must not require users to adopt Spec Kit.
 
 This feature defines a read-only Spec Kit adapter and a safe local config model for real repos.
 
 ## User stories
 
-### US1: Repo with Spec Kit gets richer TenantGuard context
+### US1: Repo with Spec Kit gets richer Aker Build context
 
-A team using `.specify/` runs TenantGuard and receives queue/prompt context informed by constitution, spec, plan, tasks, and checklists.
+A team using `.specify/` runs Aker Build and receives queue/prompt context informed by constitution, spec, plan, tasks, and checklists.
 
 Acceptance:
 
-- TenantGuard detects Spec Kit artifacts.
+- Aker Build detects Spec Kit artifacts.
 - Findings cite the relevant files.
 - Prompt context includes allowed files, forbidden files, validation, and stop conditions when extractable.
-- TenantGuard does not mutate Spec Kit files.
+- Aker Build does not mutate Spec Kit files.
 
 ### US2: Repo without Spec Kit still works
 
-A team with plain docs or no specs runs TenantGuard and receives useful project map, risks, queue, and prompt output.
+A team with plain docs or no specs runs Aker Build and receives useful project map, risks, queue, and prompt output.
 
 Acceptance:
 
@@ -46,7 +46,7 @@ Acceptance:
 
 ## Functional requirements
 
-- FR-001: Support `tenantguard.config.json` and `tenantguard.config.yaml`.
+- FR-001: Support `aker-build.config.json` and `aker-build.config.yaml`.
 - FR-002: Define a config schema with version, project metadata, include/exclude paths, gate settings, and suppressions.
 - FR-003: Suppressions MUST include reason, owner, and path or finding id; expiry is recommended.
 - FR-004: Suppressed findings MUST remain visible in output as suppressed.
@@ -63,7 +63,7 @@ Acceptance:
 docs/decisions/ADR-011-config-and-spec-adapter-boundary.md
 specs/011-spec-kit-adapter-and-config-boundary/spec.md
 specs/011-spec-kit-adapter-and-config-boundary/plan.md
-contracts/tenantguard-config.schema.json, if implementation tasks approve
+contracts/aker-build-config.schema.json, if implementation tasks approve
 packages/spec-kit-adapter/**, if implementation tasks approve
 config reader in core/cli, if implementation tasks approve
 ```

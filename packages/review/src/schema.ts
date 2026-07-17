@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { evidenceSchema } from "@tenantguard/project-map";
-import { SEVERITIES } from "@tenantguard/gates";
+import { evidenceSchema } from "@aker-build/project-map";
+import { SEVERITIES } from "@aker-build/gates";
 
 /** Canonical review.json schema version. */
 export const REVIEW_SCHEMA_VERSION = 1;

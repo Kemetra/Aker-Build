@@ -33,7 +33,7 @@ implement phase adds the **one new repo file (ADR-007)** and performs documentat
 
 - [X] T001 Write **ADR-007** (`docs/decisions/ADR-007-ci-runtime.md`): run the unbuilt TypeScript CLI in
   CI via corepack pnpm + `tsx` (no published binary / no live workflow yet); a packaged composite Action
-  / published `tenantguard` binary is a later additive step. Mirrors ADR-002…006 format. (Research R4.)
+  / published `aker-build` binary is a later additive step. Mirrors ADR-002…006 format. (Research R4.)
 
 ---
 
@@ -51,7 +51,7 @@ phase confirms it against the REAL upstream shapes.
 
 ---
 
-## Phase 3: User Story 1 — See TenantGuard results on a PR (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 — See Aker Build results on a PR (Priority: P1) 🎯 MVP
 
 **Goal**: A `pull_request`-triggered run produces a CI summary (verdict + findings + evidence) from the
 existing CLI, with no repo writes.

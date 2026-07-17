@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { evidenceSchema } from "@tenantguard/project-map";
+import { evidenceSchema } from "@aker-build/project-map";
 
 /** Canonical queue.json / route.json schema version. */
 export const QUEUE_SCHEMA_VERSION = 1;

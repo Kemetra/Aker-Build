@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { TenantGuardConfig } from "@tenantguard/config";
+import type { AkerBuildConfig } from "@aker-build/config";
 import { applyConfigToRisks } from "../src/suppressions.js";
 import type { RiskList } from "../src/types.js";
 
@@ -21,7 +21,7 @@ describe("P2 config: per-gate min_tier", () => {
       severity: "low",
       evidence: [ev("medium")], // tier = suspected
     });
-    const config: TenantGuardConfig = {
+    const config: AkerBuildConfig = {
       version: 1,
       gates: { "TG-G7": { min_tier: "confirmed" } },
     };
@@ -38,7 +38,7 @@ describe("P2 config: per-gate min_tier", () => {
       severity: "low",
       evidence: [ev("high")], // tier = confirmed
     });
-    const config: TenantGuardConfig = {
+    const config: AkerBuildConfig = {
       version: 1,
       gates: { "TG-G7": { min_tier: "confirmed" } },
     };

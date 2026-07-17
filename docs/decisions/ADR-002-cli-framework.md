@@ -2,20 +2,20 @@
 
 - **Status**: Accepted
 - **Date**: 2026-06-18
-- **Deciders**: TenantGuard maintainers
+- **Deciders**: Aker Build maintainers
 - **Context tasks**: `specs/003-cli-scanner/tasks.md` T001. Resolves the "Commander or oclif" choice
   that [ADR-001](./ADR-001-tech-stack.md) deferred.
 
 ## Context
 
-`003-cli-scanner` introduces the first real CLI commands (`tenantguard scan`, `tenantguard map`),
+`003-cli-scanner` introduces the first real CLI commands (`aker-build scan`, `aker-build map`),
 and the MVP will add `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`. ADR-001 named the
 stack but left the CLI framework open ("Commander or oclif"). A choice is needed before wiring
 `packages/cli`.
 
 ## Decision
 
-Use **Commander** for the `tenantguard` CLI.
+Use **Commander** for the `aker-build` CLI.
 
 ## Rationale
 
@@ -45,4 +45,4 @@ Use **Commander** for the `tenantguard` CLI.
 - [ADR-001](./ADR-001-tech-stack.md) (deferred this choice).
 - `specs/003-cli-scanner/research.md` R1.
 - `specs/003-cli-scanner/contracts/cli-commands.md`.
-- Blueprint `docs/tenantguard_project_blueprint.md` (§"Final MVP stack" — "CLI framework: Commander or oclif").
+- Blueprint `docs/aker-build_project_blueprint.md` (§"Final MVP stack" — "CLI framework: Commander or oclif").

@@ -1,6 +1,6 @@
 # Quickstart: Agent Prompt Compiler
 
-Planned usage of `tenantguard prompt` once implemented (after plan + tasks review). Illustrative —
+Planned usage of `aker-build prompt` once implemented (after plan + tasks review). Illustrative —
 **no code exists yet**.
 
 ---
@@ -8,19 +8,19 @@ Planned usage of `tenantguard prompt` once implemented (after plan + tasks revie
 ## Full pipeline → safe prompt
 
 ```bash
-tenantguard scan        # → .tenantguard/project-map.json   (003)
-tenantguard gates       # → .tenantguard/risks.json         (004)
-tenantguard queue       # → .tenantguard/queue.json         (005)
-tenantguard route       # → picks the next item, e.g. Q-001 (005)
-tenantguard prompt Q-001 --agent claude   # → .tenantguard/prompt-Q-001.md + printed
+aker-build scan        # → .aker-build/project-map.json   (003)
+aker-build gates       # → .aker-build/risks.json         (004)
+aker-build queue       # → .aker-build/queue.json         (005)
+aker-build route       # → picks the next item, e.g. Q-001 (005)
+aker-build prompt Q-001 --agent claude   # → .aker-build/prompt-Q-001.md + printed
 ```
 
 ## Variants
 
 ```bash
-tenantguard prompt Q-001 --agent codex     # codex presentation, same safety
-tenantguard prompt Q-001                    # generic agent
-tenantguard prompt Q-001 --stdout           # print only, no file
+aker-build prompt Q-001 --agent codex     # codex presentation, same safety
+aker-build prompt Q-001                    # generic agent
+aker-build prompt Q-001 --stdout           # print only, no file
 ```
 
 Example (abbreviated) output:

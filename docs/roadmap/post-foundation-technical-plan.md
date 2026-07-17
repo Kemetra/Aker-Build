@@ -1,4 +1,4 @@
-# TenantGuard Post-Foundation Technical Plan
+# Aker Build Post-Foundation Technical Plan
 
 Status: Updated by 010 release-readiness implementation
 Date: 2026-06-19
@@ -6,7 +6,7 @@ Scope: What to do after foundation + nine specs, before public launch or deferre
 
 ## Executive technical decision
 
-TenantGuard should now move from feature-completion to release-confidence.
+Aker Build should now move from feature-completion to release-confidence.
 
 The correct next strategy is not "more big features". It is:
 
@@ -14,17 +14,17 @@ The correct next strategy is not "more big features". It is:
 reconcile truth -> prove first-run value -> freeze output contracts -> add safe customization -> package/distribute -> launch readiness
 ```
 
-This keeps TenantGuard aligned with its own constitution: source truth first, evidence-based findings, agent-safe prompts, no hidden mutation, no secrets, and clean general SaaS extraction.
+This keeps Aker Build aligned with its own constitution: source truth first, evidence-based findings, agent-safe prompts, no hidden mutation, no secrets, and clean general SaaS extraction.
 
 ## Product boundary after foundation
 
-TenantGuard remains:
+Aker Build remains:
 
 ```text
 local CLI -> reports -> scoped prompts -> PR/diff review -> report-only CI
 ```
 
-TenantGuard does not become yet:
+Aker Build does not become yet:
 
 ```text
 hosted dashboard
@@ -43,7 +43,7 @@ SaaS billing product
 | 011 | `spec-kit-adapter-and-config-boundary` | spec + implementation slices | Fulfills the "Spec-compatible, not Spec-Kit-dependent" promise and gives real repos customization without chaos. | Spec artifacts map into project context; config overrides are audited. |
 | 012 | `output-contract-and-report-versioning` | spec + tests | Prevents breaking users once reports become public artifacts. | `project-map`, `risks`, `queue`, `route`, `review`, `report` contracts are versioned. |
 | 013 | `npm-package-and-release-workflow` | spec + implementation | Needed before public CLI launch. | Package can be installed and run from a clean environment. |
-| 014 | `github-action-template` | implementation | Converts dogfood CI into a reusable external Action surface, still report-only. | External repo can run TenantGuard in PR workflow. |
+| 014 | `github-action-template` | implementation | Converts dogfood CI into a reusable external Action surface, still report-only. | External repo can run Aker Build in PR workflow. |
 | 015 | `launch-readiness-execution` | docs + community assets | Executes 009 only after demo/distribution are ready. | README, demo, license, contributing, issues, topics are ready. |
 
 ## Wave plan
@@ -63,7 +63,7 @@ docs/decisions/ADR-008-post-foundation-sequence.md
 Also update existing docs only where stale:
 
 ```text
-docs/tenantguard_project_blueprint.md
+docs/aker-build_project_blueprint.md
 packages/cli/README.md
 specs/009-launch-and-community-strategy/spec.md
 CLAUDE.md active feature pointer, if needed
@@ -85,7 +85,7 @@ Deliverables:
 examples/multi-tenant-saas-basic/
 docs/demo/first-run.md
 README quickstart update
-.tenantguard expected-output fixtures for tests, if appropriate
+.aker-build expected-output fixtures for tests, if appropriate
 smoke test for scan -> gates -> queue -> route -> prompt -> review-pr --local-diff
 ```
 
@@ -119,12 +119,12 @@ Exit criteria:
 
 ### Wave D — Config and Spec Kit adapter
 
-Goal: make TenantGuard useful on real repos without becoming Spec Kit dependent.
+Goal: make Aker Build useful on real repos without becoming Spec Kit dependent.
 
 Deliverables:
 
 ```text
-tenantguard.config.json / tenantguard.config.yaml schema
+aker-build.config.json / aker-build.config.yaml schema
 packages/spec-kit-adapter
 safe ignore/suppressions model with evidence and expiry
 project metadata enrichment from constitution/spec/plan/tasks/checklists
@@ -132,13 +132,13 @@ project metadata enrichment from constitution/spec/plan/tasks/checklists
 
 Exit criteria:
 
-- TenantGuard can run on a repo with Spec Kit and use those artifacts as evidence.
-- TenantGuard can run on a repo without Spec Kit and still produce useful output.
+- Aker Build can run on a repo with Spec Kit and use those artifacts as evidence.
+- Aker Build can run on a repo without Spec Kit and still produce useful output.
 - Suppressions are explicit, audited, and never silent.
 
 ### Wave E — Distribution and reusable CI
 
-Goal: make TenantGuard installable and usable outside its own repo.
+Goal: make Aker Build installable and usable outside its own repo.
 
 Deliverables:
 
@@ -153,7 +153,7 @@ GitHub Action template or action wrapper, report-only
 
 Exit criteria:
 
-- Clean environment can run `tenantguard --version` and the full demo.
+- Clean environment can run `aker-build --version` and the full demo.
 - Release workflow does not expose secrets in logs.
 - GitHub Action does not mutate PRs, commit, push, or auto-merge.
 

@@ -27,9 +27,9 @@ output), not the scheduling internals or language.
 
 - Q: What are the canonical `status` and `type` enums for a queue item? → A: `status` ∈ `ready` / `blocked` / `done` (the v0 deriver emits only `ready` / `blocked`; `done` is **reserved** for future/external marking, not emitted by the deriver); `type` ∈ `implementation` / `test` / `docs` / `migration` / `chore`.
 - Q: What shape does the router output when no task is safe? → A: `next` is always present and nullable (`next: null` when none safe), plus a `no_safe_task_reasons: string[]` field — a single stable shape, never a missing key.
-- Q: How does the router obtain "current local diff" / PR state in a local-first, read-only MVP? → A: via `@tenantguard/scanner`'s read-only git/fs primitives; diff and PR state are **optional inputs** — when absent, the factors that need them are skipped (never fabricated), consistent with FR-007.
+- Q: How does the router obtain "current local diff" / PR state in a local-first, read-only MVP? → A: via `@aker-build/scanner`'s read-only git/fs primitives; diff and PR state are **optional inputs** — when absent, the factors that need them are skipped (never fabricated), consistent with FR-007.
 - Q: What is the deterministic selection ordering? → A: primary sort `score desc`; ties (equal score) broken by `blast_radius asc` → `risk asc` → `id asc` (lowest blast radius, then lowest risk, then id as the final stable key).
-- Q: Where are `queue.json` and the router decision written? → A: to the designated out-dir — `.tenantguard/queue.json` and `.tenantguard/route.json` (same convention as 003/004); `route` also prints the decision to stdout.
+- Q: Where are `queue.json` and the router decision written? → A: to the designated out-dir — `.aker-build/queue.json` and `.aker-build/route.json` (same convention as 003/004); `route` also prints the decision to stdout.
 
 ---
 
@@ -126,7 +126,7 @@ final_report.required[]   fields the final report must include
 ## Router Behavior *(mandatory)*
 
 **Inputs**: current project map; risk findings; queue items; dependencies; lock scopes; failed gates.
-**Optional inputs** (read via `@tenantguard/scanner`'s read-only git/fs primitives): current local
+**Optional inputs** (read via `@aker-build/scanner`'s read-only git/fs primitives): current local
 diff; current PR state. When an optional input is absent, the scoring factors that depend on it are
 skipped (never fabricated), consistent with FR-007.
 
@@ -176,7 +176,7 @@ By default the router selects exactly one `next`. When no item is safe, `next` i
 - **FR-015**: The router output MUST use a single stable shape: `next` always present (nullable),
   `blocked[]`, and `no_safe_task_reasons[]` (empty when `next` is non-null).
 - **FR-016**: `queue.json` and the router decision (`route.json`) MUST be written to the designated
-  out-dir (`.tenantguard/`, same convention as 003/004); writing there is not a modification of the
+  out-dir (`.aker-build/`, same convention as 003/004); writing there is not a modification of the
   scanned repo's tracked source. `route` also prints the decision to stdout.
 
 ### Key Entities
@@ -192,9 +192,9 @@ By default the router selects exactly one `next`. When no item is safe, `next` i
 ## CLI Surface *(mandatory)*
 
 ```text
-tenantguard queue       derive queue.json from map + findings (→ .tenantguard/queue.json)
-tenantguard route       select one next-safest task (with reason) + list blocked items
-                        (→ .tenantguard/route.json; also printed to stdout)
+aker-build queue       derive queue.json from map + findings (→ .aker-build/queue.json)
+aker-build route       select one next-safest task (with reason) + list blocked items
+                        (→ .aker-build/route.json; also printed to stdout)
 ```
 
 ---
@@ -202,8 +202,8 @@ tenantguard route       select one next-safest task (with reason) + list blocked
 ## Required Outputs *(mandatory)*
 
 ```text
-.tenantguard/queue.json   derived queue items (each carrying the full item contract)
-.tenantguard/route.json   the router decision: next (nullable) + blocked[] + no_safe_task_reasons[]
+.aker-build/queue.json   derived queue items (each carrying the full item contract)
+.aker-build/route.json   the router decision: next (nullable) + blocked[] + no_safe_task_reasons[]
                           the chosen next item with reason is also printed to stdout
 ```
 

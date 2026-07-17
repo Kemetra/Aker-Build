@@ -16,7 +16,7 @@ function tempRepo(): string {
   return mkdtempSync(join(tmpdir(), "tg-config-"));
 }
 
-describe("tenantguard config schema and reader", () => {
+describe("aker-build config schema and reader", () => {
   it("accepts valid JSON config with auditable suppressions", () => {
     const result = validateConfig({
       version: 1,
@@ -43,10 +43,10 @@ describe("tenantguard config schema and reader", () => {
     expect(result.config?.gates?.["TG-G4"]?.suppressions?.[0]?.owner).toBe("maintainer");
   });
 
-  it("loads tenantguard.config.yaml when present", () => {
+  it("loads aker-build.config.yaml when present", () => {
     const repo = tempRepo();
     writeFileSync(
-      join(repo, "tenantguard.config.yaml"),
+      join(repo, "aker-build.config.yaml"),
       [
         "version: 1",
         "project:",
@@ -63,7 +63,7 @@ describe("tenantguard config schema and reader", () => {
     );
 
     const loaded = loadConfig(repo);
-    expect(loaded.path).toMatch(/tenantguard\.config\.yaml$/);
+    expect(loaded.path).toMatch(/aker-build\.config\.yaml$/);
     expect(loaded.config.project?.name).toBe("yaml-saas");
   });
 
@@ -111,7 +111,7 @@ describe("tenantguard config schema and reader", () => {
   it("rejects secret-like config content without leaking the value", () => {
     const repo = tempRepo();
     writeFileSync(
-      join(repo, "tenantguard.config.json"),
+      join(repo, "aker-build.config.json"),
       JSON.stringify({ version: 1, token: "0123456789abcdef0123456789abcdef" }),
       "utf8",
     );

@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/project-map",
+  "name": "@aker-build/project-map",
   "version": "0.0.0",
-  "description": "TenantGuard Project Map schema + validator (canonical data contract)",
+  "description": "Aker Build Project Map schema + validator (canonical data contract)",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",

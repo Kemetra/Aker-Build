@@ -6,12 +6,12 @@
 
 **Architecture:** Each detector is a pure function under `packages/scanner/src/detect/`, mirroring `secrets.ts` / `data-access.ts`: `(root, files) => Evidence[]`. It reads via `readFileSafe`, emits the shared `Evidence` shape, observes only, never judges, never imports gate logic. Each adds one optional field to `projectMapSchema` and is wired into `assemble.ts`. **G-gate consumption is out of scope** — this plan ends when evidence is produced, validated, and tested.
 
-**Tech Stack:** TypeScript (ESM, `.js` import specifiers), Vitest, Zod (via `@tenantguard/project-map`). pnpm workspace.
+**Tech Stack:** TypeScript (ESM, `.js` import specifiers), Vitest, Zod (via `@aker-build/project-map`). pnpm workspace.
 
 ## Global Constraints
 
-- **Evidence contract (binding for all four detectors):** emit only the normative `Evidence` shape from `@tenantguard/project-map` — `{ type: "line", path, line, signal, confidence }`. Never a custom struct. The *finding kind* lives in `signal` (a short snake_case label); `confidence` is `"high"` for a structural match, `"medium"` for a heuristic/name-based match. See [[p1-evidence-contract]].
-- Detectors are **read-only and evidence-emitting only**. No judgment; no `import` of any `@tenantguard/gates` symbol. (Constitution: control plane, not actor.)
+- **Evidence contract (binding for all four detectors):** emit only the normative `Evidence` shape from `@aker-build/project-map` — `{ type: "line", path, line, signal, confidence }`. Never a custom struct. The *finding kind* lives in `signal` (a short snake_case label); `confidence` is `"high"` for a structural match, `"medium"` for a heuristic/name-based match. See [[p1-evidence-contract]].
+- Detectors are **read-only and evidence-emitting only**. No judgment; no `import` of any `@aker-build/gates` symbol. (Constitution: control plane, not actor.)
 - **Never capture or store a secret/credential value** — evidence carries `path` + `line` + a signal label only (FR-012 / FR-009 precedent).
 - **Honesty default:** no evidence → empty array. Never fabricate.
 - **Determinism:** every detector returns `Evidence[]` sorted by `path` then `line`.
@@ -60,7 +60,7 @@ function fixture(files: Record<string, string>): string {
 - Test: `packages/scanner/tests/routes.test.ts`
 
 **Interfaces:**
-- Consumes: `Evidence` from `@tenantguard/project-map`; `readFileSafe` from `../io.js`.
+- Consumes: `Evidence` from `@aker-build/project-map`; `readFileSafe` from `../io.js`.
 - Produces: `detectRoutes(root: string, files: string[]): Evidence[]`. Signals: `route_definition` (a route handler), `route_admin` (path contains `/admin`). Consumed by `assemble` (Task 5).
 
 - [ ] **Step 1: Write the failing tests**
@@ -99,7 +99,7 @@ describe("detectRoutes", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/routes.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/routes.test.ts`
 Expected: FAIL — cannot import `detectRoutes`.
 
 - [ ] **Step 3: Implement the detector**
@@ -107,7 +107,7 @@ Expected: FAIL — cannot import `detectRoutes`.
 ```typescript
 // packages/scanner/src/detect/routes.ts
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
 const ROUTE_DEF = /\b(app|router|server)\.(get|post|put|patch|delete)\s*\(/i;
@@ -143,7 +143,7 @@ export function detectRoutes(root: string, files: string[]): Evidence[] {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/routes.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/routes.test.ts`
 Expected: PASS (4 tests).
 
 - [ ] **Step 5: Commit**
@@ -200,7 +200,7 @@ describe("detectMigrations", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/migrations.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/migrations.test.ts`
 Expected: FAIL — cannot import `detectMigrations`.
 
 - [ ] **Step 3: Implement the detector**
@@ -208,7 +208,7 @@ Expected: FAIL — cannot import `detectMigrations`.
 ```typescript
 // packages/scanner/src/detect/migrations.ts
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 // A migration file: lives under a migrations dir, or is a .sql file with a numeric prefix.
 const MIGRATION_PATH = /(^|\/)migrations?\//i;
@@ -246,7 +246,7 @@ export function detectMigrations(root: string, files: string[]): Evidence[] {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/migrations.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/migrations.test.ts`
 Expected: PASS (4 tests).
 
 - [ ] **Step 5: Commit**
@@ -304,7 +304,7 @@ describe("detectAuth", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/auth.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/auth.test.ts`
 Expected: FAIL — cannot import `detectAuth`.
 
 - [ ] **Step 3: Implement the detector**
@@ -312,7 +312,7 @@ Expected: FAIL — cannot import `detectAuth`.
 ```typescript
 // packages/scanner/src/detect/auth.ts
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
 const AUTH_GUARD = /\b(requireAuth|authenticate|isAuthenticated|authGuard|ensureAuth|withAuth|verifyToken)\b/;
@@ -348,7 +348,7 @@ export function detectAuth(root: string, files: string[]): Evidence[] {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/auth.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/auth.test.ts`
 Expected: PASS (4 tests).
 
 - [ ] **Step 5: Commit**
@@ -408,7 +408,7 @@ describe("detectConfigSurface", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/config-surface.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/config-surface.test.ts`
 Expected: FAIL — cannot import `detectConfigSurface`.
 
 - [ ] **Step 3: Implement the detector**
@@ -416,7 +416,7 @@ Expected: FAIL — cannot import `detectConfigSurface`.
 ```typescript
 // packages/scanner/src/detect/config-surface.ts
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
 // Ordered: first match per line wins, so a line is one signal.
@@ -454,7 +454,7 @@ export function detectConfigSurface(root: string, files: string[]): Evidence[] {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/config-surface.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/config-surface.test.ts`
 Expected: PASS (4 tests).
 
 - [ ] **Step 5: Commit**
@@ -528,7 +528,7 @@ describe("assemble surfaces all four P1 detector fields", () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/p1-integration.test.ts`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/p1-integration.test.ts`
 Expected: FAIL — fields are `undefined`.
 
 - [ ] **Step 3: Add the four optional fields to the schema**
@@ -573,7 +573,7 @@ Add them to the `map` object literal (after `critical_surfaces`, alongside `data
 
 - [ ] **Step 5: Run the integration test + full scanner/project-map suites**
 
-Run: `pnpm --filter @tenantguard/scanner exec vitest run tests/p1-integration.test.ts && pnpm --filter @tenantguard/scanner test && pnpm --filter @tenantguard/project-map test`
+Run: `pnpm --filter @aker-build/scanner exec vitest run tests/p1-integration.test.ts && pnpm --filter @aker-build/scanner test && pnpm --filter @aker-build/project-map test`
 Expected: PASS. Existing map fixtures still validate (additive optional fields).
 
 - [ ] **Step 6: Commit**

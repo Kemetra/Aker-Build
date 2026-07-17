@@ -1,4 +1,4 @@
-/** A confidence tier (mirrors @tenantguard/gates ConfidenceTier). */
+/** A confidence tier (mirrors @aker-build/gates ConfidenceTier). */
 export type Tier = "confirmed" | "suspected";
 
 /** A finding the corpus author asserts SHOULD fire, keyed by gate + path + tier (P3 Decision 1/2). */

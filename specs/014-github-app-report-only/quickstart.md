@@ -4,7 +4,7 @@ A reviewer/installer walkthrough. (Docs-only — describes intended behavior; th
 
 ## What you get
 
-Install once on a repo or org. Every pull request then shows a **TenantGuard** check with findings at the exact `file:line`, with zero per-repo workflow files. The App only reports — it never changes your code or merge state.
+Install once on a repo or org. Every pull request then shows a **Aker Build** check with findings at the exact `file:line`, with zero per-repo workflow files. The App only reports — it never changes your code or merge state.
 
 ## Install (self-hostable, single-tenant)
 
@@ -17,7 +17,7 @@ Install once on a repo or org. Every pull request then shows a **TenantGuard** c
 
 ## First PR
 
-1. Open a PR. → A **TenantGuard** check appears on the head commit (US1).
+1. Open a PR. → A **Aker Build** check appears on the head commit (US1).
 2. If the diff introduces a `confirmed` finding (e.g. a DB write with no tenant filter): the check concludes **failure**, and an inline annotation appears at the exact line (US1/US2).
 3. `suspected` findings appear as collapsed advisory notes; the check stays **neutral** if there are no confirmed findings (US2).
 4. A clean diff → **success** with a short summary, no annotations.
@@ -38,7 +38,7 @@ Install once on a repo or org. Every pull request then shows a **TenantGuard** c
 | Diff too large / review times out | **neutral** check with an honest "could not complete" message |
 | >50 findings | the 50 most important annotated inline; the rest summarized in the check body |
 | App missing the Checks permission | an actionable message about the missing permission, not silent failure |
-| No `tenantguard` config in repo | runs with documented CLI defaults (incl. 013 path scope) |
+| No `aker-build` config in repo | runs with documented CLI defaults (incl. 013 path scope) |
 
 ## Not in this feature
 

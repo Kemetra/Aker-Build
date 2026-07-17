@@ -9,7 +9,7 @@ description: "Task list for 011-spec-kit-adapter-and-config-boundary"
 
 **Scope**: Implement the first usable 011 slice:
 
-- versioned local TenantGuard config schema/reader,
+- versioned local Aker Build config schema/reader,
 - visible gate suppressions,
 - read-only Spec Kit artifact adapter,
 - queue/prompt context enrichment through Spec Kit evidence,
@@ -19,7 +19,7 @@ description: "Task list for 011-spec-kit-adapter-and-config-boundary"
 **Allowed files**:
 
 ```text
-contracts/tenantguard-config.schema.json
+contracts/aker-build-config.schema.json
 packages/config/**
 packages/spec-kit-adapter/**
 packages/gates/**
@@ -57,24 +57,24 @@ Broad rewrites unrelated to config/spec adapter
 - [X] T006 Add failing tests for Spec Kit adapter missing-artifact tolerance and artifact evidence extraction.
 - [X] T007 Add failing tests for gates applying visible suppressions without hiding findings.
 - [X] T008 Add failing tests for queue/prompt context enrichment from Spec Kit evidence.
-- [X] T009 Add failing CLI tests for `tenantguard gates --config <path>`.
+- [X] T009 Add failing CLI tests for `aker-build gates --config <path>`.
 
 ## Phase 3: Config Package
 
-- [X] T010 Add `@tenantguard/config` with Zod schema, JSON/YAML reader, default discovery, explicit config path support, and sanitized errors.
-- [X] T011 Add `contracts/tenantguard-config.schema.json` matching the implemented config surface.
+- [X] T010 Add `@aker-build/config` with Zod schema, JSON/YAML reader, default discovery, explicit config path support, and sanitized errors.
+- [X] T011 Add `contracts/aker-build-config.schema.json` matching the implemented config surface.
 
 ## Phase 4: Spec Kit Adapter
 
-- [X] T012 Add `@tenantguard/spec-kit-adapter` that reads `.specify/memory/constitution.md`, `spec.md`, `plan.md`, `tasks.md`, and checklists when present.
+- [X] T012 Add `@aker-build/spec-kit-adapter` that reads `.specify/memory/constitution.md`, `spec.md`, `plan.md`, `tasks.md`, and checklists when present.
 - [X] T013 Ensure missing Spec Kit artifacts are non-fatal and secret-like content is flagged without copying values.
 
 ## Phase 5: Integration
 
-- [X] T014 Integrate config suppressions into `@tenantguard/gates` as visible `suppression` metadata.
+- [X] T014 Integrate config suppressions into `@aker-build/gates` as visible `suppression` metadata.
 - [X] T015 Preserve/accept suppression metadata in downstream schemas that consume gate findings.
 - [X] T016 Enrich derived queue item evidence with Spec Kit artifact evidence when present, so generated prompts cite the relevant spec files.
-- [X] T017 Add CLI `--config <path>` support to `tenantguard gates`.
+- [X] T017 Add CLI `--config <path>` support to `aker-build gates`.
 - [X] T018 Update `CLAUDE.md` active feature pointer to 011.
 
 ## Phase 6: Validation

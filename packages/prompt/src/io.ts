@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { writeOutput } from "@tenantguard/scanner";
-import type { Queue, QueueItem } from "@tenantguard/queue";
+import { writeOutput } from "@aker-build/scanner";
+import type { Queue, QueueItem } from "@aker-build/queue";
 
 /** Raised when queue.json is missing — CLI maps to "run queue first" (exit 1). */
 export class MissingQueueError extends Error {}
@@ -12,7 +12,7 @@ export class UnknownItemError extends Error {}
 export function loadItem(outDir: string, id: string): QueueItem {
   const queuePath = resolve(outDir, "queue.json");
   if (!existsSync(queuePath)) {
-    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`tenantguard queue\` first.`);
+    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`aker-build queue\` first.`);
   }
   const queue = JSON.parse(readFileSync(queuePath, "utf8")) as Queue;
   const item = queue.items.find((it) => it.id === id);

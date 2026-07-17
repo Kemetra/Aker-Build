@@ -1,4 +1,4 @@
-import type { ChecksClient } from "@tenantguard/github-app";
+import type { ChecksClient } from "@aker-build/github-app";
 import type { GitHubApi } from "./github-api.js";
 
 /**

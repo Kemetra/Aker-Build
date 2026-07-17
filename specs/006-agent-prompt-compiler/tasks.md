@@ -10,7 +10,7 @@ description: "Task list for 006-agent-prompt-compiler implementation"
 
 **Organization**: Grouped by the two user stories in `spec.md` (US1 P1 compile a safe scoped prompt,
 US2 P2 render per agent), each independently testable. Output is a safe Markdown prompt; the input is a
-real `QueueItem` from `@tenantguard/queue` (005).
+real `QueueItem` from `@aker-build/queue` (005).
 
 > **GATE**: Writing this file creates no code. Implementation begins only after `plan.md` + `tasks.md`
 > are reviewed. Package/lockfile changes (T002) are gated on explicit approval. The compiler is
@@ -27,7 +27,7 @@ real `QueueItem` from `@tenantguard/queue` (005).
 ## Phase 1: Setup (Shared Infrastructure)
 
 - [x] T001 Author `docs/decisions/ADR-005-prompt-templating.md` recording **hand-written TypeScript Markdown builders** (no templating engine) as the v0 approach, citing `research.md` R1. (Docs-only.)
-- [x] T002 Initialize `packages/prompt/` (`package.json` depending on `@tenantguard/queue` + `@tenantguard/scanner` workspace deps; `tsconfig.json` with `exclude: ["tests/fixtures"]` if any on-disk fixtures) and add a `prompt` command surface to the existing `packages/cli`. **Approved package/lockfile change.**
+- [x] T002 Initialize `packages/prompt/` (`package.json` depending on `@aker-build/queue` + `@aker-build/scanner` workspace deps; `tsconfig.json` with `exclude: ["tests/fixtures"]` if any on-disk fixtures) and add a `prompt` command surface to the existing `packages/cli`. **Approved package/lockfile change.**
 - [x] T003 [P] Configure Vitest for `packages/prompt` (`vitest.config.ts`), reusing the workspace toolchain.
 
 **Checkpoint**: `packages/prompt` skeletoned; ADR-005 recorded. No compiler logic yet.
@@ -99,9 +99,9 @@ set; the invariant blocks are byte-identical; an unknown agent yields the generi
 
 ---
 
-## Phase 5: CLI (`tenantguard prompt`)
+## Phase 5: CLI (`aker-build prompt`)
 
-**Goal**: Wire the compiler into the `tenantguard` CLI per `contracts/prompt-cli.md`.
+**Goal**: Wire the compiler into the `aker-build` CLI per `contracts/prompt-cli.md`.
 
 ### Tests (write FIRST; must FAIL) ⚠️
 

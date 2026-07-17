@@ -21,7 +21,7 @@ description: "Task list for 015-github-app-deployment"
 ## Phase 1: Setup
 
 - [ ] T001 Verify repo state/branch and confirm allowed/forbidden files from `plan.md` before edits.
-- [ ] T002 Scaffold `packages/github-app-server/` (package.json, tsconfig, vitest config) matching existing package conventions; depend on `@tenantguard/github-app`.
+- [ ] T002 Scaffold `packages/github-app-server/` (package.json, tsconfig, vitest config) matching existing package conventions; depend on `@aker-build/github-app`.
 - [ ] T003 [P] Add the package to the workspace + declare the GitHub REST/HTTP dependency (update `pnpm-lock.yaml` for the new manifest only).
 
 ---
@@ -104,7 +104,7 @@ description: "Task list for 015-github-app-deployment"
 
 - [ ] T022 [P] `packages/github-app-server/README.md` — run instructions + the verifiable safety boundary (env-only secrets, report-only, stateless).
 - [ ] T023 [P] Update `README.md` / `packages/cli/README.md` to mention the deployable service (no command behavior change).
-- [ ] T024 Run focused tests: `pnpm --filter @tenantguard/github-app-server test`.
+- [ ] T024 Run focused tests: `pnpm --filter @aker-build/github-app-server test`.
 - [ ] T025 Run full suite + typecheck: `pnpm test` and `pnpm typecheck` (must be green).
 - [ ] T026 Final status: confirm no secret in any output, only checks writes, zero source on disk, no P5/P6 drift; `git status` limited to allowed files.
 

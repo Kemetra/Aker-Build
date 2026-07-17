@@ -3,8 +3,8 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { scanToFile } from "@tenantguard/scanner";
-import { GitHubUnavailableError } from "@tenantguard/review";
+import { scanToFile } from "@aker-build/scanner";
+import { GitHubUnavailableError } from "@aker-build/review";
 import { runReviewCommand } from "../src/commands/review.js";
 
 /** A temp git repo with a committed baseline + an uncommitted change, and a real project-map.json. */
@@ -22,7 +22,7 @@ function reviewRepo(opts: { withMap?: boolean; git?: boolean } = {}): { root: st
     execFileSync("git", ["-c", "commit.gpgsign=false", "commit", "-q", "-m", "base"], { cwd: root, stdio: "ignore" });
     writeFileSync(join(root, "index.ts"), "export const x = 2;\n", "utf8"); // uncommitted change
   }
-  const outDir = join(root, ".tenantguard");
+  const outDir = join(root, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   // scanToFile(targetPath, outDir) requires a Git repo; only produce a map when git is enabled.
   if (opts.withMap !== false && opts.git !== false) scanToFile(root, outDir);
@@ -35,7 +35,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T017 `tenantguard review-pr --local-diff`", () => {
+describe("T017 `aker-build review-pr --local-diff`", () => {
   it("reviews the local diff, writes review.json + review.md, exits 0", () => {
     const { root, outDir } = reviewRepo();
     created.push(resolve(root, ".."));
@@ -107,8 +107,8 @@ describe("T017 `tenantguard review-pr --local-diff`", () => {
     // the only changed source file (index.ts) IS in allowed_files → no scope violation, and the
     // out-dir artifacts must NOT appear as out-of-scope changes (SC-007 self-reference fix).
     expect(review.scope.violations).toEqual([]);
-    expect(review.changed_files).not.toContain(".tenantguard/queue.json");
-    expect(review.changed_files).not.toContain(".tenantguard/review.json");
+    expect(review.changed_files).not.toContain(".aker-build/queue.json");
+    expect(review.changed_files).not.toContain(".aker-build/review.json");
     expect(review.verdict).toBe("ready");
   });
 

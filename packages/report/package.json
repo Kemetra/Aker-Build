@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/report",
+  "name": "@aker-build/report",
   "version": "0.0.0",
-  "description": "TenantGuard run report generator",
+  "description": "Aker Build run report generator",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,13 +15,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/gates": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/queue": "workspace:*",
-    "@tenantguard/review": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
-    "@tenantguard/spec-kit-adapter": "workspace:*",
+    "@aker-build/config": "workspace:*",
+    "@aker-build/gates": "workspace:*",
+    "@aker-build/project-map": "workspace:*",
+    "@aker-build/queue": "workspace:*",
+    "@aker-build/review": "workspace:*",
+    "@aker-build/scanner": "workspace:*",
+    "@aker-build/spec-kit-adapter": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

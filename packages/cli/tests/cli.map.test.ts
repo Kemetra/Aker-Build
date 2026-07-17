@@ -14,7 +14,7 @@ afterEach(() => {
   if (existsSync(out)) rmSync(out, { recursive: true, force: true });
 });
 
-describe("T027 `tenantguard map` command", () => {
+describe("T027 `aker-build map` command", () => {
   it("exits 1 with a 'run scan first' signal when no map exists", () => {
     const lines: string[] = [];
     const code = runMap({ out, sink: (s) => lines.push(s), errSink: (s) => lines.push(s) });

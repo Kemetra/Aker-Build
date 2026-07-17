@@ -1,4 +1,4 @@
-import type { QueueItem } from "@tenantguard/queue";
+import type { QueueItem } from "@aker-build/queue";
 import {
   DEFAULT_GIT_RULES,
   DEFAULT_STOP_CONDITIONS,

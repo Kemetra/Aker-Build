@@ -7,15 +7,15 @@ Type: Release hardening / demo / documentation / smoke validation
 
 ## Purpose
 
-This feature turns the implemented TenantGuard MVP chain into a reliable first-run experience for a new user.
+This feature turns the implemented Aker Build MVP chain into a reliable first-run experience for a new user.
 
 It does not launch the product publicly by itself. It prepares the repo so the launch strategy in `009-launch-and-community-strategy` can be executed later without overclaiming.
 
 ## User stories
 
-### US1: New user can run TenantGuard in minutes
+### US1: New user can run Aker Build in minutes
 
-A developer lands on the repository, follows the README quickstart, runs TenantGuard against a safe example repo, and sees meaningful output.
+A developer lands on the repository, follows the README quickstart, runs Aker Build against a safe example repo, and sees meaningful output.
 
 Acceptance:
 

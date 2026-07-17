@@ -2,7 +2,7 @@
 
 The prompt's required sections, the **section → real-`QueueItem`-field mapping**, the renderer contract,
 and the invariant default blocks. Grounded in the **real exported `QueueItem`** from
-`@tenantguard/queue` (`packages/queue/src/types.ts`), not the spec's prose. No code is created here.
+`@aker-build/queue` (`packages/queue/src/types.ts`), not the spec's prose. No code is created here.
 
 ---
 

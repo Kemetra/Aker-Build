@@ -17,7 +17,7 @@
 
 ### User Story 1 - The App actually runs against GitHub on a real PR (Priority: P1)
 
-An operator deploys the service with the App's credentials supplied via environment/secret manager and points the GitHub App's webhook at it. When a pull request is opened on an installed repository, the service receives the webhook, verifies it, checks out the PR head, runs the existing review, and a TenantGuard check appears on the PR — the same verdict the 014 handler produces, now live.
+An operator deploys the service with the App's credentials supplied via environment/secret manager and points the GitHub App's webhook at it. When a pull request is opened on an installed repository, the service receives the webhook, verifies it, checks out the PR head, runs the existing review, and an Aker Build check appears on the PR — the same verdict the 014 handler produces, now live.
 
 **Why this priority**: This is the entire purpose of the feature — turning 014's fake-tested handler into something that runs against real GitHub. It is the smallest end-to-end slice that delivers value and is independently demonstrable. Without it, 014 is unreachable in production.
 
@@ -35,7 +35,7 @@ An operator deploys the service with the App's credentials supplied via environm
 
 The operator must be able to trust that the service, which holds the App's private key and webhook secret, never exposes them. Credentials come only from the environment; they never appear in logs, error output, the Checks payload, or any file the service writes.
 
-**Why this priority**: This is the first TenantGuard feature handling live credentials, and Principle VII (No Secrets) is non-negotiable. A leaked App private key is a repository-takeover risk. Equal P1 with Story 1 — shipping the runtime without this guarantee would be unsafe.
+**Why this priority**: This is the first Aker Build feature handling live credentials, and Principle VII (No Secrets) is non-negotiable. A leaked App private key is a repository-takeover risk. Equal P1 with Story 1 — shipping the runtime without this guarantee would be unsafe.
 
 **Independent Test**: Run the service through a full event with credentials set, capturing all logs, error output, written files, and the emitted Checks payload; assert none contains any credential value. Trigger error paths (bad signature, failed checkout, GitHub API error) and assert the same.
 
@@ -93,7 +93,7 @@ The public webhook endpoint will receive malformed, unsigned, replayed, and unre
 - **FR-012**: The service MUST remain report-only: beyond the Checks/annotations writes, it MUST perform no repository mutation and MUST execute no AI agent.
 - **FR-013**: The service MUST NOT change any existing judgment logic — verdicts and findings come entirely from the existing review engine via `handleEvent`; this feature is transport/runtime only.
 - **FR-014**: The service MUST handle concurrent events without cross-contamination — each event's ephemeral workspace MUST be isolated from every other event's.
-- **FR-015** **[built]**: The service MUST authenticate to GitHub as the App installation by minting a per-event, short-lived installation access token, using it only for that event, and discarding it (never persisting the token or private key). The token is consumed via an injected `authToken()` port; the concrete JWT-sign + installation-token exchange is built (`makeAuthToken` in `auth.ts`, backed by `@octokit/auth-app`), and the REST client is installation-authenticated via the same `createAppAuth` strategy. Single-tenant: the sole installation id is read from `TENANTGUARD_INSTALLATION_ID` and captured at wiring time.
+- **FR-015** **[built]**: The service MUST authenticate to GitHub as the App installation by minting a per-event, short-lived installation access token, using it only for that event, and discarding it (never persisting the token or private key). The token is consumed via an injected `authToken()` port; the concrete JWT-sign + installation-token exchange is built (`makeAuthToken` in `auth.ts`, backed by `@octokit/auth-app`), and the REST client is installation-authenticated via the same `createAppAuth` strategy. Single-tenant: the sole installation id is read from `AKER_BUILD_INSTALLATION_ID` and captured at wiring time.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -108,7 +108,7 @@ The public webhook endpoint will receive malformed, unsigned, replayed, and unre
 
 > **Verification scope:** SC-001/SC-002 describe live end-to-end operation. The edge adapters (HTTP listener, octokit `GitHubApi`, real `git`, installation-token mint) are now **built and wired end-to-end** — the full path from raw webhook bytes → signature verify → `handleEvent` → Checks payload is exercised by automated tests, the HTTP entrypoint and oversize guard are unit-tested, the `GitRunner` is tested against a real local git repo, and secret-safety is asserted across success + checkout-failure + bad-signature paths with sentinel credentials. **What automated tests do NOT cover:** a real network round-trip against api.github.com — i.e. that a registered App's credentials actually mint a token, that octokit's real Checks API accepts the payload, and that `git fetch` against a private repo with the minted token succeeds. Those require a registered GitHub App + installation and are provable only by a **live integration / manual smoke test**, not by the green unit suite. The green suite proves the runtime is correctly *assembled and secret-safe*; it does not by itself prove "it runs live."
 
-- **SC-001**: An operator can deploy the service with credentials in the environment and, on a real opened PR, see a TenantGuard check appear with no per-PR manual steps.
+- **SC-001**: An operator can deploy the service with credentials in the environment and, on a real opened PR, see an Aker Build check appear with no per-PR manual steps.
 - **SC-002**: For a PR with a known confirmed finding, the live check concludes `failure` with an annotation at the correct file and line in 100% of acceptance runs, matching the 014 handler verdict for the same diff.
 - **SC-003**: Across all acceptance runs (success and every error path), zero credential values appear in any log, error message, written file, or Checks payload.
 - **SC-004**: Across all acceptance runs, the only repository writes performed are Checks create/update — zero commits, branches, labels, merges, or code changes.

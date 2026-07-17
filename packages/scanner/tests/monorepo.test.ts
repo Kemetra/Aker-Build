@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validate } from "@tenantguard/project-map";
+import { validate } from "@aker-build/project-map";
 import { scan } from "../src/index.js";
 import { fixture } from "./helpers.js";
 

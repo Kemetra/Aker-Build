@@ -32,6 +32,6 @@
 ## Notes
 
 - Two decisions locked up front (owner-approved): credentials are environment/secret-manager only and never persisted (Principle VII), and v1 targets a self-hostable single-tenant Node service. Recorded in Clarifications.
-- Secret handling (FR-005–FR-007, US2, SC-003) is the constitution-critical surface — this is the first TenantGuard feature touching live credentials.
+- Secret handling (FR-005–FR-007, US2, SC-003) is the constitution-critical surface — this is the first Aker Build feature touching live credentials.
 - Deferred to plan: GitHub auth mechanism specifics, observability/logging design, concurrency implementation. None blocks the spec; all noted as assumptions.
 - Scope walls off P5 (dashboard) and P6 (enforcing check); this feature is runtime completion of P4 only.

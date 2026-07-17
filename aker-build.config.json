@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "project": { "name": "tenantguard", "type": "cli-kernel" },
+  "project": { "name": "aker-build", "type": "cli-kernel" },
   "paths": {
     "exclude": [
       "benchmark/**",

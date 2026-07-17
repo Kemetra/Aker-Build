@@ -8,7 +8,7 @@
 
 **Architecture:** A `benchmark/` corpus of synthetic, gate-scoped cases (repo + `expected.json`) and a `packages/eval` runner that runs the real `scan → gates` pipeline over each case, diffs gate-scoped findings against expected by `(gate_id, path, tier)`, and emits a versioned scorecard. Read-only over public package surfaces only.
 
-**Tech Stack:** TypeScript (ESM), Vitest, pnpm. Reuses `scanToFile`/`runGatesToFile`/`confidenceTier`/`findingId` from `@tenantguard/{scanner,gates}`.
+**Tech Stack:** TypeScript (ESM), Vitest, pnpm. Reuses `scanToFile`/`runGatesToFile`/`confidenceTier`/`findingId` from `@aker-build/{scanner,gates}`.
 
 ## Global Constraints
 
@@ -34,7 +34,7 @@
   `loadCases(corpusDir: string): Case[]` (sorted by name; validates each `expected.json`).
 
 - [ ] **Step 1: Write the failing test** — `loadCases` returns the two seed cases, each with parsed `gates_under_test` + `expected_findings`; throws a clear error on a case missing `gates_under_test`.
-- [ ] **Step 2: Run → fail** (`pnpm --filter @tenantguard/eval exec vitest run tests/corpus.test.ts`).
+- [ ] **Step 2: Run → fail** (`pnpm --filter @aker-build/eval exec vitest run tests/corpus.test.ts`).
 - [ ] **Step 3: Create the two seed cases.** `unprotected-admin-route/`: a minimal repo (`package.json` + `apps/api/admin.ts` with `app.get("/admin/x", handler)` and no guard token anywhere) + `expected.json` `{ gates_under_test: ["TG-G4"], expected_findings: [{ gate_id: "TG-G4", path: "apps/api/admin.ts", tier: "confirmed" }] }`. `clean-guarded/`: same route WITH `requireRole` on the line + `expected_findings: []`, `gates_under_test: ["TG-G4"]`.
 - [ ] **Step 4: Implement `types.ts` + `corpus.ts`** (read dirs under `corpusDir`, parse+validate `expected.json`, sort by name).
 - [ ] **Step 5: Run → pass. Commit.**
@@ -48,7 +48,7 @@
 - Test: `packages/eval/tests/run-case.test.ts`
 
 **Interfaces:**
-- Consumes: `Case` (Task 1); `scanToFile`, `runGatesToFile` from `@tenantguard/scanner`/`gates`; `confidenceTier`.
+- Consumes: `Case` (Task 1); `scanToFile`, `runGatesToFile` from `@aker-build/scanner`/`gates`; `confidenceTier`.
 - Produces: `runCase(c: Case): ActualFinding[]` where `ActualFinding = { gate_id: string; path: string; tier: "confirmed" | "suspected" }` — ONLY for findings whose `gate_id ∈ c.gates_under_test` and `status === "risk"` (needs_verification/not_applicable excluded).
 
 - [ ] **Step 1: Write the failing test** — `runCase(unprotected-admin-route)` returns exactly one `{ TG-G4, apps/api/admin.ts, confirmed }`; `runCase(clean-guarded)` returns `[]`. (Reuse the `gatesFixture` temp-copy + `git init` prep pattern from `packages/gates/tests/helpers.ts`.)

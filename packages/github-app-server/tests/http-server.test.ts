@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { Readable } from "node:stream";
 import { describe, it, expect } from "vitest";
-import type { Workspace } from "@tenantguard/github-app";
+import type { Workspace } from "@aker-build/github-app";
 import type { GitHubApi } from "../src/github-api.js";
 import type { DispatchDeps } from "../src/server.js";
 import { handleRequest, readBody, MAX_BODY_BYTES, composeDeps } from "../src/http-server.js";
@@ -95,11 +95,11 @@ describe("composeDeps — the composition root (guards always-neutral at the REA
   // the always-neutral defect while those tests stay green (reviewer MEDIUM). This test pins the
   // composition root itself, where the bug actually reappears.
   const fakeEnv = {
-    TENANTGUARD_APP_ID: "123456",
+    AKER_BUILD_APP_ID: "123456",
     // A minimal RSA-looking key — octokit's auth is lazy, so construction never validates it here.
-    TENANTGUARD_APP_PRIVATE_KEY: "-----BEGIN RSA PRIVATE KEY-----\nMIIBnotreal\n-----END RSA PRIVATE KEY-----",
-    TENANTGUARD_WEBHOOK_SECRET: "whsec",
-    TENANTGUARD_INSTALLATION_ID: "99",
+    AKER_BUILD_APP_PRIVATE_KEY: "-----BEGIN RSA PRIVATE KEY-----\nMIIBnotreal\n-----END RSA PRIVATE KEY-----",
+    AKER_BUILD_WEBHOOK_SECRET: "whsec",
+    AKER_BUILD_INSTALLATION_ID: "99",
   };
 
   it("wires prepareRepo so the live review actually scans the checkout (not always-neutral)", () => {
@@ -115,7 +115,7 @@ describe("composeDeps — the composition root (guards always-neutral at the REA
   });
 
   it("fails fast (without leaking a value) when a required credential is missing", () => {
-    const { TENANTGUARD_APP_PRIVATE_KEY: _omitted, ...missingKey } = fakeEnv;
-    expect(() => composeDeps(missingKey)).toThrow(/TENANTGUARD_APP_PRIVATE_KEY/);
+    const { AKER_BUILD_APP_PRIVATE_KEY: _omitted, ...missingKey } = fakeEnv;
+    expect(() => composeDeps(missingKey)).toThrow(/AKER_BUILD_APP_PRIVATE_KEY/);
   });
 });

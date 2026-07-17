@@ -25,7 +25,7 @@ const QUEUE = { schema_version: 1, items: [ITEM] };
 
 function repo(opts: { withQueue?: boolean } = {}): { outDir: string; root: string } {
   const root = mkdtempSync(join(tmpdir(), "tg-cli-prompt-"));
-  const outDir = join(root, ".tenantguard");
+  const outDir = join(root, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   if (opts.withQueue !== false) writeFileSync(join(outDir, "queue.json"), JSON.stringify(QUEUE), "utf8");
   return { outDir, root };
@@ -37,7 +37,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T024 `tenantguard prompt` command", () => {
+describe("T024 `aker-build prompt` command", () => {
   it("compiles a prompt, writes prompt-<id>.md + prints it, exits 0", () => {
     const { outDir, root } = repo();
     created.push(root);

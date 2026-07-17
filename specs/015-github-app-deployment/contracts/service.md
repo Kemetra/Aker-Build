@@ -7,9 +7,9 @@ Three contracts: the **environment** the service requires, the **HTTP endpoint**
 The service reads these from the environment ONLY; missing any → fail fast (FR-007), naming the variable, never printing values.
 
 ```text
-TENANTGUARD_APP_ID          (required)
-TENANTGUARD_APP_PRIVATE_KEY (required) — never logged/persisted
-TENANTGUARD_WEBHOOK_SECRET  (required) — never logged/persisted
+AKER_BUILD_APP_ID          (required)
+AKER_BUILD_APP_PRIVATE_KEY (required) — never logged/persisted
+AKER_BUILD_WEBHOOK_SECRET  (required) — never logged/persisted
 PORT                        (optional; default a fixed port)
 ```
 
@@ -45,7 +45,7 @@ No response body ever contains a credential value (FR-006).
 The runtime's GitHub writes are EXACTLY:
 
 ```text
-checks.create   — create a TenantGuard check-run on the PR head
+checks.create   — create an Aker Build check-run on the PR head
 checks.update   — update the existing check-run (idempotency, 014 FR-012)
 ```
 

@@ -47,7 +47,7 @@ The collapse rule must live where **both** consumers can reach it. Verified cons
 **not** QueueItems. So the tier is computed by a shared pure function, not stored on QueueItem:
 
 ```text
-confidenceTier(finding: Finding): "confirmed" | "suspected"   ← NEW, in @tenantguard/gates
+confidenceTier(finding: Finding): "confirmed" | "suspected"   ← NEW, in @aker-build/gates
    │  (Decision 1: max over finding.evidence)
    ├──► derive.ts   → sets QueueItem.confidence_tier (additive optional, for the scorer)
    ├──► score.ts    → reads QueueItem.confidence_tier as a NEW scoring factor

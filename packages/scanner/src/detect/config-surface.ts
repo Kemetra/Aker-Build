@@ -1,5 +1,5 @@
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
 // Ordered: first match per line wins, so a line is one signal.

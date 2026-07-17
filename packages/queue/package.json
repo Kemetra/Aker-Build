@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/queue",
+  "name": "@aker-build/queue",
   "version": "0.0.0",
-  "description": "TenantGuard Derived Queue & Router — derive queue.json and route one next-safest task",
+  "description": "Aker Build Derived Queue & Router — derive queue.json and route one next-safest task",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,10 +15,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/gates": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
-    "@tenantguard/spec-kit-adapter": "workspace:*",
+    "@aker-build/gates": "workspace:*",
+    "@aker-build/project-map": "workspace:*",
+    "@aker-build/scanner": "workspace:*",
+    "@aker-build/spec-kit-adapter": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 /** A finding's collapsed confidence tier (P2). */
 export type ConfidenceTier = "confirmed" | "suspected";

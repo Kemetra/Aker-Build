@@ -1,5 +1,5 @@
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
 const AUTH_GUARD = /\b(requireAuth|authenticate|isAuthenticated|authGuard|ensureAuth|withAuth|verifyToken)\b/;
