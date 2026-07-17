@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tenantguard.dev/schemas/project-map/v1.json",
-  "title": "TenantGuard Project Map",
+  "$id": "https://aker-build.dev/schemas/project-map/v1.json",
+  "title": "Aker Build Project Map",
   "description": "Contract artifact (non-executable) describing the Project Map shape. Canonical runtime validation is the Zod schema derived at implementation time; this JSON Schema documents the same contract for interop. Consumers MUST tolerate unknown fields (additionalProperties:true => forward compatibility).",
   "type": "object",
   "additionalProperties": true,

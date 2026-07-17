@@ -3,13 +3,13 @@
 **Feature Branch**: `001-product-foundation`
 **Created**: 2026-06-18
 **Status**: Approved (foundation — reviewed 2026-06-18)
-**Input**: User description: "Create the first product foundation specification for TenantGuard — a CLI-first SaaS Build Kernel — defining purpose, users, pains, MVP scope, non-goals, core workflow, CLI commands, outputs, Spec Kit relationship, principles, acceptance criteria, and follow-up specs. Docs only."
+**Input**: User description: "Create the first product foundation specification for Aker Build — a CLI-first SaaS Build Kernel — defining purpose, users, pains, MVP scope, non-goals, core workflow, CLI commands, outputs, Spec Kit relationship, principles, acceptance criteria, and follow-up specs. Docs only."
 
 ---
 
 ## Product Purpose *(mandatory)*
 
-TenantGuard is a CLI-first **SaaS Build Kernel**: a control plane that helps teams build and
+Aker Build is a CLI-first **SaaS Build Kernel**: a control plane that helps teams build and
 maintain multi-tenant SaaS systems with GitHub, specs, CI, and AI coding agents — without losing
 architecture control.
 
@@ -26,7 +26,7 @@ It answers, from current source evidence:
 
 > Build SaaS with AI agents without losing architecture control.
 
-TenantGuard is **not** a SaaS boilerplate, **not** a generic task manager, and **not** a Retail
+Aker Build is **not** a SaaS boilerplate, **not** a generic task manager, and **not** a Retail
 Tower product. It is a side product derived through *clean extraction* from Retail Tower OS
 operating lessons — it does not copy Retail Tower domain logic, repo-specific rules, ERPNext/POS
 details, private roadmap material, or internal reports.
@@ -35,11 +35,11 @@ details, private roadmap material, or internal reports.
 
 ## User Scenarios & Testing *(mandatory)*
 
-The "users" are SaaS-building teams; the "system" is the TenantGuard CLI run against a target repo.
+The "users" are SaaS-building teams; the "system" is the Aker Build CLI run against a target repo.
 
 ### User Story 1 - See the current safe state of a repo (Priority: P1)
 
-A developer points TenantGuard at a SaaS repository and gets an evidence-backed picture of what
+A developer points Aker Build at a SaaS repository and gets an evidence-backed picture of what
 exists, what is risky, and what is blocked — derived from the actual repo, not from stale notes.
 
 **Why this priority**: Source truth is the foundation of every other capability. Without a trusted
@@ -52,7 +52,7 @@ missing artifact, or failed command).
 
 **Acceptance Scenarios**:
 
-1. **Given** a local SaaS repo, **When** the user runs the scan, **Then** TenantGuard produces a
+1. **Given** a local SaaS repo, **When** the user runs the scan, **Then** Aker Build produces a
    project map describing detected structure without modifying any repo file.
 2. **Given** a scanned repo, **When** the user requests a report, **Then** each risk lists at least
    one piece of concrete evidence and no status is asserted without evidence.
@@ -63,7 +63,7 @@ missing artifact, or failed command).
 
 ### User Story 2 - Get the next safest task (Priority: P2)
 
-A team lead asks TenantGuard "what should we do next?" and receives exactly one next-safest task,
+A team lead asks Aker Build "what should we do next?" and receives exactly one next-safest task,
 selected from a derived queue, with the reason it was chosen and what is blocked.
 
 **Why this priority**: Teams frequently do not know the safe next step. A single, justified
@@ -104,7 +104,7 @@ safety sections and names allowed/forbidden files explicitly.
 
 ### User Story 4 - Check whether a change is ready (Priority: P3)
 
-A reviewer runs TenantGuard against a local diff (or, later, a GitHub PR) and gets a
+A reviewer runs Aker Build against a local diff (or, later, a GitHub PR) and gets a
 Ready / Not Ready / Needs Verification verdict against declared scope and gates, with evidence.
 
 **Why this priority**: Closes the loop — verifying agent or human output against the same gates that
@@ -115,7 +115,7 @@ confirm it returns "Not Ready" citing the violated gate and the evidence.
 
 **Acceptance Scenarios**:
 
-1. **Given** a local diff, **When** the user runs review, **Then** TenantGuard returns one of
+1. **Given** a local diff, **When** the user runs review, **Then** Aker Build returns one of
    Ready / Not Ready / Needs Verification with supporting evidence.
 2. **Given** a diff that violates an architecture or security gate, **When** review runs, **Then**
    the verdict is Not Ready and names the failing gate.
@@ -139,7 +139,7 @@ confirm it returns "Not Ready" citing the violated gate and the evidence.
 
 ## Core Workflow *(mandatory)*
 
-TenantGuard's operating flow:
+Aker Build's operating flow:
 
 ```text
 scan sources
@@ -211,16 +211,16 @@ support with evidence from the repo, diff, PR metadata, or CI.
 The MVP CLI MUST provide (names are product surface, not implementation detail):
 
 ```text
-tenantguard init
-tenantguard scan
-tenantguard map
-tenantguard gates
-tenantguard queue
-tenantguard route
-tenantguard prompt <ID> --agent claude
-tenantguard prompt <ID> --agent codex
-tenantguard review-pr --local-diff
-tenantguard report
+aker-build init
+aker-build scan
+aker-build map
+aker-build gates
+aker-build queue
+aker-build route
+aker-build prompt <ID> --agent claude
+aker-build prompt <ID> --agent codex
+aker-build review-pr --local-diff
+aker-build report
 ```
 
 ### Required MVP Outputs
@@ -232,8 +232,8 @@ queue.json              derived execution queue
 one next safe action    selected by the router, with reason
 safe agent prompt       copy-paste-ready, scope-limited
 PR / readiness report   Ready / Not Ready / Needs Verification
-tenantguard-report.md   human-readable report
-tenantguard-report.json machine-readable report
+aker-build-report.md   human-readable report
+aker-build-report.json machine-readable report
 ```
 
 ### Key Entities
@@ -290,12 +290,12 @@ Explicitly **not** in MVP:
 
 ## Relationship to Spec Kit *(mandatory)*
 
-- TenantGuard **uses** Spec Kit for its own build workflow (constitution → specify → plan → tasks →
+- Aker Build **uses** Spec Kit for its own build workflow (constitution → specify → plan → tasks →
   reviewed implementation).
-- As a **product**, TenantGuard **supports** Spec Kit projects: it reads `.specify/` artifacts
+- As a **product**, Aker Build **supports** Spec Kit projects: it reads `.specify/` artifacts
   (constitution, spec, plan, tasks, checklists) when present and maps them into its project map,
   queue, gates, and prompt context.
-- TenantGuard **must not depend on Spec Kit to function**. Repos with plain docs or no specs are
+- Aker Build **must not depend on Spec Kit to function**. Repos with plain docs or no specs are
   fully supported; absence of Spec Kit degrades gracefully.
 
 ---
@@ -333,7 +333,7 @@ this feature:
 - **SC-005**: All MVP core flows complete with no network access and no credentials configured.
 - **SC-006**: The router returns exactly one next-safest task by default (or an explicit "no safe
   task" with reasons), never an unexplained pick.
-- **SC-007**: TenantGuard runs successfully on a repo containing Spec Kit artifacts and on a repo
+- **SC-007**: Aker Build runs successfully on a repo containing Spec Kit artifacts and on a repo
   with none, without erroring on the absence of specs.
 
 ---
@@ -394,7 +394,7 @@ Listed in dependency order — **defined here, not implemented by this feature**
 005-derived-queue-router    Queue derivation and next-safest-task selection.
 006-agent-prompt-compiler   Safe prompts for Claude, Codex, and generic agents.
 007-pr-reviewer             Local-diff and GitHub PR review against scope and gates.
-008-github-action           Run TenantGuard in CI and produce PR summaries.
+008-github-action           Run Aker Build in CI and produce PR summaries.
 009-launch-and-community-strategy   Launch & community strategy (docs-only).
 ```
 

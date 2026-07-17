@@ -1,8 +1,8 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { filterPaths, isPathAllowed, type TenantGuardConfig } from "@tenantguard/config";
-import { loadJson, validate, type ProjectMap } from "@tenantguard/project-map";
-import { listFiles, fileExists, readFileSafe, isGitRepo } from "@tenantguard/scanner";
+import { filterPaths, isPathAllowed, type AkerBuildConfig } from "@aker-build/config";
+import { loadJson, validate, type ProjectMap } from "@aker-build/project-map";
+import { listFiles, fileExists, readFileSafe, isGitRepo } from "@aker-build/scanner";
 import type { GateContext } from "./types.js";
 
 /** Raised when the project map is missing — the CLI maps this to "run scan first" (exit 1). */
@@ -17,7 +17,7 @@ export class InvalidProjectMapError extends Error {}
  * from `<outDir>/project-map.json` (002 `loadJson` + `validate`) and wiring the scanner's
  * read-only fs primitives (FR-008, R2). Reads only; never writes or mutates the scanned repo.
  */
-export function buildContext(repoRoot: string, outDir: string, config?: TenantGuardConfig): GateContext {
+export function buildContext(repoRoot: string, outDir: string, config?: AkerBuildConfig): GateContext {
   if (!isGitRepo(repoRoot)) {
     throw new NotGitRepoError(
       `Not a Git repository: ${repoRoot} (scanning non-Git directories is out of MVP scope)`,
@@ -27,7 +27,7 @@ export function buildContext(repoRoot: string, outDir: string, config?: TenantGu
   const mapPath = resolve(outDir, "project-map.json");
   if (!existsSync(mapPath)) {
     throw new MissingProjectMapError(
-      `No produced map at ${mapPath}. Run \`tenantguard scan\` first.`,
+      `No produced map at ${mapPath}. Run \`aker-build scan\` first.`,
     );
   }
 

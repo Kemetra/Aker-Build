@@ -1,14 +1,14 @@
 # Phase 1 Data Model: SaaS Gates v0
 
 Entities, the `risks.json` shape, and the per-gate v0 signal set. Grounded in the **real exported
-shape** of `@tenantguard/project-map` (`evidenceSchema`), not paraphrase. No code is created here; this
+shape** of `@aker-build/project-map` (`evidenceSchema`), not paraphrase. No code is created here; this
 is the contract the implementation (after review) must satisfy.
 
 ---
 
 ## Shared Evidence Object (imported, NOT redefined)
 
-Reused verbatim from `@tenantguard/project-map` (`evidenceSchema`). For reference, its real shape:
+Reused verbatim from `@aker-build/project-map` (`evidenceSchema`). For reference, its real shape:
 
 ```text
 Evidence {
@@ -46,7 +46,7 @@ The **registry** holds all ten v0 gates keyed by id. Subset selection filters th
 |-------|------|--------|
 | `projectMap` | `ProjectMap` | Loaded + validated from `project-map.json` (002 `loadJson`+`validate`). |
 | `repoRoot` | string | The scanned repo root (read-only). |
-| `listFiles` | `(root) => string[]` | Reused from `@tenantguard/scanner` io (read-only). |
+| `listFiles` | `(root) => string[]` | Reused from `@aker-build/scanner` io (read-only). |
 | `fileExists` | `(root, rel) => boolean` | Reused from scanner io. |
 | `readFileSafe` | `(root, rel) => string \| null` | Reused from scanner io. |
 | `diff?` | (deferred) | PR/diff evidence for G2/G3/G8 matures with 007 (spec Assumptions). |
@@ -80,7 +80,7 @@ Ordered enum `low < medium < high < critical`. Applies only to `risk` findings; 
 | `schema_version` | number | Mirrors 002's `SCHEMA_VERSION` convention. |
 | `findings` | `Finding[]` | Single unified array, all three statuses (no per-status top-level lists, FR-012). Stably sorted (R5). |
 
-Written to `.tenantguard/risks.json` (FR-014), outside the scanned repo's tracked source.
+Written to `.aker-build/risks.json` (FR-014), outside the scanned repo's tracked source.
 
 ---
 

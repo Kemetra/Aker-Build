@@ -9,8 +9,8 @@ The terminal stage of the produce→route→prompt chain. A new package `package
 queue item (005) into a **safe, narrow, copy-paste-ready Markdown prompt** for an AI coding agent
 (claude / codex / generic). Every prompt carries the required safety sections, the default git rules,
 and the default stop conditions; renderers differ in **presentation only** (identical safety). Output
-is printed to stdout and, unless `--stdout`, written to `.tenantguard/prompt-<ID>.md`. v0 is
-deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `tenantguard
+is printed to stdout and, unless `--stdout`, written to `.aker-build/prompt-<ID>.md`. v0 is
+deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `aker-build
 prompt <ID> [--agent claude|codex]`.
 
 **Technical approach** (decided at this plan layer):
@@ -19,8 +19,8 @@ prompt <ID> [--agent claude|codex]`.
    resolving the spec's deferred choice. Recorded as **ADR-005** (a 006 task, mirroring ADR-002/003/004).
    See Research R1.
 2. **Input edge**: `packages/prompt` reads `queue.json` (005) from the out-dir, looks up the item by
-   `id`, and reuses `@tenantguard/scanner`'s read-only io for the optional file write. It imports
-   `QueueItem` types from `@tenantguard/queue`. See Research R2.
+   `id`, and reuses `@aker-build/scanner`'s read-only io for the optional file write. It imports
+   `QueueItem` types from `@aker-build/queue`. See Research R2.
 3. **Section → field mapping grounded in the REAL 005 `QueueItem`** (data-model): **Objective ←
    `title`** (there is no `objective` field); the **scope check** = `title` + `allowed_files` +
    `validation` non-empty, with **`forbidden_files` present-may-be-empty** (the 005 deriver emits `[]`).
@@ -32,12 +32,12 @@ are reviewed (AC-009; constitution §Development Workflow).
 ## Technical Context
 
 **Language/Version**: TypeScript on Node.js LTS (per ADR-001).
-**Primary Dependencies**: `@tenantguard/queue` (`QueueItem` type + reading `queue.json`);
-  `@tenantguard/scanner` (read-only `io.ts` for the optional file write); **Commander** (CLI, ADR-002).
+**Primary Dependencies**: `@aker-build/queue` (`QueueItem` type + reading `queue.json`);
+  `@aker-build/scanner` (read-only `io.ts` for the optional file write); **Commander** (CLI, ADR-002).
   **No Zod schema needed** — the output is Markdown text, not a validated JSON artifact (the *input*
   queue.json is already validated by 005). No templating engine; no network client.
 **Storage**: Reads `queue.json` from the out-dir (read-only). Writes `prompt-<ID>.md` to the
-  **designated out-dir outside tracked source** (default `./.tenantguard/`, FR-014) unless `--stdout`.
+  **designated out-dir outside tracked source** (default `./.aker-build/`, FR-014) unless `--stdout`.
 **Testing**: Vitest. Fixtures = synthetic `QueueItem`s (a fully-scoped item, an item missing
   `validation`/`allowed_files`, a `forbidden_files: []` item) plus a `queue.json` for the CLI test.
 **Target Platform**: Local dev machine / CI runner; Node CLI. No network.
@@ -58,7 +58,7 @@ are reviewed (AC-009; constitution §Development Workflow).
 | Principle | Relevance | Status |
 |-----------|-----------|--------|
 | I. Source Truth First | The prompt is compiled from a routed item derived from current evidence; the **Repo-state verification** section makes the agent re-check before acting. | ✅ Pass |
-| II. CLI First | Delivered as `tenantguard prompt <ID>`; local, no network/credentials (FR-011). | ✅ Pass |
+| II. CLI First | Delivered as `aker-build prompt <ID>`; local, no network/credentials (FR-011). | ✅ Pass |
 | III. Evidence-Based | The **Context** section cites the item's `source.evidence`; no fabricated context. | ✅ Pass |
 | IV. Spec-Compatible | Compiles any 005 item; no methodology requirement. | ✅ Pass |
 | V. Agent Safety | **This feature IS Principle V made concrete** — every prompt carries Objective, Repo-state verification, Context, Scope, Allowed/Forbidden files, Validation, Git rules, Stop conditions, Final report (FR-001/003/005); narrow by default (FR-004); never commit/push/merge (FR-008). | ✅ Pass |
@@ -114,14 +114,14 @@ packages/prompt/              # prompt compiler + renderers (created at implemen
     ├── unknown-agent-fallback.test.ts# unknown agent → generic + note (FR-010)
     └── determinism.test.ts           # same (item,agent) → byte-identical (SC-008)
 
-packages/cli/                 # extend the existing tenantguard CLI (no new package)
-├── src/commands/prompt.ts    # `tenantguard prompt <ID> [--agent] [--out] [--stdout]`
+packages/cli/                 # extend the existing aker-build CLI (no new package)
+├── src/commands/prompt.ts    # `aker-build prompt <ID> [--agent] [--out] [--stdout]`
 └── tests/cli.prompt.test.ts  # compiles from queue.json; exit codes; run-queue-first; unknown id/agent
 ```
 
 **Structure Decision**: A new `packages/prompt` library (scope check + section builders + renderers)
 plus a thin new command in the **existing** `packages/cli`. `packages/prompt` depends on
-`@tenantguard/queue` (the `QueueItem` input) and `@tenantguard/scanner` (read-only io). No new Zod
+`@aker-build/queue` (the `QueueItem` input) and `@aker-build/scanner` (read-only io). No new Zod
 schema: the output is Markdown text; the input `queue.json` is already 005-validated. This plan **does
 not create** any of the above; the split is confirmable at `/speckit-tasks`.
 

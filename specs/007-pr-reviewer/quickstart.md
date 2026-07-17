@@ -1,6 +1,6 @@
 # Quickstart: PR Reviewer
 
-Planned usage of `tenantguard review-pr` once implemented (after plan + tasks review). Illustrative —
+Planned usage of `aker-build review-pr` once implemented (after plan + tasks review). Illustrative —
 **no code exists yet**.
 
 ---
@@ -8,20 +8,20 @@ Planned usage of `tenantguard review-pr` once implemented (after plan + tasks re
 ## Full pipeline → readiness verdict
 
 ```bash
-tenantguard scan        # → .tenantguard/project-map.json   (003)
-tenantguard gates       # → .tenantguard/risks.json         (004)
-tenantguard queue       # → .tenantguard/queue.json         (005)
+aker-build scan        # → .aker-build/project-map.json   (003)
+aker-build gates       # → .aker-build/risks.json         (004)
+aker-build queue       # → .aker-build/queue.json         (005)
 # ... an agent (or human) makes changes against item Q-001 ...
-tenantguard review-pr --local-diff --item Q-001   # → .tenantguard/review.json + review.md + printed
+aker-build review-pr --local-diff --item Q-001   # → .aker-build/review.json + review.md + printed
 ```
 
 ## Variants
 
 ```bash
-tenantguard review-pr --local-diff           # gate review of the working diff; scope check skipped + noted
-tenantguard review-pr 42                       # review GitHub PR #42 (uses your gh CLI)
-tenantguard review-pr 42 --item Q-001          # PR review + scope check
-tenantguard review-pr --local-diff --stdout    # print only, no files written
+aker-build review-pr --local-diff           # gate review of the working diff; scope check skipped + noted
+aker-build review-pr 42                       # review GitHub PR #42 (uses your gh CLI)
+aker-build review-pr 42 --item Q-001          # PR review + scope check
+aker-build review-pr --local-diff --stdout    # print only, no files written
 ```
 
 > **PR-mode v0 caveat:** the gates inspect your **local working tree**, while the changed-files set

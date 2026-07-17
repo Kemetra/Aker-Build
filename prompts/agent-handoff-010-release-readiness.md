@@ -3,7 +3,7 @@
 Use this only after maintainer approval.
 
 ```text
-You are working in the TenantGuard repository.
+You are working in the Aker Build repository.
 
 Objective:
 Prepare a docs-first 010 release-readiness slice that reconciles post-foundation status and creates a clear first-run demo plan. Do not implement production code unless the existing spec/plan/tasks explicitly allow it.
@@ -15,7 +15,7 @@ First, verify repo state:
   - README.md
   - CLAUDE.md
   - .specify/memory/constitution.md
-  - docs/tenantguard_project_blueprint.md
+  - docs/aker-build_project_blueprint.md
   - packages/cli/src/index.ts
   - packages/cli/README.md
   - specs/009-launch-and-community-strategy/spec.md

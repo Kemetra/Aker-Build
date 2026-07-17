@@ -24,7 +24,7 @@ describe("P2: only confirmed findings flip the PR verdict", () => {
     const findings: Finding[] = [
       { gate_id: "TG-G4", status: "risk", severity: "high", evidence: [ev(FILE, "route without auth guard", "high")] },
     ];
-    const report = reviewLocalDiff({ out: ".tenantguard" }, deps([FILE], findings));
+    const report = reviewLocalDiff({ out: ".aker-build" }, deps([FILE], findings));
     expect(report.verdict).toBe("not_ready");
   });
 
@@ -32,14 +32,14 @@ describe("P2: only confirmed findings flip the PR verdict", () => {
     const findings: Finding[] = [
       { gate_id: "TG-G4", status: "risk", severity: "high", evidence: [ev(FILE, "route maybe behind middleware", "medium")] },
     ];
-    const report = reviewLocalDiff({ out: ".tenantguard" }, deps([FILE], findings));
+    const report = reviewLocalDiff({ out: ".aker-build" }, deps([FILE], findings));
     expect(report.verdict).toBe("needs_verification");
     // still visible in the report, just not blocking
     expect(report.findings.some((f) => "gate_id" in f && f.gate_id === "TG-G4")).toBe(true);
   });
 
   it("no findings → ready", () => {
-    const report = reviewLocalDiff({ out: ".tenantguard" }, deps([FILE], []));
+    const report = reviewLocalDiff({ out: ".aker-build" }, deps([FILE], []));
     expect(report.verdict).toBe("ready");
   });
 });

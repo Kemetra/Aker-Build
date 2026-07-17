@@ -5,7 +5,7 @@ Exit codes and output are the contract.
 
 ---
 
-## `tenantguard prompt <ID> [--agent <name>]`
+## `aker-build prompt <ID> [--agent <name>]`
 
 Compile a safe, scope-limited Markdown prompt for queue item `<ID>`.
 
@@ -13,13 +13,13 @@ Compile a safe, scope-limited Markdown prompt for queue item `<ID>`.
 |--------|----------|
 | Argument | `<ID>` — the queue item id (e.g. `Q-001`). Required. |
 | `--agent <name>` | `claude` \| `codex` \| `generic`. Default `generic`. Unknown name → generic renderer + a note (FR-010). |
-| `--out <dir>` | Directory holding `queue.json`; `prompt-<ID>.md` written here. Default `./.tenantguard/`. |
+| `--out <dir>` | Directory holding `queue.json`; `prompt-<ID>.md` written here. Default `./.aker-build/`. |
 | `--stdout` | Print the prompt only; do not write a file. |
 | Input | Reads `<out>/queue.json` (005) and looks up the item by `id`. |
 | Side effects | Read-only on the scanned repo; writes `prompt-<ID>.md` to `--out` unless `--stdout`. No network/credentials (FR-011). |
 | Output (stdout) | The compiled **Markdown** prompt (always printed). |
-| Output (file) | `.tenantguard/prompt-<ID>.md` (unless `--stdout`), FR-014. |
-| Exit codes | `0` prompt compiled · `1` missing `queue.json` (run `tenantguard queue` first) · `2` bad input: unknown `<ID>`, not a Git repo, **or item missing required scope info (refusal, FR-009)** — message names the cause · `3` internal error. |
+| Output (file) | `.aker-build/prompt-<ID>.md` (unless `--stdout`), FR-014. |
+| Exit codes | `0` prompt compiled · `1` missing `queue.json` (run `aker-build queue` first) · `2` bad input: unknown `<ID>`, not a Git repo, **or item missing required scope info (refusal, FR-009)** — message names the cause · `3` internal error. |
 | Determinism | Same `(item, agent)` → byte-identical output (FR-016 / SC-008). |
 
 ---

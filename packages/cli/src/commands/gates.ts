@@ -7,7 +7,7 @@ import {
   UnknownGateError,
   InvalidRisksError,
   ConfigError,
-} from "@tenantguard/gates";
+} from "@aker-build/gates";
 
 export interface GatesCmdOptions {
   out?: string;
@@ -19,7 +19,7 @@ export interface GatesCmdOptions {
   errSink?: (line: string) => void;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the `gates` command. Returns an exit code (no process.exit, so it is testable).

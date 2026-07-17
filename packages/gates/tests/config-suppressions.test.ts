@@ -7,7 +7,7 @@ import { gatesFixture } from "./helpers.js";
 describe("011 config suppressions", () => {
   it("keeps matching suppressed findings visible with auditable metadata", () => {
     const { repoRoot, outDir } = gatesFixture("vuln");
-    const configPath = join(repoRoot, "tenantguard.config.json");
+    const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify(
@@ -44,7 +44,7 @@ describe("011 config suppressions", () => {
 
   it("applies a configured severity override to unsuppressed risk findings", () => {
     const { repoRoot, outDir } = gatesFixture("vuln");
-    const configPath = join(repoRoot, "tenantguard.config.json");
+    const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify({ version: 1, gates: { "TG-G5": { severity: "medium" } } }),
@@ -57,7 +57,7 @@ describe("011 config suppressions", () => {
 
   it("matches non-suffix double-star suppression globs", () => {
     const { repoRoot, outDir } = gatesFixture("vuln");
-    const configPath = join(repoRoot, "tenantguard.config.json");
+    const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify({
@@ -84,7 +84,7 @@ describe("011 config suppressions", () => {
 
   it("does not emit findings for excluded paths", () => {
     const { repoRoot, outDir } = gatesFixture("vuln");
-    const configPath = join(repoRoot, "tenantguard.config.json");
+    const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify({ version: 1, paths: { exclude: ["apps/api/routes/admin.ts"] } }),

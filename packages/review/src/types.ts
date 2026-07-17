@@ -1,5 +1,5 @@
-import type { Evidence } from "@tenantguard/project-map";
-import type { Finding, Severity, FindingStatus } from "@tenantguard/gates";
+import type { Evidence } from "@aker-build/project-map";
+import type { Finding, Severity, FindingStatus } from "@aker-build/gates";
 
 // 002/004 shapes are reused VERBATIM — never redefined here.
 export type { Evidence, Finding, Severity, FindingStatus };
@@ -61,6 +61,6 @@ export interface ReviewOptions {
   out?: string;
   /** Optional queue item id; when set, scope is checked against its allowed/forbidden files. */
   item?: string;
-  /** Optional explicit config path. If omitted, tenantguard.config.json/yaml is auto-discovered. */
+  /** Optional explicit config path. If omitted, aker-build.config.json/yaml is auto-discovered. */
   configPath?: string;
 }

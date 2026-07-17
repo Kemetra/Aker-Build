@@ -1,13 +1,13 @@
 {
-  "name": "@tenantguard/github-app-server",
+  "name": "@aker-build/github-app-server",
   "version": "0.0.0",
-  "description": "TenantGuard report-only GitHub App — self-hostable deployment runtime (webhook server + concrete GitHub Checks client + ephemeral git workspace)",
+  "description": "Aker Build report-only GitHub App — self-hostable deployment runtime (webhook server + concrete GitHub Checks client + ephemeral git workspace)",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "bin": {
-    "tenantguard-app-server": "./src/bin.ts"
+    "aker-build-app-server": "./src/bin.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -17,8 +17,8 @@
   "dependencies": {
     "@octokit/auth-app": "^7.1.5",
     "@octokit/rest": "^21.1.1",
-    "@tenantguard/github-app": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
+    "@aker-build/github-app": "workspace:*",
+    "@aker-build/scanner": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

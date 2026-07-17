@@ -1,6 +1,10 @@
-# TenantGuard
+# Aker Build
 
-TenantGuard is a CLI-first SaaS Build Kernel for teams building multi-tenant SaaS systems with GitHub, specs, CI, and AI coding agents.
+[![CI](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml/badge.svg?branch=main)](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml) [![License: MIT](https://img.shields.io/github/license/Kemetra/Aker-Build)](LICENSE)
+
+![Aker Build logo](docs/aker-logo.png)
+
+Aker Build is a CLI-first SaaS Build Kernel for teams building multi-tenant SaaS systems with GitHub, specs, CI, and AI coding agents.
 
 It helps teams answer:
 
@@ -11,13 +15,13 @@ It helps teams answer:
 - What files may an AI agent touch?
 - Is this PR ready to merge?
 
-TenantGuard is not a SaaS boilerplate. It does not generate a full app. It controls the build process around architecture, gates, queues, prompts, and verification.
+Aker Build is not a SaaS boilerplate. It does not generate a full app. It controls the build process around architecture, gates, queues, prompts, and verification.
 
 ## Status
 
-TenantGuard's MVP CLI chain is implemented and in release-readiness hardening. The current focus is a reliable first-run demo, documented command surface, and launch prerequisites.
+Aker Build's MVP CLI chain is implemented and in release-readiness hardening. The current focus is a reliable first-run demo, documented command surface, and launch prerequisites.
 
-- TenantGuard runs against its own repo via a report-only GitHub Action dogfooding workflow.
+- Aker Build runs against its own repo via a report-only GitHub Action dogfooding workflow.
 - GitHub App, hosted dashboard, auto-fix, auto-commit, and auto-merge remain deferred.
 
 ## Benchmark scorecard
@@ -25,7 +29,7 @@ TenantGuard's MVP CLI chain is implemented and in release-readiness hardening. T
 ![benchmark](https://img.shields.io/badge/G4_confirmed_precision-100%25-brightgreen)
 ![benchmark](https://img.shields.io/badge/G4_confirmed_recall-100%25-brightgreen)
 
-TenantGuard's detection quality is measured, not asserted. A labeled corpus of
+Aker Build's detection quality is measured, not asserted. A labeled corpus of
 synthetic multi-tenant failure cases (`benchmark/cases/`, 15 cases) runs through
 the real `scan → gates` pipeline; precision/recall are computed per gate ×
 confidence tier, and CI fails if they drop below `benchmark/thresholds.json`.
@@ -51,7 +55,7 @@ covered; and the 5-line statement window can classify an unscoped query as
 scoped when a neighboring statement's tenant token falls inside the window.
 Framework signature packs and a coverage-honesty field close these in W3b.
 
-Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.tenantguard/benchmark-report.{json,md}`).
+Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.aker-build/benchmark-report.{json,md}`).
 
 ## Quickstart
 
@@ -91,18 +95,18 @@ scan sources
 ## MVP Commands
 
 ```bash
-tenantguard scan [path]
-tenantguard map
-tenantguard gates [path]
-tenantguard queue [path]
-tenantguard route [path]
-tenantguard prompt <id> --agent claude|codex|generic
-tenantguard review-pr [path] --local-diff
-tenantguard review-pr <number>
-tenantguard report [path]
+aker-build scan [path]
+aker-build map
+aker-build gates [path]
+aker-build queue [path]
+aker-build route [path]
+aker-build prompt <id> --agent claude|codex|generic
+aker-build review-pr [path] --local-diff
+aker-build review-pr <number>
+aker-build report [path]
 ```
 
-The npm-published `tenantguard` binary is a follow-up release task. Until then, local and CI usage runs the TypeScript CLI through `tsx`.
+The npm-published `aker-build` binary is a follow-up release task. Until then, local and CI usage runs the TypeScript CLI through `tsx`.
 
 ## Documentation
 

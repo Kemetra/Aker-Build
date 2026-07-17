@@ -5,13 +5,13 @@
 
 ## Summary
 
-Build **SaaS Gates v0** — TenantGuard's risk-detection layer. It reads the Project Map (002) plus
-read-only repo evidence and produces `.tenantguard/risks.json`: a single unified `findings[]` array
+Build **SaaS Gates v0** — Aker Build's risk-detection layer. It reads the Project Map (002) plus
+read-only repo evidence and produces `.aker-build/risks.json`: a single unified `findings[]` array
 where each finding carries a `gate_id`, a `status` (`risk` / `needs_verification` / `not_applicable`),
 and (for `risk` findings) a `severity` (`low`/`medium`/`high`/`critical`) plus one or more **shared
-Evidence Objects** reused verbatim from `@tenantguard/project-map`. v0 detection is **signal-based**
+Evidence Objects** reused verbatim from `@aker-build/project-map`. v0 detection is **signal-based**
 (not full static analysis): false negatives are acceptable; every emitted finding is evidence-backed,
-deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `tenantguard gates`
+deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `aker-build gates`
 (full set or a `--gates TG-G4,TG-G5` subset).
 
 **Technical approach** (decided at this plan layer):
@@ -21,12 +21,12 @@ deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed 
    language (decided at plan layer)"). Recorded as **ADR-003** (a 004 task, mirroring how 003 recorded
    ADR-002 via T001). See Research R1.
 2. **Evidence-consumption edge**: a new package `packages/gates` consumes an **already-written
-   `project-map.json`** (loaded + validated via `@tenantguard/project-map`) and gets file-level reads
-   by **reusing `@tenantguard/scanner`'s read-only `io.ts` primitives** — centralizing the read-only
+   `project-map.json`** (loaded + validated via `@aker-build/project-map`) and gets file-level reads
+   by **reusing `@aker-build/scanner`'s read-only `io.ts` primitives** — centralizing the read-only
    guarantee rather than reinventing fs access. See Research R2.
 3. **Schema home**: the discriminated-union `findingSchema` / `risksSchema` live **in
    `packages/gates`** (a new artifact, not the project map), **importing `evidenceSchema` from
-   `@tenantguard/project-map`** and never redefining it (FR-003). See Research R3.
+   `@aker-build/project-map`** and never redefining it (FR-003). See Research R3.
 
 **No production code is created by this plan.** Implementation begins only after `plan.md` + `tasks.md`
 are reviewed (AC-009; constitution §Development Workflow).
@@ -34,13 +34,13 @@ are reviewed (AC-009; constitution §Development Workflow).
 ## Technical Context
 
 **Language/Version**: TypeScript on Node.js LTS (per ADR-001).
-**Primary Dependencies**: `@tenantguard/project-map` (workspace — `evidenceSchema`, `projectMapSchema`,
-  `validate`, `loadJson`); `@tenantguard/scanner` (workspace — read-only `io.ts` traversal primitives);
+**Primary Dependencies**: `@aker-build/project-map` (workspace — `evidenceSchema`, `projectMapSchema`,
+  `validate`, `loadJson`); `@aker-build/scanner` (workspace — read-only `io.ts` traversal primitives);
   **Commander** (CLI parsing, per ADR-002); **Zod** (the `risks.json` schema). Node built-ins
   (`node:fs`, `node:path`) only via the reused scanner io — no `git` shell-out, no network client.
 **Storage**: Reads target repo files (read-only) and a previously produced `project-map.json`. Writes
   `risks.json` to the **designated output dir outside the scanned repo's tracked source** (default
-  `./.tenantguard/risks.json`, the same convention 003 uses for `project-map.json`; FR-014) — never
+  `./.aker-build/risks.json`, the same convention 003 uses for `project-map.json`; FR-014) — never
   mutates scanned files (FR-008).
 **Testing**: Vitest. Fixtures = the reused 003 scanner fixtures (`saas`, `monorepo`, `empty`) plus
   **per-gate clean/violation** fixtures (the "v0 sample set", SC-003). Fixtures are prepared as Git
@@ -65,7 +65,7 @@ are reviewed (AC-009; constitution §Development Workflow).
 | Principle | Relevance | Status |
 |-----------|-----------|--------|
 | I. Source Truth First | Gates read source evidence + the Project Map before asserting; insufficient evidence → `needs_verification`, never a fabricated pass/fail (FR-004, SC-004). | ✅ Pass |
-| II. CLI First | Delivered as `tenantguard gates` (incl. `--gates` subset); local, no network/credentials (FR-010). | ✅ Pass |
+| II. CLI First | Delivered as `aker-build gates` (incl. `--gates` subset); local, no network/credentials (FR-010). | ✅ Pass |
 | III. Evidence-Based | Every `risk` finding cites ≥1 shared Evidence Object reused from 002; findings without evidence not emitted (FR-003, SC-002). | ✅ Pass |
 | IV. Spec-Compatible | Runs over any scanned repo's map (incl. plain-docs / non-SaaS); reads `.specify/` evidence if present, never requires it. | ✅ Pass |
 | V. Agent Safety | N/A directly (not a prompt feature; gate findings feed 006/007 later). | ✅ N/A |
@@ -85,9 +85,9 @@ specs/004-saas-gates-v0/
 ├── plan.md              # This file
 ├── research.md          # Phase 0 — decisions (rule engine, evidence edge, schema home, severity, determinism, sample set)
 ├── data-model.md        # Phase 1 — Gate, Finding (discriminated union), Risk List, Severity, per-gate v0 signals
-├── quickstart.md        # Phase 1 — planned `tenantguard gates` usage + acceptance mapping
+├── quickstart.md        # Phase 1 — planned `aker-build gates` usage + acceptance mapping
 ├── contracts/
-│   ├── gates-cli.md      # Phase 1 — `tenantguard gates` command contract (args, --gates, exit codes, output)
+│   ├── gates-cli.md      # Phase 1 — `aker-build gates` command contract (args, --gates, exit codes, output)
 │   └── risks-json.md     # Phase 1 — risks.json shape contract (findings[], status union, evidence reuse)
 ├── checklists/
 │   └── requirements.md   # (from /speckit.specify)
@@ -128,14 +128,14 @@ packages/gates/               # gate model + v0 check set + risks.json schema (c
     ├── subset.test.ts                # --gates TG-G4,TG-G5 runs only the named gates (FR-006)
     └── readonly.test.ts              # no scanned-repo file created/modified/deleted (FR-008)
 
-packages/cli/                 # extend the existing tenantguard CLI (no new package)
-├── src/commands/gates.ts     # `tenantguard gates [--gates ids]` → runGates → write risks.json; "run scan first" path
+packages/cli/                 # extend the existing aker-build CLI (no new package)
+├── src/commands/gates.ts     # `aker-build gates [--gates ids]` → runGates → write risks.json; "run scan first" path
 └── tests/cli.gates.test.ts   # command produces valid risks.json; --gates subset; exit codes
 ```
 
 **Structure Decision**: A new `packages/gates` library (pure gate model + v0 checks + the `risks.json`
 schema) plus a thin new command in the **existing** `packages/cli`. `packages/gates` depends on
-`@tenantguard/project-map` (output contract + `evidenceSchema` + `validate`) and `@tenantguard/scanner`
+`@aker-build/project-map` (output contract + `evidenceSchema` + `validate`) and `@aker-build/scanner`
 (read-only `io.ts`), keeping the read-only guarantee in one place and letting 005/007 reuse the gate
 library directly. This plan **does not create** any of the above; the split is confirmable at
 `/speckit-tasks`.

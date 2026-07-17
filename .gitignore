@@ -8,8 +8,8 @@ dist/
 # Test/coverage artifacts
 coverage/
 
-# TenantGuard CLI output (project-map.json / risks.json / queue.json / review.* etc.)
-.tenantguard/
+# Aker Build CLI output (project-map.json / risks.json / queue.json / review.* etc.)
+.aker-build/
 
 # Editor / OS
 .DS_Store

@@ -45,32 +45,32 @@ checkout). Path 3 is explicitly out of this feature's scope.
 From the repo root, run (substitute your real values; the `.pem` is read inline, never stored):
 
 ```bash
-TENANTGUARD_SMOKE=1 \
-TENANTGUARD_APP_ID="<app id>" \
-TENANTGUARD_APP_PRIVATE_KEY="$(cat /path/to/your-app.private-key.pem)" \
-TENANTGUARD_WEBHOOK_SECRET="<webhook secret>" \
-TENANTGUARD_INSTALLATION_ID="<installation id>" \
+AKER_BUILD_SMOKE=1 \
+AKER_BUILD_APP_ID="<app id>" \
+AKER_BUILD_APP_PRIVATE_KEY="$(cat /path/to/your-app.private-key.pem)" \
+AKER_BUILD_WEBHOOK_SECRET="<webhook secret>" \
+AKER_BUILD_INSTALLATION_ID="<installation id>" \
 TG_SMOKE_OWNER="<repo owner / org login>" \
 TG_SMOKE_REPO="<repo name>" \
 TG_SMOKE_PR="<existing PR number>" \
 TG_SMOKE_HEAD_SHA="<that PR's head commit sha>" \
-pnpm --filter @tenantguard/github-app-server exec vitest run live-smoke
+pnpm --filter @aker-build/github-app-server exec vitest run live-smoke
 ```
 
 PowerShell equivalent (set then run, in one session so the vars persist):
 
 ```powershell
-$env:TENANTGUARD_SMOKE="1"
-$env:TENANTGUARD_APP_ID="<app id>"
-$env:TENANTGUARD_APP_PRIVATE_KEY=(Get-Content -Raw C:\path\to\your-app.private-key.pem)
-$env:TENANTGUARD_WEBHOOK_SECRET="<webhook secret>"
-$env:TENANTGUARD_INSTALLATION_ID="<installation id>"
+$env:AKER_BUILD_SMOKE="1"
+$env:AKER_BUILD_APP_ID="<app id>"
+$env:AKER_BUILD_APP_PRIVATE_KEY=(Get-Content -Raw C:\path\to\your-app.private-key.pem)
+$env:AKER_BUILD_WEBHOOK_SECRET="<webhook secret>"
+$env:AKER_BUILD_INSTALLATION_ID="<installation id>"
 $env:TG_SMOKE_OWNER="<repo owner / org login>"
 $env:TG_SMOKE_REPO="<repo name>"
 $env:TG_SMOKE_PR="<existing PR number>"
 $env:TG_SMOKE_HEAD_SHA="<that PR's head commit sha>"
-pnpm --filter @tenantguard/github-app-server exec vitest run live-smoke
-# Clear them afterwards: Remove-Item Env:TENANTGUARD_*, Env:TG_SMOKE_*
+pnpm --filter @aker-build/github-app-server exec vitest run live-smoke
+# Clear them afterwards: Remove-Item Env:AKER_BUILD_*, Env:TG_SMOKE_*
 ```
 
 ---
@@ -86,10 +86,10 @@ pnpm --filter @tenantguard/github-app-server exec vitest run live-smoke
       check id. (A successful create also implicitly proves the App-JWT → installation-token exchange.)
 
 - [ ] **Confirm in the GitHub UI:** open the PR's head commit — a **neutral** check named
-      **`TenantGuard`** ("TenantGuard live smoke") should now be present. This is the human-eye proof
+      **`Aker Build`** ("Aker Build live smoke") should now be present. This is the human-eye proof
       that the write actually landed on GitHub.
 
-**If it shows `3 skipped`:** `TENANTGUARD_SMOKE=1` was not set — the test never ran. Set it and retry.
+**If it shows `3 skipped`:** `AKER_BUILD_SMOKE=1` was not set — the test never ran. Set it and retry.
 
 **If a test fails:** the failure message names the failing path without printing any secret. Common causes:
 - `401 / Bad credentials` → wrong app id, key, or installation id.
@@ -113,19 +113,19 @@ response shapes are all exercised.
 To certify those, run the **full server** (path 2) end-to-end behind a public webhook. The host
 entrypoint is `packages/github-app-server/src/bin.ts` (a thin shim that calls the exported `start()`,
 which env-composes the runtime and binds the listener). It is registered as the package `bin`
-`tenantguard-app-server`.
+`aker-build-app-server`.
 
-1. Set the four `TENANTGUARD_*` credentials (no `TG_SMOKE_*` needed) — environment only, never a file.
-2. Launch the host. The bin uses `.js`→`.ts` import specifiers (same convention as the `tenantguard`
-   and `tenantguard-benchmark` bins), so it needs a **TS-aware runtime**:
-   - **Built / published package:** run the installed `tenantguard-app-server` command.
+1. Set the four `AKER_BUILD_*` credentials (no `TG_SMOKE_*` needed) — environment only, never a file.
+2. Launch the host. The bin uses `.js`→`.ts` import specifiers (same convention as the `aker-build`
+   and `aker-build-benchmark` bins), so it needs a **TS-aware runtime**:
+   - **Built / published package:** run the installed `aker-build-app-server` command.
    - **In-repo dev run:** invoke `src/bin.ts` through a TS runtime (a build step, or a `tsx`/loader —
      `tsx` is intentionally **not** a repo dependency, so installing one is an operator/deploy choice,
      not a committed lockfile change). Example with a locally available loader:
      `node --import tsx packages/github-app-server/src/bin.ts`
 3. Expose the port publicly (e.g. a tunnel) and point the App's **webhook URL** at it.
 4. **Open a PR** on the installed repo.
-5. Confirm a **`TenantGuard`** check appears at the PR head with the expected conclusion
+5. Confirm a **`Aker Build`** check appears at the PR head with the expected conclusion
    (`failure` for a confirmed finding in a changed file, `success` for clean, `neutral` for draft or
    could-not-complete).
 

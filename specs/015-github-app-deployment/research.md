@@ -34,7 +34,7 @@ Decision / Rationale / Alternatives for each resolved unknown.
 
 ## R4 — Concrete ChecksClient over the GitHub API
 
-**Decision**: Implement 014's `ChecksClient` (create/update/find) using the installation-token'd REST client. `findCheck` locates an existing TenantGuard check-run for the head (idempotency, 014 FR-012). Every method maps to a Checks API call and nothing else; the 014 `assertAllowedWrite` gate still wraps writes in `postCheck`.
+**Decision**: Implement 014's `ChecksClient` (create/update/find) using the installation-token'd REST client. `findCheck` locates an existing Aker Build check-run for the head (idempotency, 014 FR-012). Every method maps to a Checks API call and nothing else; the 014 `assertAllowedWrite` gate still wraps writes in `postCheck`.
 
 **Rationale**: Satisfies the existing interface exactly, so `handleEvent` is unchanged. The allowlist gate remains the single mutation chokepoint even with a live client behind it.
 

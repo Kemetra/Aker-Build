@@ -12,10 +12,10 @@ How an operator runs the report-only GitHub App against live GitHub. (Docs-only 
 Set credentials in the deployment environment or secret manager — never in a file the repo tracks:
 
 ```text
-TENANTGUARD_APP_ID=<app id>
-TENANTGUARD_APP_PRIVATE_KEY=<private key>          # never logged or written to disk
-TENANTGUARD_WEBHOOK_SECRET=<webhook secret>        # never logged or written to disk
-TENANTGUARD_INSTALLATION_ID=<installation id>      # single-tenant: the sole installation
+AKER_BUILD_APP_ID=<app id>
+AKER_BUILD_APP_PRIVATE_KEY=<private key>          # never logged or written to disk
+AKER_BUILD_WEBHOOK_SECRET=<webhook secret>        # never logged or written to disk
+AKER_BUILD_INSTALLATION_ID=<installation id>      # single-tenant: the sole installation
 PORT=<optional>
 ```
 
@@ -29,7 +29,7 @@ Start the service (self-hosted, single-tenant). Point the GitHub App's webhook U
 
 1. A PR is opened → GitHub delivers a signed `pull_request` webhook.
 2. The service verifies the HMAC signature. Unsigned/forged → rejected (401), nothing happens.
-3. It checks out the PR head into an ephemeral directory, runs the existing review, posts a **TenantGuard** check, then **deletes** the directory.
+3. It checks out the PR head into an ephemeral directory, runs the existing review, posts a **Aker Build** check, then **deletes** the directory.
 4. A confirmed finding → `failure` with an inline annotation; suspected-only → `neutral`; clean → `success`; draft → never red; couldn't complete → honest `neutral`.
 
 ## Safety you can verify
@@ -41,7 +41,7 @@ Start the service (self-hosted, single-tenant). Point the GitHub App's webhook U
 
 ## Verifying it actually runs live
 
-The automated test suite proves the runtime is correctly assembled and secret-safe, but it does **not** make a real network call to GitHub. To confirm live operation you must run a manual smoke test against a registered App + installation: open a PR on an installed repo and confirm a **TenantGuard** check appears at the head commit with the expected conclusion. Until that smoke test passes, treat "runs live" as built-and-wired but not yet field-verified.
+The automated test suite proves the runtime is correctly assembled and secret-safe, but it does **not** make a real network call to GitHub. To confirm live operation you must run a manual smoke test against a registered App + installation: open a PR on an installed repo and confirm a **Aker Build** check appears at the head commit with the expected conclusion. Until that smoke test passes, treat "runs live" as built-and-wired but not yet field-verified.
 
 ## Not in this feature
 

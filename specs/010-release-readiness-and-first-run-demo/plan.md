@@ -72,11 +72,11 @@ Document and optionally automate:
 pnpm install
 pnpm test
 pnpm typecheck
-pnpm --filter @tenantguard/cli exec tenantguard scan examples/multi-tenant-saas-basic --out .tenantguard-demo
-pnpm --filter @tenantguard/cli exec tenantguard gates examples/multi-tenant-saas-basic --out .tenantguard-demo
-pnpm --filter @tenantguard/cli exec tenantguard queue examples/multi-tenant-saas-basic --out .tenantguard-demo
-pnpm --filter @tenantguard/cli exec tenantguard route examples/multi-tenant-saas-basic --out .tenantguard-demo
-pnpm --filter @tenantguard/cli exec tenantguard prompt Q-001 --agent claude --out .tenantguard-demo
+pnpm --filter @aker-build/cli exec aker-build scan examples/multi-tenant-saas-basic --out .aker-build-demo
+pnpm --filter @aker-build/cli exec aker-build gates examples/multi-tenant-saas-basic --out .aker-build-demo
+pnpm --filter @aker-build/cli exec aker-build queue examples/multi-tenant-saas-basic --out .aker-build-demo
+pnpm --filter @aker-build/cli exec aker-build route examples/multi-tenant-saas-basic --out .aker-build-demo
+pnpm --filter @aker-build/cli exec aker-build prompt Q-001 --agent claude --out .aker-build-demo
 ```
 
 Adjust exact package command based on actual workspace scripts.
@@ -121,7 +121,7 @@ pnpm typecheck
 
 | Risk | Mitigation |
 |---|---|
-| Demo overfits to TenantGuard internals | Use a SaaS-shaped example, not TenantGuard itself. |
+| Demo overfits to Aker Build internals | Use a SaaS-shaped example, not Aker Build itself. |
 | Output claims exceed implementation | Map every claim to a real command/output. |
 | Secret leakage in fixtures | Use obviously fake placeholders and secret scanner tests if available. |
 | Scope creep into distribution or Action | Keep npm/Action to ADR/spec follow-ups, not this implementation unless explicitly approved. |

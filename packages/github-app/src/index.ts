@@ -1,4 +1,4 @@
-// Public surface for @tenantguard/github-app.
+// Public surface for @aker-build/github-app.
 // Report-only GitHub App (roadmap P4): on a PR event, run the review-pr chain at the head ref and
 // post a Checks run + annotations. No repository mutation; stateless; secret-safe.
 
@@ -7,8 +7,8 @@ export { buildPayload, postCheck, type ChecksClient } from "./checks.js";
 // incompletePayload is defined+exported below (used by handleEvent and by runtimes that must post an
 // honest neutral when a GitHub read fails before the review can run).
 // Re-export the Checks payload types so consumers of handleEvent/ChecksClient can name them
-// without reaching into @tenantguard/review directly (read-only re-export; no behavior change).
-export type { ChecksPayload, CheckAnnotation } from "@tenantguard/review";
+// without reaching into @aker-build/review directly (read-only re-export; no behavior change).
+export type { ChecksPayload, CheckAnnotation } from "@aker-build/review";
 export {
   run,
   safeRun,
@@ -26,7 +26,7 @@ export {
   type RawWebhookEvent,
 } from "./types.js";
 
-import type { ChecksPayload } from "@tenantguard/review";
+import type { ChecksPayload } from "@aker-build/review";
 import { parseEvent } from "./webhook.js";
 import { buildPayload, postCheck, type ChecksClient } from "./checks.js";
 import { safeRun, type RunnerDeps } from "./review-runner.js";
@@ -39,10 +39,10 @@ import type { PullRequestEvent } from "./types.js";
  */
 export function incompletePayload(reason: string): ChecksPayload {
   return {
-    name: "TenantGuard",
+    name: "Aker Build",
     conclusion: "neutral",
     title: "Review could not complete",
-    summary: `TenantGuard could not complete this review: ${reason}\n\nThis is reported as neutral — it is **not** a pass.`,
+    summary: `Aker Build could not complete this review: ${reason}\n\nThis is reported as neutral — it is **not** a pass.`,
     annotations: [],
   };
 }

@@ -19,11 +19,11 @@ function Invoke-External {
   }
 }
 
-function Invoke-TenantGuard {
+function Invoke-AkerBuild {
   param([string[]]$Arguments)
 
   Invoke-External `
-    -Name "tenantguard $($Arguments -join ' ')" `
+    -Name "aker-build $($Arguments -join ' ')" `
     -FilePath "pnpm" `
     -Arguments (@("dlx", "tsx", $script:CliPath) + $Arguments)
 }
@@ -31,7 +31,7 @@ function Invoke-TenantGuard {
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $Example = Join-Path $Root "examples\multi-tenant-saas-basic"
 $CliPath = Join-Path $Root "packages\cli\src\bin.ts"
-$WorkBase = Join-Path ([System.IO.Path]::GetTempPath()) ("tenantguard-first-run-" + [guid]::NewGuid().ToString("N"))
+$WorkBase = Join-Path ([System.IO.Path]::GetTempPath()) ("aker-build-first-run-" + [guid]::NewGuid().ToString("N"))
 $Repo = Join-Path $WorkBase "repo"
 $Out = Join-Path $WorkBase "out"
 
@@ -48,17 +48,17 @@ Get-ChildItem -LiteralPath $Example -Force | ForEach-Object {
 
 Invoke-External -Name "git init" -FilePath "git" -Arguments @("-C", $Repo, "init", "--quiet")
 Invoke-External -Name "git config user.email" -FilePath "git" -Arguments @("-C", $Repo, "config", "user.email", "demo@example.test")
-Invoke-External -Name "git config user.name" -FilePath "git" -Arguments @("-C", $Repo, "config", "user.name", "TenantGuard Demo")
+Invoke-External -Name "git config user.name" -FilePath "git" -Arguments @("-C", $Repo, "config", "user.name", "Aker Build Demo")
 Invoke-External -Name "git config core.autocrlf" -FilePath "git" -Arguments @("-C", $Repo, "config", "core.autocrlf", "false")
 Invoke-External -Name "git config commit.gpgsign" -FilePath "git" -Arguments @("-C", $Repo, "config", "commit.gpgsign", "false")
 Invoke-External -Name "git add fixture files" -FilePath "git" -Arguments @("-C", $Repo, "add", "README.md", "package.json", "apps", "migrations")
 Invoke-External -Name "git commit baseline" -FilePath "git" -Arguments @("-C", $Repo, "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "baseline example")
 
-Invoke-TenantGuard @("scan", $Repo, "--out", $Out)
-Invoke-TenantGuard @("gates", $Repo, "--out", $Out)
-Invoke-TenantGuard @("queue", $Repo, "--out", $Out)
-Invoke-TenantGuard @("route", $Repo, "--out", $Out)
-Invoke-TenantGuard @("prompt", "Q-001", "--agent", "claude", "--out", $Out)
+Invoke-AkerBuild @("scan", $Repo, "--out", $Out)
+Invoke-AkerBuild @("gates", $Repo, "--out", $Out)
+Invoke-AkerBuild @("queue", $Repo, "--out", $Out)
+Invoke-AkerBuild @("route", $Repo, "--out", $Out)
+Invoke-AkerBuild @("prompt", "Q-001", "--agent", "claude", "--out", $Out)
 
 $DiffPath = Join-Path $Repo "apps\api\src\routes\admin-preview.ts"
 @'
@@ -73,8 +73,8 @@ router.get("/admin/preview", (_req, res) => {
 });
 '@ | Set-Content -LiteralPath $DiffPath -Encoding utf8
 
-Invoke-TenantGuard @("review-pr", $Repo, "--local-diff", "--item", "Q-001", "--out", $Out)
-Invoke-TenantGuard @("report", $Repo, "--out", $Out)
+Invoke-AkerBuild @("review-pr", $Repo, "--local-diff", "--item", "Q-001", "--out", $Out)
+Invoke-AkerBuild @("report", $Repo, "--out", $Out)
 
 $Expected = @(
   "project-map.json",
@@ -84,8 +84,8 @@ $Expected = @(
   "prompt-Q-001.md",
   "review.json",
   "review.md",
-  "tenantguard-report.json",
-  "tenantguard-report.md"
+  "aker-build-report.json",
+  "aker-build-report.md"
 )
 
 foreach ($File in $Expected) {
@@ -108,19 +108,19 @@ if ($Review.changed_files -notcontains "apps/api/src/routes/admin-preview.ts") {
   throw "review.json did not include the controlled changed file"
 }
 
-$Report = Get-Content -LiteralPath (Join-Path $Out "tenantguard-report.json") -Raw | ConvertFrom-Json
+$Report = Get-Content -LiteralPath (Join-Path $Out "aker-build-report.json") -Raw | ConvertFrom-Json
 if ([string]::IsNullOrWhiteSpace($Report.summary.project_name)) {
-  throw "tenantguard-report.json did not include a project name"
+  throw "aker-build-report.json did not include a project name"
 }
 if ($Report.summary.findings.total -lt 1) {
-  throw "tenantguard-report.json did not summarize findings"
+  throw "aker-build-report.json did not summarize findings"
 }
 if ($Report.summary.review.changed_files -lt 1) {
-  throw "tenantguard-report.json did not summarize review changed files"
+  throw "aker-build-report.json did not summarize review changed files"
 }
 
 Write-Host ""
-Write-Host "TenantGuard first-run smoke passed."
+Write-Host "Aker Build first-run smoke passed."
 Write-Host "Temp repo: $Repo"
 Write-Host "Outputs:   $Out"
 

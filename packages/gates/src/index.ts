@@ -1,15 +1,15 @@
-// Public surface for @tenantguard/gates.
+// Public surface for @aker-build/gates.
 // SaaS Gates v0 — evidence-backed risk detection producing risks.json (004).
 
 import { resolve } from "node:path";
-import { loadConfig } from "@tenantguard/config";
+import { loadConfig } from "@aker-build/config";
 import { buildContext } from "./context.js";
 import { runGatesOnContext } from "./run.js";
 import { writeRisks } from "./io.js";
 import type { RunGatesOptions, RunGatesResult } from "./types.js";
 import { applyConfigToRisks } from "./suppressions.js";
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the v0 gate set (or a subset) over a scanned repo. Reads the produced project-map.json from
@@ -42,5 +42,5 @@ export { runGatesOnContext, InvalidRisksError } from "./run.js";
 export { findingSchema, risksSchema, validateRisks, RISKS_SCHEMA_VERSION, SEVERITIES } from "./schema.js";
 export { applyConfigToRisks, findingId } from "./suppressions.js";
 export { confidenceTier, type ConfidenceTier } from "./confidence.js";
-export { ConfigError, ConfigSecretError, ConfigValidationError } from "@tenantguard/config";
+export { ConfigError, ConfigSecretError, ConfigValidationError } from "@aker-build/config";
 export type { Finding, FindingStatus, Severity, Gate, GateContext, RiskList, RunGatesOptions, RunGatesResult, SuppressionMetadata } from "./types.js";

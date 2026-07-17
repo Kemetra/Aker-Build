@@ -7,7 +7,7 @@ Type: Product capability / config enforcement
 
 ## Purpose
 
-TenantGuard config `paths.include` and `paths.exclude` must affect the files TenantGuard scans, gates, queues, and reviews.
+Aker Build config `paths.include` and `paths.exclude` must affect the files Aker Build scans, gates, queues, and reviews.
 
 This feature makes the 011 config boundary operational without adding a remote policy system or changing gate rules.
 

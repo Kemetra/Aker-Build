@@ -6,7 +6,7 @@ Date: 2026-06-19
 
 ## Technical summary
 
-Add reusable path-filter helpers to `@tenantguard/config` and apply them at read boundaries:
+Add reusable path-filter helpers to `@aker-build/config` and apply them at read boundaries:
 
 ```text
 config paths -> scanner file list -> project map/secret notes
@@ -47,10 +47,10 @@ Public schema version changes
 Required:
 
 ```bash
-pnpm --filter @tenantguard/config test
-pnpm --filter @tenantguard/scanner test
-pnpm --filter @tenantguard/gates test
-pnpm --filter @tenantguard/review test
+pnpm --filter @aker-build/config test
+pnpm --filter @aker-build/scanner test
+pnpm --filter @aker-build/gates test
+pnpm --filter @aker-build/review test
 pnpm test
 pnpm typecheck
 ```

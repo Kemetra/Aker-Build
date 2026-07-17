@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Octokit } from "@octokit/rest";
-import type { ChecksPayload } from "@tenantguard/github-app";
+import type { ChecksPayload } from "@aker-build/github-app";
 import { makeGitHubApi, type OctokitLike } from "../src/octokit-api.js";
 
 /**
@@ -13,7 +13,7 @@ import { makeGitHubApi, type OctokitLike } from "../src/octokit-api.js";
  */
 
 const payload: ChecksPayload = {
-  name: "TenantGuard",
+  name: "Aker Build",
   conclusion: "failure",
   title: "t",
   summary: "s",
@@ -89,11 +89,11 @@ describe("makeGitHubApi over a REAL Octokit + injected fetch (kills the cast-thr
     expect(requests.some((r) => r.method === "POST" && /\/repos\/o\/r\/check-runs$/.test(r.url))).toBe(true);
   });
 
-  it("findCheckRun queries the REAL check-runs-for-ref route and finds the TenantGuard run", async () => {
+  it("findCheckRun queries the REAL check-runs-for-ref route and finds the Aker Build run", async () => {
     const { api } = realApi([
       {
         match: /\/commits\/[0-9a-f]+\/check-runs/,
-        body: { total_count: 2, check_runs: [{ id: 11, name: "other" }, { id: 22, name: "TenantGuard" }] },
+        body: { total_count: 2, check_runs: [{ id: 11, name: "other" }, { id: 22, name: "Aker Build" }] },
       },
     ]);
     const found = await api.findCheckRun({ owner: "o", repo: "r", headSha: "b".repeat(40) });

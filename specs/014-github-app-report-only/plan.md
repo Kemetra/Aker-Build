@@ -12,7 +12,7 @@ Productize the existing report-only dogfood GitHub Action behavior as an install
 ## Technical Context
 
 **Language/Version**: TypeScript on Node.js LTS (`engines.node >=22.13`, matching the repo).
-**Primary Dependencies**: existing workspace packages `@tenantguard/review`, `@tenantguard/report`, `@tenantguard/config`, `@tenantguard/scanner`, `@tenantguard/gates`; GitHub integration via Octokit-style REST client and webhook signature verification. No new judgment engine.
+**Primary Dependencies**: existing workspace packages `@aker-build/review`, `@aker-build/report`, `@aker-build/config`, `@aker-build/scanner`, `@aker-build/gates`; GitHub integration via Octokit-style REST client and webhook signature verification. No new judgment engine.
 **Storage**: None (stateless by default — no stored source/secrets). Per-PR compute only.
 **Testing**: Vitest, consistent with all existing packages. GitHub API and webhook payloads are mocked/faked at the boundary; no live network in tests.
 **Target Platform**: A self-hostable Node service/runner an org deploys itself (per spec Clarifications). Exact host topology (long-running webhook server vs. on-demand runner) is resolved in research.md.
@@ -43,8 +43,8 @@ Productize the existing report-only dogfood GitHub Action behavior as an install
 ```text
 packages/github-app   (new)
   verify webhook signature; map PR events -> review requests
-  invoke @tenantguard/review review-pr chain at the PR head ref
-  consume @tenantguard/report / Checks renderer payload (PR #24 work)
+  invoke @aker-build/review review-pr chain at the PR head ref
+  consume @aker-build/report / Checks renderer payload (PR #24 work)
   apply tier-driven presentation + <=50-annotation bound
   set Checks conclusion (neutral for drafts; failure only on confirmed)
   ZERO writes outside the Checks/annotations API
@@ -121,7 +121,7 @@ Broad rewrites unrelated to the App transport layer
 Required:
 
 ```bash
-pnpm --filter @tenantguard/github-app test
+pnpm --filter @aker-build/github-app test
 pnpm test
 pnpm typecheck
 ```

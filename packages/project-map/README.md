@@ -1,6 +1,6 @@
-# @tenantguard/project-map
+# @aker-build/project-map
 
-TenantGuard's canonical, evidence-derived model of a target repository — the data contract every
+Aker Build's canonical, evidence-derived model of a target repository — the data contract every
 downstream capability (scanner, gates, queue/router, prompt compiler, PR reviewer) reads.
 
 Spec: [`specs/002-project-map-schema`](../../specs/002-project-map-schema/spec.md) ·
@@ -9,7 +9,7 @@ Contract: [`contracts/project-map.schema.json`](../../specs/002-project-map-sche
 ## Usage
 
 ```ts
-import { validate, loadJson, loadYaml, SCHEMA_VERSION } from "@tenantguard/project-map";
+import { validate, loadJson, loadYaml, SCHEMA_VERSION } from "@aker-build/project-map";
 
 const map = loadJson(jsonText);        // JSON is canonical
 // const map = loadYaml(yamlText);     // YAML is an equivalent convenience form

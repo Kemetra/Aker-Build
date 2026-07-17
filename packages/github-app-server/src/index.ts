@@ -1,4 +1,4 @@
-// Public surface for @tenantguard/github-app-server.
+// Public surface for @aker-build/github-app-server.
 // Self-hostable deployment runtime for the 014 report-only GitHub App: webhook dispatch + concrete
 // GitHub Checks client + ephemeral git workspace. Report-only, stateless, secret-safe.
 

@@ -1,6 +1,6 @@
 # Quickstart: SaaS Gates v0
 
-Planned usage of `tenantguard gates` once implemented (after plan + tasks review). Illustrative — **no
+Planned usage of `aker-build gates` once implemented (after plan + tasks review). Illustrative — **no
 code exists yet**.
 
 ---
@@ -9,23 +9,23 @@ code exists yet**.
 
 ```bash
 # 1. Produce the project map first (003)
-tenantguard scan
+aker-build scan
 
-# 2. Run all v0 gates over the scanned repo → .tenantguard/risks.json
-tenantguard gates
+# 2. Run all v0 gates over the scanned repo → .aker-build/risks.json
+aker-build gates
 ```
 
 ## Run a subset
 
 ```bash
 # Only security + idempotency gates
-tenantguard gates --gates TG-G4,TG-G5
+aker-build gates --gates TG-G4,TG-G5
 ```
 
 ## Inspect findings
 
 ```bash
-tenantguard gates --stdout | jq '.findings[] | select(.status == "risk")'
+aker-build gates --stdout | jq '.findings[] | select(.status == "risk")'
 ```
 
 Example `risks.json` (abbreviated):

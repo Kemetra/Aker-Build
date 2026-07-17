@@ -1,6 +1,6 @@
-# @tenantguard/github-app
+# @aker-build/github-app
 
-Report-only GitHub App (roadmap **P4**). On a pull request, it runs the existing TenantGuard `review-pr` chain at the PR head and posts the result as a **GitHub Checks run + annotations**. It never changes your code or merge state.
+Report-only GitHub App (roadmap **P4**). On a pull request, it runs the existing Aker Build `review-pr` chain at the PR head and posts the result as a **GitHub Checks run + annotations**. It never changes your code or merge state.
 
 ## Safety boundary (verifiable)
 
@@ -43,4 +43,4 @@ Annotations are capped at 50 per check (GitHub's per-request limit); overflow is
 
 ## Architecture note
 
-The merged Checks renderer (`renderChecksPayload` in `@tenantguard/review`, PR #24) already produces the payload (annotation cap, tier→level, verdict→conclusion). This package is a thin **transport**: webhook intake → ephemeral checkout → run `review-pr` → draft-neutral override → post via the safety allowlist. It deliberately reuses, rather than re-implements, the presentation layer.
+The merged Checks renderer (`renderChecksPayload` in `@aker-build/review`, PR #24) already produces the payload (annotation cap, tier→level, verdict→conclusion). This package is a thin **transport**: webhook intake → ephemeral checkout → run `review-pr` → draft-neutral override → post via the safety allowlist. It deliberately reuses, rather than re-implements, the presentation layer.

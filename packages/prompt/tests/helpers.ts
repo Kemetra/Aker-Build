@@ -1,4 +1,4 @@
-import type { QueueItem } from "@tenantguard/queue";
+import type { QueueItem } from "@aker-build/queue";
 
 /** A fully-scoped, compilable QueueItem (sensible defaults; override per test). */
 export function fullItem(overrides: Partial<QueueItem> = {}): QueueItem {

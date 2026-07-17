@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { scanToFile } from "@tenantguard/scanner";
+import { scanToFile } from "@aker-build/scanner";
 import { runGates, validateRisks } from "../src/index.js";
 
 // ADR-012 follow-up #1: prove `paths.exclude` (013) and `gates.*.min_tier` (P2) compose in one
@@ -28,8 +28,8 @@ function initGitRepo(dir: string): void {
     execFileSync("git", args, { cwd: dir, stdio: "ignore" });
   };
   git("init", "-q");
-  git("config", "user.email", "test@tenantguard.local");
-  git("config", "user.name", "TenantGuard Test");
+  git("config", "user.email", "test@aker-build.local");
+  git("config", "user.name", "Aker Build Test");
 }
 
 /** Build a throwaway repo with excluded/admin.ts + kept/admin.ts (identical content) + config. */
@@ -40,7 +40,7 @@ function buildFixture(): { repoRoot: string; outDir: string } {
   writeFileSync(join(repoRoot, "excluded", "admin.ts"), ADMIN_CONTENT, "utf8");
   writeFileSync(join(repoRoot, "kept", "admin.ts"), ADMIN_CONTENT, "utf8");
   writeFileSync(
-    join(repoRoot, "tenantguard.config.json"),
+    join(repoRoot, "aker-build.config.json"),
     JSON.stringify(
       {
         version: 1,
@@ -54,8 +54,8 @@ function buildFixture(): { repoRoot: string; outDir: string } {
   );
   initGitRepo(repoRoot);
 
-  const outDir = join(repoRoot, ".tenantguard");
-  scanToFile(repoRoot, outDir); // auto-discovers tenantguard.config.json (already on disk)
+  const outDir = join(repoRoot, ".aker-build");
+  scanToFile(repoRoot, outDir); // auto-discovers aker-build.config.json (already on disk)
   return { repoRoot, outDir };
 }
 

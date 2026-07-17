@@ -1,4 +1,4 @@
-import type { ChecksPayload } from "@tenantguard/github-app";
+import type { ChecksPayload } from "@aker-build/github-app";
 import type { GitHubApi } from "./github-api.js";
 
 /**
@@ -81,9 +81,9 @@ export function makeGitHubApi(octokit: OctokitLike): GitHubApi {
         owner,
         repo,
         ref: headSha,
-        check_name: "TenantGuard",
+        check_name: "Aker Build",
       });
-      const run = data.check_runs.find((r) => r.name === "TenantGuard");
+      const run = data.check_runs.find((r) => r.name === "Aker Build");
       return run ? { id: run.id } : null;
     },
 

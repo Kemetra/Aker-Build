@@ -11,9 +11,9 @@ export interface AppCredentials {
 }
 
 export const REQUIRED_ENV = [
-  "TENANTGUARD_APP_ID",
-  "TENANTGUARD_APP_PRIVATE_KEY",
-  "TENANTGUARD_WEBHOOK_SECRET",
+  "AKER_BUILD_APP_ID",
+  "AKER_BUILD_APP_PRIVATE_KEY",
+  "AKER_BUILD_WEBHOOK_SECRET",
 ] as const;
 
 export class MissingCredentialError extends Error {
@@ -36,8 +36,8 @@ export function loadCredentials(env: Record<string, string | undefined> = proces
   if (missing.length > 0) throw new MissingCredentialError([...missing]);
 
   return {
-    appId: env.TENANTGUARD_APP_ID!,
-    privateKey: env.TENANTGUARD_APP_PRIVATE_KEY!,
-    webhookSecret: env.TENANTGUARD_WEBHOOK_SECRET!,
+    appId: env.AKER_BUILD_APP_ID!,
+    privateKey: env.AKER_BUILD_APP_PRIVATE_KEY!,
+    webhookSecret: env.AKER_BUILD_WEBHOOK_SECRET!,
   };
 }

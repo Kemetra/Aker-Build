@@ -1,4 +1,4 @@
-import type { QueueItem } from "@tenantguard/queue";
+import type { QueueItem } from "@aker-build/queue";
 import type { AgentName, CompiledPrompt } from "./types.js";
 import { checkScope } from "./scope.js";
 import { buildSections } from "./sections.js";

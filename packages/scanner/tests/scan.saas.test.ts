@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { validate } from "@tenantguard/project-map";
+import { validate } from "@aker-build/project-map";
 import { scan } from "../src/index.js";
 import { fixture } from "./helpers.js";
 
 describe("T007 scan SaaS fixture -> 002-conforming map (SC-001)", () => {
-  it("produces a map that validates against @tenantguard/project-map", () => {
+  it("produces a map that validates against @aker-build/project-map", () => {
     const { map } = scan(fixture("saas"));
     const result = validate(map);
     expect(result.ok).toBe(true);

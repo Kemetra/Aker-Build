@@ -1,8 +1,8 @@
 {
-  "name": "tenantguard-workspace",
+  "name": "aker-build-workspace",
   "version": "0.0.0",
   "private": true,
-  "description": "TenantGuard — CLI-first SaaS Build Kernel (workspace root)",
+  "description": "Aker Build — CLI-first SaaS Build Kernel (workspace root)",
   "license": "MIT",
   "packageManager": "pnpm@11.0.8",
   "engines": {

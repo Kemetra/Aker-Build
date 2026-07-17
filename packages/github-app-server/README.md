@@ -1,6 +1,6 @@
-# @tenantguard/github-app-server
+# @aker-build/github-app-server
 
-Self-hostable deployment runtime for the TenantGuard report-only GitHub App (014). It hosts the webhook endpoint and supplies the concrete GitHub Checks client and ephemeral git workspace, so the App runs against live GitHub.
+Self-hostable deployment runtime for the Aker Build report-only GitHub App (014). It hosts the webhook endpoint and supplies the concrete GitHub Checks client and ephemeral git workspace, so the App runs against live GitHub.
 
 ## What it does
 
@@ -9,9 +9,9 @@ On each `pull_request` webhook: verify the HMAC signature → check out the PR h
 ## Configure (secrets via environment only)
 
 ```text
-TENANTGUARD_APP_ID=<app id>
-TENANTGUARD_APP_PRIVATE_KEY=<private key>     # never logged or written to disk
-TENANTGUARD_WEBHOOK_SECRET=<webhook secret>   # never logged or written to disk
+AKER_BUILD_APP_ID=<app id>
+AKER_BUILD_APP_PRIVATE_KEY=<private key>     # never logged or written to disk
+AKER_BUILD_WEBHOOK_SECRET=<webhook secret>   # never logged or written to disk
 PORT=<optional>
 ```
 

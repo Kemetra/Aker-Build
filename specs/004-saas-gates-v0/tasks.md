@@ -10,7 +10,7 @@ description: "Task list for 004-saas-gates-v0 implementation"
 
 **Organization**: Grouped by the three user stories in `spec.md` (US1 P1 risk list, US2 P2 triage,
 US3 P3 subset), each independently testable. Output is a `risks.json` validated with the gates
-`risksSchema`, whose evidence shape is imported from `@tenantguard/project-map` (002).
+`risksSchema`, whose evidence shape is imported from `@aker-build/project-map` (002).
 
 > **GATE**: Writing this file creates no code. Implementation begins only after `plan.md` + `tasks.md`
 > are reviewed. Package/lockfile changes (T002) are gated on explicit approval. The gate runner is
@@ -27,7 +27,7 @@ US3 P3 subset), each independently testable. Output is a `risks.json` validated 
 ## Phase 1: Setup (Shared Infrastructure)
 
 - [x] T001 Author `docs/decisions/ADR-003-gate-rule-engine.md` recording **TypeScript-coded gate functions** (no YAML/Rego engine) as the v0 rule-engine approach, citing `research.md` R1 and the constitution's OPA-deferred posture. (Docs-only.)
-- [x] T002 Initialize `packages/gates/` (`package.json` depending on `@tenantguard/project-map` + `@tenantguard/scanner` workspace deps + `zod`; `tsconfig.json`) and add a `gates` command surface to the existing `packages/cli` (`commander` already present). **Approved package/lockfile change.**
+- [x] T002 Initialize `packages/gates/` (`package.json` depending on `@aker-build/project-map` + `@aker-build/scanner` workspace deps + `zod`; `tsconfig.json`) and add a `gates` command surface to the existing `packages/cli` (`commander` already present). **Approved package/lockfile change.**
 - [x] T003 [P] Configure Vitest for `packages/gates` (`vitest.config.ts`), reusing the workspace toolchain.
 
 **Checkpoint**: `packages/gates` skeletoned; ADR-003 recorded. No gate logic yet.
@@ -38,9 +38,9 @@ US3 P3 subset), each independently testable. Output is a `risks.json` validated 
 
 **⚠️ CRITICAL**: No user-story work begins until this phase is complete.
 
-- [x] T004 [P] Define the `risks.json` Zod schema in `packages/gates/src/schema.ts`: `findingSchema = z.discriminatedUnion("status", [...])` (risk → severity enum + ≥1 evidence; needs_verification → severity null + ≥1 evidence; not_applicable → severity null + ≥0 evidence), **importing `evidenceSchema` from `@tenantguard/project-map`** (FR-003); `risksSchema = { schema_version, findings: Finding[] }` (R3, R4, data-model).
+- [x] T004 [P] Define the `risks.json` Zod schema in `packages/gates/src/schema.ts`: `findingSchema = z.discriminatedUnion("status", [...])` (risk → severity enum + ≥1 evidence; needs_verification → severity null + ≥1 evidence; not_applicable → severity null + ≥0 evidence), **importing `evidenceSchema` from `@aker-build/project-map`** (FR-003); `risksSchema = { schema_version, findings: Finding[] }` (R3, R4, data-model).
 - [x] T005 [P] Define gate types (`Gate`, `GateContext`, `Finding`, `Severity`) in `packages/gates/src/types.ts` per `data-model.md`.
-- [x] T006 Implement `GateContext` construction in `packages/gates/src/context.ts`: load + `validate()` `project-map.json` via `@tenantguard/project-map`; wire **read-only** `listFiles`/`fileExists`/`readFileSafe` reused from `@tenantguard/scanner` io (FR-008, R2; depends on T005).
+- [x] T006 Implement `GateContext` construction in `packages/gates/src/context.ts`: load + `validate()` `project-map.json` via `@aker-build/project-map`; wire **read-only** `listFiles`/`fileExists`/`readFileSafe` reused from `@aker-build/scanner` io (FR-008, R2; depends on T005).
 - [x] T007 Implement the gate registry + subset selection by id in `packages/gates/src/registry.ts` (filter by `--gates` ids; unknown id → error) (FR-006, R7; depends on T005).
 - [x] T008 Create the v0 sample-set fixtures under `packages/gates/tests/fixtures/` (per-gate clean + violation repos) and reuse the 003 fixture-prep helper (copy-to-tempdir + `git init`, cached) (SC-003, R6).
 
@@ -50,7 +50,7 @@ US3 P3 subset), each independently testable. Output is a `risks.json` validated 
 
 ## Phase 3: User Story 1 - Get an evidence-backed risk list (Priority: P1) 🎯 MVP
 
-**Goal**: `tenantguard gates` over a scanned repo produces `risks.json` where every finding cites a
+**Goal**: `aker-build gates` over a scanned repo produces `risks.json` where every finding cites a
 gate id + status, every `risk` finding cites severity + ≥1 evidence object, and the scanned repo is
 unchanged.
 
@@ -72,7 +72,7 @@ gate with evidence at the offending location; assert 0 scanned files changed.
 - [x] T016 [P] [US1] Implement the source-truth gate (TG-G0) in `packages/gates/src/gates/g0-source-truth.ts` (missing source/spec/CI evidence signals) (depends on T006).
 - [x] T017 [US1] Implement the run orchestrator in `packages/gates/src/run.ts`: select gates → run each → collect a single unified `findings[]` with **deterministic stable sort** (depends on T007, T013–T016).
 - [x] T018 [US1] **Validate the produced risks.json with `risksSchema` before returning/writing**; on failure, error and emit nothing (R3; depends on T004, T017).
-- [x] T019 [US1] Implement output write (`risks.json` to designated `--out`, default `./.tenantguard/`, outside scanned tracked source) in `packages/gates/src/io.ts` (FR-014; delegates reads to scanner io; depends on T018).
+- [x] T019 [US1] Implement output write (`risks.json` to designated `--out`, default `./.aker-build/`, outside scanned tracked source) in `packages/gates/src/io.ts` (FR-014; delegates reads to scanner io; depends on T018).
 - [x] T020 [US1] Public surface `runGates(opts): RisksResult` in `packages/gates/src/index.ts` (depends on T018).
 
 **Checkpoint**: MVP — a scanned repo produces an evidence-backed, read-only, secret-safe risk list.
@@ -127,9 +127,9 @@ unchanged input → equivalent risk lists.
 
 ---
 
-## Phase 6: CLI (`tenantguard gates`)
+## Phase 6: CLI (`aker-build gates`)
 
-**Goal**: Wire the gates library into the `tenantguard` CLI per `contracts/gates-cli.md`.
+**Goal**: Wire the gates library into the `aker-build` CLI per `contracts/gates-cli.md`.
 
 ### Tests (write FIRST; must FAIL) ⚠️
 
@@ -201,5 +201,5 @@ branch, only when requested.
 - **No code is written by generating this file.** Implementation waits on plan+tasks review.
 - TDD: verify each test fails before implementing.
 - Gate runner is **read-only on the scanned repo** — output goes to a designated path outside tracked source.
-- Output **must validate against the gates `risksSchema`** before being written; the evidence shape is **imported** from `@tenantguard/project-map` (never redefined).
+- Output **must validate against the gates `risksSchema`** before being written; the evidence shape is **imported** from `@aker-build/project-map` (never redefined).
 - [P] = different files, no dependency; [US#] maps task → user story.

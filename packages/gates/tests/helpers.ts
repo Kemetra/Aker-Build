@@ -3,7 +3,7 @@ import { dirname, resolve, join } from "node:path";
 import { readdirSync, statSync, mkdtempSync, mkdirSync, cpSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
-import { scanToFile } from "@tenantguard/scanner";
+import { scanToFile } from "@aker-build/scanner";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -15,7 +15,7 @@ const prepared = new Map<string, { repoRoot: string; outDir: string }>();
 
 /**
  * Prepare a gates fixture: copy it to a temp dir, `git init` it, run the scanner to produce
- * `<repo>/.tenantguard/project-map.json` (the gates' input), and return both paths. Cached per
+ * `<repo>/.aker-build/project-map.json` (the gates' input), and return both paths. Cached per
  * name so two gate runs over the same fixture see identical inputs (SC-005). Mirrors the 003
  * scanner fixture-prep pattern (nested-.git can't be committed → reconstruct at test time).
  */
@@ -32,7 +32,7 @@ export function gatesFixture(name: string): { repoRoot: string; outDir: string }
   }
   initGitRepo(repoRoot);
 
-  const outDir = join(repoRoot, ".tenantguard");
+  const outDir = join(repoRoot, ".aker-build");
   scanToFile(repoRoot, outDir); // produces project-map.json the gates consume
 
   const entry = { repoRoot, outDir };
@@ -45,16 +45,16 @@ function initGitRepo(dir: string): void {
     execFileSync("git", args, { cwd: dir, stdio: "ignore" });
   };
   git("init", "-q");
-  git("config", "user.email", "test@tenantguard.local");
-  git("config", "user.name", "TenantGuard Test");
+  git("config", "user.email", "test@aker-build.local");
+  git("config", "user.name", "Aker Build Test");
 }
 
-/** Snapshot of file path → size:mtime under a dir, excluding .git and the .tenantguard out-dir. */
+/** Snapshot of file path → size:mtime under a dir, excluding .git and the .aker-build out-dir. */
 export function snapshot(root: string): Map<string, string> {
   const snap = new Map<string, string>();
   const walk = (dir: string): void => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
-      if (e.isDirectory() && (e.name === ".git" || e.name === ".tenantguard")) continue;
+      if (e.isDirectory() && (e.name === ".git" || e.name === ".aker-build")) continue;
       const p = resolve(dir, e.name);
       if (e.isDirectory()) walk(p);
       else if (e.isFile()) {

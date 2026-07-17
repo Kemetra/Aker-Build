@@ -1,4 +1,4 @@
-import type { ChecksPayload } from "@tenantguard/github-app";
+import type { ChecksPayload } from "@aker-build/github-app";
 
 /**
  * The minimal GitHub surface this runtime needs, as a PORT. An operator supplies a concrete
@@ -16,7 +16,7 @@ export interface GitHubApi {
     repo: string;
     prNumber: number;
   }): Promise<{ title: string; state: string; baseRefName: string }>;
-  /** Find an existing TenantGuard check-run for the head (idempotency, 014 FR-012). */
+  /** Find an existing Aker Build check-run for the head (idempotency, 014 FR-012). */
   findCheckRun(args: { owner: string; repo: string; headSha: string }): Promise<{ id: number } | null>;
   /** Create a check-run + annotations. The ONLY write besides update. */
   createCheckRun(args: { owner: string; repo: string; headSha: string; payload: ChecksPayload }): Promise<{ id: number }>;

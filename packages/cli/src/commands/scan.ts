@@ -1,5 +1,5 @@
-import { scan, scanToFile } from "@tenantguard/scanner";
-import { ConfigError } from "@tenantguard/config";
+import { scan, scanToFile } from "@aker-build/scanner";
+import { ConfigError } from "@aker-build/config";
 import { stringify as toYaml } from "yaml";
 
 export interface ScanCmdOptions {
@@ -11,7 +11,7 @@ export interface ScanCmdOptions {
   errSink?: (line: string) => void;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the `scan` command. Returns an exit code (does not call process.exit, so it is testable).

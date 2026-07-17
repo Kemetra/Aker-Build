@@ -27,7 +27,7 @@ describe("a diff-attributable risk finding → Not Ready naming the gate (T012, 
       { gate_id: "TG-G4", status: "risk", severity: "high", evidence: [ev("apps/api/routes/admin.ts", 12, "admin route without a role guard")] },
     ];
     const report = reviewLocalDiff(
-      { out: ".tenantguard" },
+      { out: ".aker-build" },
       deps(["apps/api/routes/admin.ts"], findings),
     );
     expect(report.verdict).toBe("not_ready");
@@ -39,7 +39,7 @@ describe("a diff-attributable risk finding → Not Ready naming the gate (T012, 
       { gate_id: "TG-G4", status: "risk", severity: "high", evidence: [ev("apps/api/routes/other.ts", 3, "unrelated")] },
     ];
     const report = reviewLocalDiff(
-      { out: ".tenantguard" },
+      { out: ".aker-build" },
       deps(["apps/api/routes/admin.ts"], findings),
     );
     expect(report.verdict).toBe("ready");
@@ -48,13 +48,13 @@ describe("a diff-attributable risk finding → Not Ready naming the gate (T012, 
 
   it("excluded changed files do not contribute findings or scope violations", () => {
     const repoRoot = mkdtempSync(join(tmpdir(), "tg-review-config-"));
-    const configPath = join(repoRoot, "tenantguard.config.json");
+    const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify({ version: 1, paths: { exclude: ["apps/api/routes/admin.ts"] } }),
       "utf8",
     );
-    const out = join(repoRoot, ".tenantguard");
+    const out = join(repoRoot, ".aker-build");
     mkdirSync(out);
     writeFileSync(
       join(out, "queue.json"),

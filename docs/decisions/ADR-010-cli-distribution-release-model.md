@@ -2,12 +2,12 @@
 
 - Status: Proposed
 - Date: 2026-06-19
-- Deciders: TenantGuard maintainers
+- Deciders: Aker Build maintainers
 - Related specs: proposed `013-npm-package-and-release-workflow`
 
 ## Context
 
-TenantGuard is CLI-first. Public launch requires a credible install/run path. The blueprint and ADR-001 already choose TypeScript, Node.js LTS, pnpm, Vitest, Zod, and JSON/YAML config.
+Aker Build is CLI-first. Public launch requires a credible install/run path. The blueprint and ADR-001 already choose TypeScript, Node.js LTS, pnpm, Vitest, Zod, and JSON/YAML config.
 
 The next distribution question is how users should install and trust the CLI.
 
@@ -18,25 +18,25 @@ Use npm-first distribution for the CLI.
 Preferred public command shape:
 
 ```bash
-npx tenantguard --help
-npx tenantguard scan .
-npx tenantguard gates .
-npx tenantguard queue .
-npx tenantguard route .
-npx tenantguard prompt Q-001 --agent claude
-npx tenantguard review-pr --local-diff
+npx aker-build --help
+npx aker-build scan .
+npx aker-build gates .
+npx aker-build queue .
+npx aker-build route .
+npx aker-build prompt Q-001 --agent claude
+npx aker-build review-pr --local-diff
 ```
 
-If the `tenantguard` npm name is unavailable, use a scoped package:
+If the `aker-build` npm name is unavailable, use a scoped package:
 
 ```text
-@tenantguard/cli
+@aker-build/cli
 ```
 
 The package must expose a `bin` named:
 
 ```text
-tenantguard
+aker-build
 ```
 
 ## Release rules

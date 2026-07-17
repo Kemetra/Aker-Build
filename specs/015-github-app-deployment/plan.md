@@ -12,7 +12,7 @@ Provide the live host and concrete implementations that make the 014 report-only
 ## Technical Context
 
 **Language/Version**: TypeScript on Node.js LTS (`engines.node >=22.13`).
-**Primary Dependencies**: `@tenantguard/github-app` (014 — `handleEvent`, `ChecksClient`, `Workspace`, `RunnerDeps`); an Octokit-style GitHub REST client; Node's built-in `http` (or a minimal server) for the webhook endpoint; `node:child_process`/git for checkout; `node:crypto` (already used by 014's `verifySignature`).
+**Primary Dependencies**: `@aker-build/github-app` (014 — `handleEvent`, `ChecksClient`, `Workspace`, `RunnerDeps`); an Octokit-style GitHub REST client; Node's built-in `http` (or a minimal server) for the webhook endpoint; `node:child_process`/git for checkout; `node:crypto` (already used by 014's `verifySignature`).
 **Storage**: None (stateless; ephemeral per-event workspace; no DB). Credentials live only in the process environment.
 **Testing**: Vitest. GitHub REST and git are faked at the boundary (no live network/git in unit tests); secret-leak assertions capture logs/errors/payloads/written files.
 **Target Platform**: A self-hostable long-running Node service an org runs itself (spec Clarifications). Serverless/multi-host adapters out of scope.
@@ -113,7 +113,7 @@ Broad rewrites unrelated to the runtime layer
 Required:
 
 ```bash
-pnpm --filter @tenantguard/github-app-server test
+pnpm --filter @aker-build/github-app-server test
 pnpm test
 pnpm typecheck
 ```

@@ -7,7 +7,7 @@ import {
   WebhookSignatureError,
   type Workspace,
   type ChecksPayload,
-} from "@tenantguard/github-app";
+} from "@aker-build/github-app";
 import type { GitHubApi } from "./github-api.js";
 import { makeChecksClient } from "./checks-client.js";
 

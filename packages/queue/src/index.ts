@@ -1,4 +1,4 @@
-// Public surface for @tenantguard/queue.
+// Public surface for @aker-build/queue.
 // Derive queue.json from map + findings; route one next-safest task (005).
 
 import { readFileSync, existsSync } from "node:fs";
@@ -11,7 +11,7 @@ import { QUEUE_SCHEMA_VERSION, validateQueue, validateRouteDecision } from "./sc
 import { writeQueue, writeRoute, QUEUE_FILENAME } from "./io.js";
 import type { Queue, RouterDecision, QueueOptions, RouteOptions, RouterInputs, QueueItem } from "./types.js";
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /** Raised when a produced artifact fails its own schema (a bug — nothing is written). */
 export class InvalidQueueError extends Error {}
@@ -69,7 +69,7 @@ export function route(targetPath: string, opts: RouteOptions = {}, inputs?: Part
   const out = opts.out ?? DEFAULT_OUT;
   const queuePath = resolve(out, QUEUE_FILENAME);
   if (!existsSync(queuePath)) {
-    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`tenantguard queue\` first.`);
+    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`aker-build queue\` first.`);
   }
   const parsed = JSON.parse(readFileSync(queuePath, "utf8")) as Queue;
   const ctx = buildContext(resolve(targetPath), out, inputs);

@@ -1,7 +1,7 @@
 import { stringify as toYaml } from "yaml";
-import { ConfigError } from "@tenantguard/config";
-import { isGitRepo } from "@tenantguard/scanner";
-import { MissingProjectMapError, NotGitRepoError, InvalidProjectMapError } from "@tenantguard/gates";
+import { ConfigError } from "@aker-build/config";
+import { isGitRepo } from "@aker-build/scanner";
+import { MissingProjectMapError, NotGitRepoError, InvalidProjectMapError } from "@aker-build/gates";
 import {
   reviewLocalDiff,
   reviewPr,
@@ -13,8 +13,8 @@ import {
   InvalidReviewError,
   GitUnavailableError,
   GitHubUnavailableError,
-} from "@tenantguard/review";
-import type { ReviewReport } from "@tenantguard/review";
+} from "@aker-build/review";
+import type { ReviewReport } from "@aker-build/review";
 
 export interface ReviewCmdOptions {
   localDiff?: boolean;
@@ -32,7 +32,7 @@ export interface ReviewCmdOptions {
   };
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the `review-pr` command. Returns an exit code (no process.exit, so it is testable).

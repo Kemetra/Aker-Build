@@ -4,8 +4,8 @@ import { dirname, resolve, join } from "node:path";
 import { tmpdir } from "node:os";
 import { rmSync, existsSync, readFileSync, mkdtempSync, cpSync, mkdirSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { scanToFile } from "@tenantguard/scanner";
-import { validateRisks } from "@tenantguard/gates";
+import { scanToFile } from "@aker-build/scanner";
+import { validateRisks } from "@aker-build/gates";
 import { runGatesCommand } from "../src/commands/gates.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -17,9 +17,9 @@ function prepRepoWithMap(): { repoRoot: string; outDir: string } {
   cpSync(vulnSrc, repoRoot, { recursive: true });
   const git = (...a: string[]) => execFileSync("git", a, { cwd: repoRoot, stdio: "ignore" });
   git("init", "-q");
-  git("config", "user.email", "test@tenantguard.local");
-  git("config", "user.name", "TenantGuard Test");
-  const outDir = join(repoRoot, ".tenantguard");
+  git("config", "user.email", "test@aker-build.local");
+  git("config", "user.name", "Aker Build Test");
+  const outDir = join(repoRoot, ".aker-build");
   scanToFile(repoRoot, outDir);
   return { repoRoot, outDir };
 }
@@ -30,9 +30,9 @@ function prepRepoNoMap(): { repoRoot: string; outDir: string } {
   cpSync(vulnSrc, repoRoot, { recursive: true });
   const git = (...a: string[]) => execFileSync("git", a, { cwd: repoRoot, stdio: "ignore" });
   git("init", "-q");
-  git("config", "user.email", "test@tenantguard.local");
-  git("config", "user.name", "TenantGuard Test");
-  const outDir = join(repoRoot, ".tenantguard");
+  git("config", "user.email", "test@aker-build.local");
+  git("config", "user.name", "Aker Build Test");
+  const outDir = join(repoRoot, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   return { repoRoot, outDir };
 }
@@ -43,7 +43,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T033 `tenantguard gates` command", () => {
+describe("T033 `aker-build gates` command", () => {
   it("produces a valid risks.json and exits 0", () => {
     const { repoRoot, outDir } = prepRepoWithMap();
     created.push(repoRoot);
@@ -84,7 +84,7 @@ describe("T033 `tenantguard gates` command", () => {
   it("applies visible suppressions from --config", () => {
     const { repoRoot, outDir } = prepRepoWithMap();
     created.push(repoRoot);
-    const configPath = join(repoRoot, "tenantguard.config.json");
+    const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify({

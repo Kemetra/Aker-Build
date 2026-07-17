@@ -6,7 +6,7 @@ import {
   NotGitRepoError,
   InvalidRouteError,
   type RouterDecision,
-} from "@tenantguard/queue";
+} from "@aker-build/queue";
 
 export interface RouteCmdOptions {
   out?: string;
@@ -16,7 +16,7 @@ export interface RouteCmdOptions {
   errSink?: (line: string) => void;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /** Human-readable summary of a router decision (always printed). */
 function summarize(d: RouterDecision): string[] {

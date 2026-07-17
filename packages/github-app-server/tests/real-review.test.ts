@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 import { createHmac } from "node:crypto";
 import { afterEach, describe, it, expect } from "vitest";
-import type { Workspace } from "@tenantguard/github-app";
+import type { Workspace } from "@aker-build/github-app";
 import type { GitHubApi } from "../src/github-api.js";
 import { handleRequest } from "../src/http-server.js";
 import { prepareRepo } from "../src/prepare-repo.js";
@@ -195,7 +195,7 @@ describe("REAL scan + REAL gates over a REAL checkout (regression guard for alwa
     };
     // A prepareRepo that fails with the absolute checkout path in its message (as scanToFile would).
     const leakyPrepare = (repoRoot: string): string => {
-      throw new Error(`scan failed at ${repoRoot}/.tenantguard/project-map.json`);
+      throw new Error(`scan failed at ${repoRoot}/.aker-build/project-map.json`);
     };
     const deps: DispatchDeps = {
       api: recordingApi,
@@ -210,6 +210,6 @@ describe("REAL scan + REAL gates over a REAL checkout (regression guard for alwa
     const parsed = JSON.parse(posted) as { conclusion: string };
     expect(parsed.conclusion).toBe("neutral"); // incomplete → neutral, never false success
     expect(posted).not.toContain(repo); // the absolute checkout path must NOT appear in the summary
-    expect(posted).not.toContain(".tenantguard/project-map.json");
+    expect(posted).not.toContain(".aker-build/project-map.json");
   });
 });

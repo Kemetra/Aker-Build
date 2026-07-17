@@ -31,7 +31,7 @@ verdict + contributing findings + evidence. 008 adds no new rendering — it reu
 - The summary MUST contain the **verdict** and the **contributing findings with evidence** (FR-003, SC-001).
 - No raw secret value MUST appear (FR-006, SC-005) — inherited: 007/004/002 evidence names the `signal`,
   never the value.
-- On a TenantGuard error, the summary MUST show a **clear failure** (the error), not a passing summary
+- On an Aker Build error, the summary MUST show a **clear failure** (the error), not a passing summary
   (FR-008, SC-007).
 - Empty diff → the summary says "nothing to review" and the check does **not** fail (Edge Cases).
 

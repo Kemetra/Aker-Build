@@ -1,10 +1,10 @@
-import type { TenantGuardConfig } from "@tenantguard/config";
+import type { AkerBuildConfig } from "@aker-build/config";
 import type { Finding, RiskList, SuppressionMetadata } from "./types.js";
 import { validateRisks } from "./schema.js";
 import { InvalidRisksError } from "./run.js";
 import { confidenceTier } from "./confidence.js";
 
-export function applyConfigToRisks(risks: RiskList, config: TenantGuardConfig): RiskList {
+export function applyConfigToRisks(risks: RiskList, config: AkerBuildConfig): RiskList {
   const findings = risks.findings.map((finding) => applyGateConfig(finding, config));
   const next: RiskList = { ...risks, findings };
   const result = validateRisks(next);
@@ -21,7 +21,7 @@ export function findingId(finding: Finding): string {
   return [finding.gate_id, first?.path ?? "", first?.signal ?? "", finding.status].join(":");
 }
 
-function applyGateConfig(finding: Finding, config: TenantGuardConfig): Finding {
+function applyGateConfig(finding: Finding, config: AkerBuildConfig): Finding {
   const gateConfig = config.gates?.[finding.gate_id];
   if (!gateConfig) return finding;
 
@@ -37,7 +37,7 @@ function applyGateConfig(finding: Finding, config: TenantGuardConfig): Finding {
     const tierSuppression: SuppressionMetadata = {
       id: `min-tier:${next.gate_id}`,
       reason: `below gate min_tier=confirmed (finding tier=suspected)`,
-      owner: "tenantguard:config",
+      owner: "aker-build:config",
       matched_by: "finding_id",
     };
     next = { ...next, suppression: tierSuppression } as Finding;
@@ -59,7 +59,7 @@ function applyGateConfig(finding: Finding, config: TenantGuardConfig): Finding {
 
 function matchesSuppression(
   finding: Finding,
-  suppression: NonNullable<NonNullable<TenantGuardConfig["gates"]>[string]["suppressions"]>[number],
+  suppression: NonNullable<NonNullable<AkerBuildConfig["gates"]>[string]["suppressions"]>[number],
 ): boolean {
   if (suppression.finding_id && suppression.finding_id === findingId(finding)) return true;
   if (!suppression.path) return false;

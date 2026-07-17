@@ -40,6 +40,6 @@
   note* ("the blueprint proposes ..."), not as a binding requirement — this keeps the requirements
   and success criteria technology-agnostic per AC-009.
 - This is a product-foundation document; the Spec Kit template's app-feature sections (User Stories,
-  Acceptance Scenarios, Key Entities) are kept and reframed for TenantGuard's actual users (teams)
+  Acceptance Scenarios, Key Entities) are kept and reframed for Aker Build's actual users (teams)
   and system (the CLI). Additional product sections (purpose, non-goals, workflow, principles,
   follow-up specs) are added per the feature request.

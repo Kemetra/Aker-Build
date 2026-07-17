@@ -1,5 +1,5 @@
-import { renderChecksPayload, type ChecksPayload } from "@tenantguard/review";
-import type { ReviewReport } from "@tenantguard/review";
+import { renderChecksPayload, type ChecksPayload } from "@aker-build/review";
+import type { ReviewReport } from "@aker-build/review";
 import { assertAllowedWrite } from "./safety.js";
 import type { PullRequestEvent } from "./types.js";
 
@@ -10,7 +10,7 @@ import type { PullRequestEvent } from "./types.js";
 export interface ChecksClient {
   createCheck(args: { owner: string; repo: string; headSha: string; payload: ChecksPayload }): Promise<{ id: number }>;
   updateCheck(args: { owner: string; repo: string; checkId: number; payload: ChecksPayload }): Promise<void>;
-  /** Find an existing TenantGuard check for this head, if any (for idempotent update — FR-012). */
+  /** Find an existing Aker Build check for this head, if any (for idempotent update — FR-012). */
   findCheck?(args: { owner: string; repo: string; headSha: string }): Promise<{ id: number } | null>;
 }
 
@@ -29,7 +29,7 @@ export function buildPayload(report: ReviewReport, event: Pick<PullRequestEvent,
 }
 
 /**
- * Post the payload as a Checks run. Idempotent: updates an existing TenantGuard check for this head
+ * Post the payload as a Checks run. Idempotent: updates an existing Aker Build check for this head
  * if one is found, else creates one (FR-012). Every write routes through `assertAllowedWrite` — the
  * single safety gate (FR-007). Returns the check id.
  */

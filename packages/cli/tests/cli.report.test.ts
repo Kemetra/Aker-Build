@@ -12,7 +12,7 @@ afterEach(() => {
 
 function tempRun(): { repoRoot: string; outDir: string } {
   const repoRoot = mkdtempSync(join(tmpdir(), "tg-cli-report-"));
-  const outDir = join(repoRoot, ".tenantguard");
+  const outDir = join(repoRoot, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   created.push(repoRoot);
   writeFileSync(
@@ -30,15 +30,15 @@ function tempRun(): { repoRoot: string; outDir: string } {
   return { repoRoot, outDir };
 }
 
-describe("`tenantguard report` command", () => {
-  it("writes tenantguard-report.json and tenantguard-report.md", () => {
+describe("`aker-build report` command", () => {
+  it("writes aker-build-report.json and aker-build-report.md", () => {
     const { repoRoot, outDir } = tempRun();
     const lines: string[] = [];
     const code = runReportCommand(repoRoot, { out: outDir, errSink: (line) => lines.push(line) });
 
     expect(code).toBe(0);
-    expect(existsSync(resolve(outDir, "tenantguard-report.json"))).toBe(true);
-    expect(existsSync(resolve(outDir, "tenantguard-report.md"))).toBe(true);
+    expect(existsSync(resolve(outDir, "aker-build-report.json"))).toBe(true);
+    expect(existsSync(resolve(outDir, "aker-build-report.md"))).toBe(true);
     expect(lines.join("\n")).toContain("Wrote");
   });
 
@@ -48,7 +48,7 @@ describe("`tenantguard report` command", () => {
     const code = runReportCommand(repoRoot, { out: outDir, stdout: true, format: "md", sink: (line) => lines.push(line), errSink: () => {} });
 
     expect(code).toBe(0);
-    expect(lines.join("\n")).toContain("# TenantGuard Report");
+    expect(lines.join("\n")).toContain("# Aker Build Report");
   });
 
   it("prints JSON to stdout when requested", () => {
@@ -63,7 +63,7 @@ describe("`tenantguard report` command", () => {
   it("writes readable missing-artifact output", () => {
     const { repoRoot, outDir } = tempRun();
     const code = runReportCommand(repoRoot, { out: outDir, errSink: () => {} });
-    const report = JSON.parse(readFileSync(resolve(outDir, "tenantguard-report.json"), "utf8"));
+    const report = JSON.parse(readFileSync(resolve(outDir, "aker-build-report.json"), "utf8"));
 
     expect(code).toBe(0);
     expect(report.artifacts.missing).toContain("risks.json");

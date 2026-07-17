@@ -41,6 +41,6 @@ function initGitRepo(dir: string): void {
     execFileSync("git", args, { cwd: dir, stdio: "ignore" });
   };
   git("init", "-q");
-  git("config", "user.email", "test@tenantguard.local");
-  git("config", "user.name", "TenantGuard Test");
+  git("config", "user.email", "test@aker-build.local");
+  git("config", "user.name", "Aker Build Test");
 }

@@ -1,19 +1,19 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { loadConfig } from "@tenantguard/config";
-import { validate as validateProjectMap, type ProjectMap } from "@tenantguard/project-map";
-import { validateRisks, type Finding, type RiskList } from "@tenantguard/gates";
-import { validateQueue, validateRouteDecision, type Queue, type RouterDecision } from "@tenantguard/queue";
-import { validateReview } from "@tenantguard/review";
-import type { ReviewReport } from "@tenantguard/review";
-import { writeOutput } from "@tenantguard/scanner";
-import { readSpecKitArtifacts } from "@tenantguard/spec-kit-adapter";
+import { loadConfig } from "@aker-build/config";
+import { validate as validateProjectMap, type ProjectMap } from "@aker-build/project-map";
+import { validateRisks, type Finding, type RiskList } from "@aker-build/gates";
+import { validateQueue, validateRouteDecision, type Queue, type RouterDecision } from "@aker-build/queue";
+import { validateReview } from "@aker-build/review";
+import type { ReviewReport } from "@aker-build/review";
+import { writeOutput } from "@aker-build/scanner";
+import { readSpecKitArtifacts } from "@aker-build/spec-kit-adapter";
 import { REPORT_SCHEMA_VERSION, validateReport } from "./schema.js";
-import type { ReportOptions, TenantGuardReport, WrittenReport } from "./types.js";
+import type { ReportOptions, AkerBuildReport, WrittenReport } from "./types.js";
 
-const DEFAULT_OUT = ".tenantguard";
-const REPORT_JSON = "tenantguard-report.json";
-const REPORT_MD = "tenantguard-report.md";
+const DEFAULT_OUT = ".aker-build";
+const REPORT_JSON = "aker-build-report.json";
+const REPORT_MD = "aker-build-report.md";
 const ARTIFACTS = ["project-map.json", "risks.json", "queue.json", "route.json", "review.json"] as const;
 
 export class InvalidReportError extends Error {}
@@ -89,7 +89,7 @@ function loadArtifacts(outDir: string): LoadedArtifacts {
   };
 }
 
-function summarizeConfig(repoRoot: string): TenantGuardReport["config"] {
+function summarizeConfig(repoRoot: string): AkerBuildReport["config"] {
   try {
     const loaded = loadConfig(repoRoot);
     const config = loaded.config;
@@ -116,7 +116,7 @@ function severityOf(finding: Finding): "low" | "medium" | "high" | "critical" | 
   return finding.status === "risk" ? finding.severity : null;
 }
 
-function summarizeSuppressions(risks: RiskList | null): TenantGuardReport["suppressions"] {
+function summarizeSuppressions(risks: RiskList | null): AkerBuildReport["suppressions"] {
   if (!risks) return [];
   return risks.findings
     .filter((finding) => finding.suppression)
@@ -136,7 +136,7 @@ function summarizeSuppressions(risks: RiskList | null): TenantGuardReport["suppr
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : a.gate_id.localeCompare(b.gate_id)));
 }
 
-function summarizeFindings(risks: RiskList | null): TenantGuardReport["summary"]["findings"] {
+function summarizeFindings(risks: RiskList | null): AkerBuildReport["summary"]["findings"] {
   const findings = risks?.findings ?? [];
   return {
     total: findings.length,
@@ -153,7 +153,7 @@ function summarizeFindings(risks: RiskList | null): TenantGuardReport["summary"]
   };
 }
 
-function buildReportUnchecked(repoRoot: string, outDir: string): TenantGuardReport {
+function buildReportUnchecked(repoRoot: string, outDir: string): AkerBuildReport {
   const artifacts = loadArtifacts(outDir);
   const specKit = readSpecKitArtifacts(repoRoot);
 
@@ -198,21 +198,21 @@ function buildReportUnchecked(repoRoot: string, outDir: string): TenantGuardRepo
   };
 }
 
-export function buildReport(targetPath: string, opts: ReportOptions = {}): TenantGuardReport {
+export function buildReport(targetPath: string, opts: ReportOptions = {}): AkerBuildReport {
   const out = resolve(opts.out ?? DEFAULT_OUT);
   const report = buildReportUnchecked(resolve(targetPath), out);
   const result = validateReport(report);
   if (!result.ok) {
     throw new InvalidReportError(
-      `produced tenantguard-report.json failed schema validation: ${result.errors.map((e) => `${e.path || "(root)"}: ${e.message}`).join("; ")}`,
+      `produced aker-build-report.json failed schema validation: ${result.errors.map((e) => `${e.path || "(root)"}: ${e.message}`).join("; ")}`,
     );
   }
   return report;
 }
 
-export function renderReportMarkdown(report: TenantGuardReport): string {
+export function renderReportMarkdown(report: AkerBuildReport): string {
   const lines: string[] = [];
-  lines.push("# TenantGuard Report");
+  lines.push("# Aker Build Report");
   lines.push("");
   lines.push(`Project: ${report.summary.project_name ?? "(unknown)"}`);
   lines.push(`Tenant model: ${report.summary.tenant_status ?? "(unknown)"}`);
@@ -277,4 +277,4 @@ export function writeReportToFiles(targetPath: string, opts: ReportOptions = {})
 }
 
 export { validateReport, reportSchema, REPORT_SCHEMA_VERSION } from "./schema.js";
-export type { TenantGuardReport, ReportOptions, WrittenReport } from "./types.js";
+export type { AkerBuildReport, ReportOptions, WrittenReport } from "./types.js";

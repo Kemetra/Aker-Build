@@ -29,7 +29,7 @@ internals or language.
 - Q: The 004 gates engine runs over the whole project-map (full-repo evidence), not a diff — how does "run the gates against the change" work without modifying 004? → A: Run the **full 004 gate set over current (post-change) repo state**, then **attribute each finding to the diff** by checking whether its evidence `path` is among the changed files. Reuses 004 verbatim; read-only; deterministic. Findings whose evidence touches no changed file are out of the diff's scope and do not drive the verdict.
 - Q: 004 ships findings with `status` (risk / needs_verification / not_applicable) + `severity` but **no** "blocking gate" field — how is the verdict derived? → A: Map the verdict **off `status`**: a diff-attributable `risk` → **Not Ready**; a diff-attributable `needs_verification` → **Needs Verification**; otherwise **Ready**. **All `risk` findings block in v0** (a gate-ID subset refinement is a later concern). The earlier assumption that a "blocking vs informational" distinction was "refined alongside 004" is **retired** — it never shipped; severity is reporting detail, not the verdict driver.
 - Q: `review-pr --local-diff` has no item reference, but FR-003 / User Story 3 check the diff against a queue item's allowed/forbidden files — how is scope resolved? → A: Add an **optional `--item <ID>`** flag. When given, the reviewer loads that item's `allowed_files`/`forbidden_files` from `queue.json` (005) and runs the scope check. **Without `--item`, the scope check is skipped (and noted in the report)**; gate-based review + verdict still run, preserving always-available local-first review (US1).
-- Q: What output shape should the readiness report take? → A: Both forms — a **machine-readable `review.json`** (verdict + contributing findings + evidence) **and a human-readable Markdown report**, mirroring the risks.json/queue.json precedent. Printed to stdout and written to `.tenantguard/` (outside tracked source).
+- Q: What output shape should the readiness report take? → A: Both forms — a **machine-readable `review.json`** (verdict + contributing findings + evidence) **and a human-readable Markdown report**, mirroring the risks.json/queue.json precedent. Printed to stdout and written to `.aker-build/` (outside tracked source).
 
 ---
 
@@ -82,7 +82,7 @@ TG-G3 with evidence drawn from the changed files / PR metadata.
 A reviewer checks a change against a queue item's declared allowed/forbidden files and flags
 out-of-scope edits.
 
-**Why this priority**: Scope adherence is how TenantGuard catches "agent changed too many files."
+**Why this priority**: Scope adherence is how Aker Build catches "agent changed too many files."
 
 **Independent Test**: Review a diff that touches a forbidden file for its item (via `--item <ID>`) and
 confirm the verdict flags the out-of-scope change.
@@ -162,7 +162,7 @@ attach, per contributing finding, the gate id, the location (evidence `path`/`li
   reporting detail, not the verdict driver.
 - **FR-013**: The reviewer MUST emit both a **machine-readable `review.json`** (verdict + contributing
   findings + evidence) and a **human-readable Markdown report**, printed to stdout and written to the
-  designated out-dir (default `.tenantguard/`, outside tracked source).
+  designated out-dir (default `.aker-build/`, outside tracked source).
 
 ### Key Entities
 
@@ -180,14 +180,14 @@ attach, per contributing finding, the gate id, the location (evidence `path`/`li
 ## CLI Surface *(mandatory)*
 
 ```text
-tenantguard review-pr --local-diff               review the current local diff (no credentials)
-tenantguard review-pr --local-diff --item Q-001   ...and check scope against queue item Q-001
-tenantguard review-pr <number>                    review a GitHub PR by number (requires GitHub access)
-tenantguard review-pr <number> --item Q-001       ...with scope checked against Q-001
+aker-build review-pr --local-diff               review the current local diff (no credentials)
+aker-build review-pr --local-diff --item Q-001   ...and check scope against queue item Q-001
+aker-build review-pr <number>                    review a GitHub PR by number (requires GitHub access)
+aker-build review-pr <number> --item Q-001       ...with scope checked against Q-001
 ```
 
 `--item <ID>` is **optional**; when supplied, the item's `allowed_files`/`forbidden_files` are read from
-`<out>/queue.json` (default `.tenantguard/`) for the scope check. Without it, the scope check is skipped
+`<out>/queue.json` (default `.aker-build/`) for the scope check. Without it, the scope check is skipped
 (noted in the report) and gate-based review still runs.
 
 ---
@@ -196,9 +196,9 @@ tenantguard review-pr <number> --item Q-001       ...with scope checked against 
 
 ```text
 review.json             machine-readable: verdict (Ready/Not Ready/Needs Verification) + contributing
-                        (diff-attributable) findings + evidence + scope result. Written to .tenantguard/.
+                        (diff-attributable) findings + evidence + scope result. Written to .aker-build/.
 PR / readiness report   human-readable Markdown of the same verdict + findings + evidence. Printed to
-                        stdout and written to .tenantguard/. (008 surfaces this in CI.)
+                        stdout and written to .aker-build/. (008 surfaces this in CI.)
 ```
 
 ---
@@ -256,7 +256,7 @@ PR / readiness report   human-readable Markdown of the same verdict + findings +
 
 - **Diff parsing and GitHub-client choice deferred** to plan/ADR. This spec mandates review *behavior
   and verdict model*, not the libraries.
-- **GitHub access**, when used for PR mode, relies on the user's existing credentials/CLI; TenantGuard
+- **GitHub access**, when used for PR mode, relies on the user's existing credentials/CLI; Aker Build
   stores no tokens.
 - **No "blocking gate" field in 004** (the earlier assumption that one was "refined alongside 004" never
   shipped). The verdict is derived off finding `status`; **all `risk` findings block in v0**. Narrowing

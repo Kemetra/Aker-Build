@@ -2,7 +2,7 @@
 export type AgentName = "claude" | "codex" | "generic";
 
 export interface CompileOptions {
-  /** Output/input directory holding queue.json. Default ".tenantguard". */
+  /** Output/input directory holding queue.json. Default ".aker-build". */
   out?: string;
   /** Agent renderer; unknown values fall back to generic + a note. */
   agent?: string;

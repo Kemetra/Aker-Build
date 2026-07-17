@@ -6,16 +6,16 @@
 ## Summary
 
 Build the **CLI Scanner** — the producer half of the 002↔003 pair. It reads a local Git repository
-**read-only** and emits a `project-map.json` that **validates against `@tenantguard/project-map`**
+**read-only** and emits a `project-map.json` that **validates against `@aker-build/project-map`**
 (002, already implemented and merged), plus **run notes** recording skips, insufficient-evidence
 signals, and flagged secrets. It detects basic structure heuristically (manifest files, directory
 conventions), is **deterministic** (stable ordering for re-scan diffing), **local-first** (no network,
 no credentials), never fabricates values, and never copies secrets into output. Exposed via the MVP
-CLI commands `tenantguard scan` and `tenantguard map`.
+CLI commands `aker-build scan` and `aker-build map`.
 
 **Technical approach** (decided at this plan layer): a new package `packages/scanner` (detection +
 map assembly) and a CLI package `packages/cli` (command wiring), both consuming
-`@tenantguard/project-map` as a workspace dependency for the output contract and validation. CLI
+`@aker-build/project-map` as a workspace dependency for the output contract and validation. CLI
 framework: **Commander** (see Research R1; resolves the choice ADR-001 deferred → recorded as
 **ADR-002**). **No production code is created by this plan**; implementation begins only after
 `plan.md` + `tasks.md` are reviewed.
@@ -23,15 +23,15 @@ framework: **Commander** (see Research R1; resolves the choice ADR-001 deferred 
 ## Technical Context
 
 **Language/Version**: TypeScript on Node.js LTS (per ADR-001).
-**Primary Dependencies**: `@tenantguard/project-map` (workspace, output contract + `validate`);
+**Primary Dependencies**: `@aker-build/project-map` (workspace, output contract + `validate`);
   **Commander** (CLI parsing); `yaml` (already used; optional YAML map emission). Node built-ins
   (`node:fs`, `node:path`) for read-only traversal — **no** shelling out to `git`, no network client.
 **Storage**: Reads target repo files (read-only). Writes `project-map.json` (+ optional run-notes /
   YAML) to a **designated output path outside the scanned repo's tracked source** (default e.g.
-  `./.tenantguard/project-map.json`, configurable) — never mutates scanned files (FR-003).
+  `./.aker-build/project-map.json`, configurable) — never mutates scanned files (FR-003).
 **Testing**: Vitest. Fixtures = sample repos under `tests/fixtures/` (a multi-tenant SaaS-shaped repo,
   an empty dir, a non-SaaS repo, a monorepo, an unreadable-path case). Assertions validate emitted
-  maps with `@tenantguard/project-map`'s `validate()`.
+  maps with `@aker-build/project-map`'s `validate()`.
 **Target Platform**: Local dev machine / CI runner; Node CLI. No network.
 **Project Type**: CLI tool + supporting library (monorepo packages).
 **Performance Goals**: Scan a typical repo in a few seconds; report progress / not hang on large
@@ -49,7 +49,7 @@ framework: **Commander** (see Research R1; resolves the choice ADR-001 deferred 
 | Principle | Relevance | Status |
 |-----------|-----------|--------|
 | I. Source Truth First | The scanner *is* the source-truth producer; FR-004/FR-006 forbid fabrication, emit low-confidence/empty + "insufficient evidence" instead. | ✅ Pass |
-| II. CLI First | Delivered as `tenantguard scan` / `map`; local, no network/credentials (FR-011). | ✅ Pass |
+| II. CLI First | Delivered as `aker-build scan` / `map`; local, no network/credentials (FR-011). | ✅ Pass |
 | III. Evidence-Based | Every populated value traces to a Detection Signal; uncertainty recorded via the shared Evidence Object / run notes (FR-004, SC-003). | ✅ Pass |
 | IV. Spec-Compatible | Scans any repo incl. plain-docs/no-spec and non-SaaS (FR-008); reads `.specify/` if present but never requires it. | ✅ Pass |
 | V. Agent Safety | N/A directly (not a prompt feature). | ✅ N/A |
@@ -99,12 +99,12 @@ packages/scanner/             # detection + map assembly (created at implementat
     ├── secrets.test.ts       # secret-like content flagged, never copied (SC-006)
     └── monorepo.test.ts      # multi-repo layout → multiple repos[] (FR-007)
 
-packages/cli/                 # the `tenantguard` CLI (created at implementation time)
+packages/cli/                 # the `aker-build` CLI (created at implementation time)
 ├── src/
 │   ├── index.ts              # Commander program; registers commands
 │   ├── commands/
-│   │   ├── scan.ts           # `tenantguard scan [path]` → writes project-map.json + notes
-│   │   └── map.ts            # `tenantguard map` → show / re-emit the produced map
+│   │   ├── scan.ts           # `aker-build scan [path]` → writes project-map.json + notes
+│   │   └── map.ts            # `aker-build map` → show / re-emit the produced map
 │   └── bin.ts                # #! entry (wired to package.json bin)
 └── tests/
     └── cli.scan.test.ts      # scan command produces a valid map; exit codes; no scanned-repo mutation

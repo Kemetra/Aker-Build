@@ -6,7 +6,7 @@ implemented** (after `/speckit.tasks` review). This document is design intent; n
 ## Validate a map (planned library usage)
 
 ```ts
-import { validate, SCHEMA_VERSION } from "@tenantguard/project-map";
+import { validate, SCHEMA_VERSION } from "@aker-build/project-map";
 import { readFileSync } from "node:fs";
 
 // JSON is canonical:

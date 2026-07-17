@@ -1,5 +1,5 @@
-import type { Finding } from "@tenantguard/gates";
-import { confidenceTier } from "@tenantguard/gates";
+import type { Finding } from "@aker-build/gates";
+import { confidenceTier } from "@aker-build/gates";
 import type { QueueContext, QueueItem, QueueItemType, Level } from "./types.js";
 
 /** Map a gate id to the kind of work a fix would be. */

@@ -2,14 +2,14 @@
 
 - **Status**: Accepted
 - **Date**: 2026-06-18
-- **Deciders**: TenantGuard maintainers
+- **Deciders**: Aker Build maintainers
 - **Context tasks**: `specs/002-project-map-schema/tasks.md` T001 (this ADR unblocks the CLAUDE.md
   Implementation Boundary before any package code is written).
 
 ## Status note
 
 This ADR **formalizes an already-ratified decision**, it does not introduce a new one. The
-TenantGuard Constitution v1.0.0 (§"MVP Scope & Constraints") already states the technology baseline:
+Aker Build Constitution v1.0.0 (§"MVP Scope & Constraints") already states the technology baseline:
 "TypeScript on Node.js LTS, pnpm, Vitest for tests, Zod for schema validation, JSON/YAML config, JSON
 files for local storage." This ADR records that decision in the conventional location
 (`docs/decisions/`) referenced by `CLAUDE.md`, with its rationale and alternatives, so the evidence
@@ -17,7 +17,7 @@ chain is explicit (Constitution Principle III — Evidence-Based Findings).
 
 ## Context
 
-TenantGuard is a CLI-first SaaS Build Kernel (Constitution Principle II). Before implementing the
+Aker Build is a CLI-first SaaS Build Kernel (Constitution Principle II). Before implementing the
 first package (`002-project-map-schema`), the language, runtime, package manager, test framework, and
 validation library must be chosen and recorded. The drivers:
 
@@ -31,7 +31,7 @@ validation library must be chosen and recorded. The drivers:
 
 ## Decision
 
-Adopt the following MVP stack (verbatim from `docs/tenantguard_project_blueprint.md` §"Final MVP
+Adopt the following MVP stack (verbatim from `docs/aker-build_project_blueprint.md` §"Final MVP
 stack", and consistent with `specs/002-project-map-schema/spec.md` Assumptions and `plan.md`):
 
 | Area | Decision |
@@ -90,7 +90,7 @@ From the blueprint (§"Deferred technology"):
 ## References
 
 - Constitution v1.0.0 — `.specify/memory/constitution.md` (§"MVP Scope & Constraints").
-- Blueprint — `docs/tenantguard_project_blueprint.md` (§"Final MVP stack", §"Why TypeScript first",
+- Blueprint — `docs/aker-build_project_blueprint.md` (§"Final MVP stack", §"Why TypeScript first",
   §"Deferred technology").
 - Spec — `specs/002-project-map-schema/spec.md` (Assumptions).
 - Plan / Research — `specs/002-project-map-schema/plan.md`, `research.md` (R1, R2).

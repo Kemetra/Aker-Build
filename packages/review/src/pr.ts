@@ -1,5 +1,5 @@
-import { runGates as realRunGates } from "@tenantguard/gates";
-import type { RunGatesResult } from "@tenantguard/gates";
+import { runGates as realRunGates } from "@aker-build/gates";
+import type { RunGatesResult } from "@aker-build/gates";
 import { prChangedFiles as realPrChangedFiles, prMetadata as realPrMetadata } from "./gh.js";
 import { diffAttributableFindings } from "./attribute.js";
 import { checkScope, SCOPE_SKIPPED } from "./scope.js";
@@ -19,7 +19,7 @@ export interface PrReviewDeps {
   repoRoot?: string;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Review a GitHub PR by number (FR-005). Reuses the local-diff core over the PR's changed-files set,

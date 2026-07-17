@@ -12,7 +12,7 @@ description: "Task list for 002-project-map-schema implementation"
 independently testable.
 
 > **GATE — read before executing any task below**: These tasks are the *plan for implementation*;
-> writing this file creates no code. Per the TenantGuard constitution, **implementation (Phase 1+
+> writing this file creates no code. Per the Aker Build constitution, **implementation (Phase 1+
 > below) MUST NOT begin until `plan.md` + `tasks.md` are reviewed and approved**, and only on an
 > approved feature branch with explicit instruction. **ADR-001-tech-stack is PENDING** (file absent);
 > T001 authors it from the blueprint + spec Assumptions before any package code is written. No
@@ -32,7 +32,7 @@ independently testable.
 dependency/lockfile state and is therefore an **explicit-approval gate** (Constitution: lockfiles
 MUST NOT change unless package changes are explicitly approved).
 
-- [x] T001 Author `docs/decisions/ADR-001-tech-stack.md` capturing TypeScript / Node LTS / pnpm / Vitest / Zod / JSON+YAML, citing `docs/tenantguard_project_blueprint.md` (tech-stack table, "Why TypeScript first") and `specs/002-project-map-schema/spec.md` Assumptions as the decision basis. (Docs-only; unblocks the Implementation Boundary.) ✅ Done 2026-06-18 — `docs/decisions/ADR-001-tech-stack.md`.
+- [x] T001 Author `docs/decisions/ADR-001-tech-stack.md` capturing TypeScript / Node LTS / pnpm / Vitest / Zod / JSON+YAML, citing `docs/aker-build_project_blueprint.md` (tech-stack table, "Why TypeScript first") and `specs/002-project-map-schema/spec.md` Assumptions as the decision basis. (Docs-only; unblocks the Implementation Boundary.) ✅ Done 2026-06-18 — `docs/decisions/ADR-001-tech-stack.md`.
 - [x] T002 Initialize the `packages/project-map/` package (`package.json` with Zod + a YAML parser, `tsconfig.json`) per ADR-001. **Requires explicit approval (adds dependencies + lockfile).**
 - [x] T003 [P] Configure Vitest + lint/format for `packages/project-map/` (`vitest.config.ts`, lint config). **Requires explicit approval if it touches the lockfile.**
 

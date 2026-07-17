@@ -1,4 +1,4 @@
-// Public surface for @tenantguard/review.
+// Public surface for @aker-build/review.
 // PR Reviewer — review a local diff (or GitHub PR) against the 004 gates + declared scope,
 // returning a Ready / Not Ready / Needs Verification verdict with evidence (007).
 

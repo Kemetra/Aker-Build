@@ -1,5 +1,5 @@
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
 const ROUTE_DEF = /\b(app|router|server)\.(get|post|put|patch|delete)\s*\(/i;

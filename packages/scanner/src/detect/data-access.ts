@@ -1,5 +1,5 @@
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 // Only inspect source files that plausibly contain query code.
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;

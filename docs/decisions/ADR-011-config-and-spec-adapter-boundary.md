@@ -2,12 +2,12 @@
 
 - Status: Proposed
 - Date: 2026-06-19
-- Deciders: TenantGuard maintainers
+- Deciders: Aker Build maintainers
 - Related specs: proposed `011-spec-kit-adapter-and-config-boundary`
 
 ## Context
 
-TenantGuard must be Spec Kit compatible but not Spec Kit dependent. It must work on projects with:
+Aker Build must be Spec Kit compatible but not Spec Kit dependent. It must work on projects with:
 
 ```text
 .specify/ artifacts
@@ -26,8 +26,8 @@ Add a versioned local config model and a read-only Spec Kit adapter.
 Config file names:
 
 ```text
-tenantguard.config.json
-tenantguard.config.yaml
+aker-build.config.json
+aker-build.config.yaml
 ```
 
 JSON remains canonical; YAML is convenience.
@@ -76,7 +76,7 @@ Spec Kit adapter behavior:
 ## Rationale
 
 - Spec Kit compatibility improves prompt quality and task safety.
-- Config lets real projects adopt TenantGuard gradually.
+- Config lets real projects adopt Aker Build gradually.
 - Visible suppressions keep evidence and trust intact.
 - Read-only adapter respects No Hidden Mutation.
 

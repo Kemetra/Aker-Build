@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { rmSync, existsSync, readFileSync } from "node:fs";
-import { validate } from "@tenantguard/project-map";
+import { validate } from "@aker-build/project-map";
 import { runScan } from "../src/commands/scan.js";
 import { fixture } from "./helpers.js";
 
@@ -15,7 +15,7 @@ afterEach(() => {
   if (existsSync(out)) rmSync(out, { recursive: true, force: true });
 });
 
-describe("T026 `tenantguard scan` command", () => {
+describe("T026 `aker-build scan` command", () => {
   it("produces a 002-valid project-map.json and exits 0", () => {
     const code = runScan(saas, { out });
     expect(code).toBe(0);

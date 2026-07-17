@@ -6,7 +6,7 @@ on.
 
 ---
 
-## `tenantguard gates [path]`
+## `aker-build gates [path]`
 
 Run the v0 gate set (or a subset) over a scanned repo and produce `risks.json`.
 
@@ -14,13 +14,13 @@ Run the v0 gate set (or a subset) over a scanned repo and produce `risks.json`.
 |--------|----------|
 | Argument | `[path]` — target repo dir. Default: current directory. |
 | `--gates <ids>` | Comma-separated gate ids to run, e.g. `TG-G4,TG-G5`. Omitted → run the full set. Unknown id → exit `2` with a clear message listing valid ids (FR-006, R7). |
-| `--out <dir>` | Output/input directory. Default: `./.tenantguard/`. Outside scanned tracked source. |
+| `--out <dir>` | Output/input directory. Default: `./.aker-build/`. Outside scanned tracked source. |
 | `--stdout` | Print `risks.json` to stdout instead of writing a file. |
-| Input | Reads `<out>/project-map.json` (produced by `tenantguard scan`). |
+| Input | Reads `<out>/project-map.json` (produced by `aker-build scan`). |
 | Side effects | **Reads** the project map + target repo files only (via reused scanner read-only io). **Writes** `risks.json` to `--out`. **Never** creates/modifies/deletes a tracked file in the scanned repo (FR-008). No network, no credentials (FR-010). |
-| Output (file) | `.tenantguard/risks.json` validating against the gates `risksSchema` (FR-002, FR-012). |
+| Output (file) | `.aker-build/risks.json` validating against the gates `risksSchema` (FR-002, FR-012). |
 | stderr | Progress / warnings; errors. **No secret values** (FR-009, SC-006). |
-| Exit codes | `0` risks.json produced & valid · `1` no `project-map.json` found (suggests running `tenantguard scan` first) · `2` bad input (unknown `--gates` id; target not a Git repo) · `3` internal error (produced risks.json failed schema validation — a gate bug; nothing written). |
+| Exit codes | `0` risks.json produced & valid · `1` no `project-map.json` found (suggests running `aker-build scan` first) · `2` bad input (unknown `--gates` id; target not a Git repo) · `3` internal error (produced risks.json failed schema validation — a gate bug; nothing written). |
 | Determinism | Re-running over unchanged input yields an equivalent risk list (stable ordering) — FR-007 / SC-005. |
 
 ---

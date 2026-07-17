@@ -12,9 +12,9 @@
 
 ## Purpose *(mandatory)*
 
-SaaS Gates v0 are TenantGuard's risk-detection layer. They read the Project Map (002) and the repo's
+SaaS Gates v0 are Aker Build's risk-detection layer. They read the Project Map (002) and the repo's
 current evidence and produce a `risks.json` — a list of evidence-backed findings tied to named gates
-(TG-G0…TG-G9). Gates are the same checks TenantGuard applies to user projects and to its own PRs.
+(TG-G0…TG-G9). Gates are the same checks Aker Build applies to user projects and to its own PRs.
 
 This spec defines the **gate model and the v0 check set** (what each gate looks for, what evidence it
 must cite, how findings are shaped), not the parsing internals or rule-engine library.
@@ -26,10 +26,10 @@ must cite, how findings are shaped), not the parsing internals or rule-engine li
 ### Session 2026-06-18
 
 - Q: How should `risks.json` represent the three gate outcomes (risk / needs-verification / not-applicable)? → A: One unified `findings[]` array; each finding carries a `status` enum (`risk` / `needs_verification` / `not_applicable`); severity + evidence are required for `risk` findings and conditional for the other statuses (see FR-013 / Finding entity).
-- Q: How is a subset of gates selected on the CLI (FR-006)? → A: By gate id, comma-separated — e.g. `tenantguard gates --gates TG-G4,TG-G5`.
+- Q: How is a subset of gates selected on the CLI (FR-006)? → A: By gate id, comma-separated — e.g. `aker-build gates --gates TG-G4,TG-G5`.
 - Q: What are the canonical severity labels? → A: `low` / `medium` / `high` / `critical` (ordered, low→critical).
 - Q: What defines the v0 "sample set" for the false-positive baseline (SC-003)? → A: Reuse and extend the 003 scanner test fixtures (`saas`, `monorepo`, `empty`) with per-gate clean/violation fixtures; no new test infrastructure.
-- Q: Where is `risks.json` written? → A: To the designated output dir (`.tenantguard/risks.json`), the same out-dir convention 003 uses for `project-map.json`.
+- Q: Where is `risks.json` written? → A: To the designated output dir (`.aker-build/risks.json`), the same out-dir convention 003 uses for `project-map.json`.
 
 ---
 
@@ -70,7 +70,7 @@ classifiable by gate and status — and each `risk` finding by severity — with
 ### User Story 3 - Run a subset of gates (Priority: P3)
 
 A developer runs only the gates relevant to a change (e.g. security + idempotency) by passing their
-gate ids — `tenantguard gates --gates TG-G4,TG-G5` — and gets just those findings.
+gate ids — `aker-build gates --gates TG-G4,TG-G5` — and gets just those findings.
 
 **Why this priority**: Targeted runs keep feedback fast and relevant, especially for PR review (007).
 
@@ -167,7 +167,7 @@ change; unresolved high-risk review finding.
   severity MUST be `null` (no risk has been asserted). A `needs_verification` finding MUST still cite
   at least one Evidence Object (what was inspected / why evidence was insufficient); a `not_applicable`
   finding MAY have an empty evidence list (the gate simply does not apply).
-- **FR-014**: `risks.json` MUST be written to the designated output directory (`.tenantguard/`), the
+- **FR-014**: `risks.json` MUST be written to the designated output directory (`.aker-build/`), the
   same out-dir convention `003-cli-scanner` uses for `project-map.json`; writing there is not a
   modification of the scanned repo's tracked source.
 - **FR-007**: Gate runs MUST be deterministic for unchanged input (stable findings and ordering).
@@ -200,8 +200,8 @@ change; unresolved high-risk review finding.
 ## CLI Surface *(mandatory)*
 
 ```text
-tenantguard gates                       run the full gate set over the scanned repo, produce risks.json
-tenantguard gates --gates TG-G4,TG-G5   run only the named gates (comma-separated gate ids)
+aker-build gates                       run the full gate set over the scanned repo, produce risks.json
+aker-build gates --gates TG-G4,TG-G5   run only the named gates (comma-separated gate ids)
 ```
 
 ---
@@ -209,7 +209,7 @@ tenantguard gates --gates TG-G4,TG-G5   run only the named gates (comma-separate
 ## Required Outputs *(mandatory)*
 
 ```text
-.tenantguard/risks.json
+.aker-build/risks.json
              A single unified findings[] array. Every finding = gate id + status
              (risk / needs_verification / not_applicable). A risk finding additionally has
              severity (low/medium/high/critical) + one or more shared Evidence Objects

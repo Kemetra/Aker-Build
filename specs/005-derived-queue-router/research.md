@@ -25,10 +25,10 @@ Rationale / Alternatives**.
 ## R2 — Package boundary & evidence edge: new `packages/queue`, reuse upstream contracts
 
 - **Decision**: New package `packages/queue`. It consumes a **written `risks.json`** (loaded +
-  validated via `@tenantguard/gates` `risksSchema`/`validateRisks`) and **`project-map.json`** (via
-  `@tenantguard/project-map` `loadJson` + `validate`), and reuses `@tenantguard/scanner`'s read-only
+  validated via `@aker-build/gates` `risksSchema`/`validateRisks`) and **`project-map.json`** (via
+  `@aker-build/project-map` `loadJson` + `validate`), and reuses `@aker-build/scanner`'s read-only
   `io.ts` for output writes and the **optional** local diff read. It **imports `evidenceSchema` from
-  `@tenantguard/project-map`** for queue-item `source.evidence` and never redefines it (FR-003).
+  `@aker-build/project-map`** for queue-item `source.evidence` and never redefines it (FR-003).
 - **Rationale**: Mirrors the 004 evidence-edge pattern (consume written artifacts, centralize
   read-only io). Keeps `queue` decoupled from how gates/scan ran, makes the CLI "run queue/scan first"
   paths explicit, and lets 006 consume queue items directly. Optional diff/PR inputs are read-only and
@@ -41,7 +41,7 @@ Rationale / Alternatives**.
 ## R3 — Schema home: queue/route schemas in `packages/queue`, evidence imported from 002
 
 - **Decision**: Define `queueItemSchema`, `queueSchema`, and `routeDecisionSchema` (Zod) **in
-  `packages/queue`**, importing `evidenceSchema` from `@tenantguard/project-map`.
+  `packages/queue`**, importing `evidenceSchema` from `@aker-build/project-map`.
 - **Rationale**: `queue.json` and `route.json` are new downstream artifacts owned by the producer.
   Importing the shared `evidenceSchema` satisfies FR-003 and inherits 002's `.strip()` no-secret
   guarantee (VII / FR-012).
@@ -83,10 +83,10 @@ Rationale / Alternatives**.
 
 ## R7 — CLI surface & "run X first" paths
 
-- **Decision**: `tenantguard queue [path] [--out <dir>]` derives `queue.json`; `tenantguard route
+- **Decision**: `aker-build queue [path] [--out <dir>]` derives `queue.json`; `aker-build route
   [path] [--out <dir>] [--stdout]` reads `queue.json` (deriving on the fly if absent is **not** done —
   it requires a produced queue) and writes `route.json` + prints the decision. Missing prerequisite
-  (`risks.json` for queue, `queue.json` for route) → non-zero exit with a clear "run `tenantguard
+  (`risks.json` for queue, `queue.json` for route) → non-zero exit with a clear "run `aker-build
   gates`/`queue` first" message (mirroring 003/004 UX).
 - **Rationale**: FR-016 + the clarified CLI surface; consistent with the 003 `map` / 004 `gates`
   "run X first" pattern.

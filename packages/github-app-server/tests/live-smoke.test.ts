@@ -6,7 +6,7 @@
  * cast in composeDeps means only the fake's shape is type-checked — nothing exercises the REAL
  * appId/privateKey -> installation-token -> api.github.com path. This file closes exactly that gap.
  *
- * It is GATED behind `TENANTGUARD_SMOKE=1`. With the flag unset (the default, and CI) the whole suite
+ * It is GATED behind `AKER_BUILD_SMOKE=1`. With the flag unset (the default, and CI) the whole suite
  * reports SKIPPED — never falsely green. It runs live ONLY when an operator sets the flag plus their
  * real App credentials in the environment, via `! <command>` so this process (and these tests) never
  * see secrets in source. The credentials are read by the SAME `composeDeps` the server uses — this
@@ -26,17 +26,17 @@
  *   confirmation stays a manual checklist step (you can't stand up a public webhook from a unit test).
  *
  * To run:
- *   TENANTGUARD_APP_ID=... TENANTGUARD_APP_PRIVATE_KEY="$(cat key.pem)" \
- *   TENANTGUARD_WEBHOOK_SECRET=... TENANTGUARD_INSTALLATION_ID=... \
+ *   AKER_BUILD_APP_ID=... AKER_BUILD_APP_PRIVATE_KEY="$(cat key.pem)" \
+ *   AKER_BUILD_WEBHOOK_SECRET=... AKER_BUILD_INSTALLATION_ID=... \
  *   TG_SMOKE_OWNER=... TG_SMOKE_REPO=... TG_SMOKE_PR=<existing PR #> TG_SMOKE_HEAD_SHA=<that PR's head sha> \
- *   TENANTGUARD_SMOKE=1 pnpm --filter @tenantguard/github-app-server test live-smoke
+ *   AKER_BUILD_SMOKE=1 pnpm --filter @aker-build/github-app-server test live-smoke
  */
 import { describe, it, expect } from "vitest";
 import { makeAuthToken } from "../src/auth.js";
 import { loadCredentials } from "../src/config.js";
 import { readInstallationId, composeDeps } from "../src/http-server.js";
 
-const SMOKE = process.env.TENANTGUARD_SMOKE === "1";
+const SMOKE = process.env.AKER_BUILD_SMOKE === "1";
 
 /** Read a required smoke-only target var, failing loudly (no value printed) if absent. */
 function need(name: string): string {
@@ -73,7 +73,7 @@ describe.skipIf(!SMOKE)("LIVE smoke against api.github.com (real App + installat
     expect(files.every((f) => typeof f === "string")).toBe(true);
   });
 
-  it("creates a real TenantGuard check at the PR head and returns its id (check-write path)", async () => {
+  it("creates a real Aker Build check at the PR head and returns its id (check-write path)", async () => {
     const owner = need("TG_SMOKE_OWNER");
     const repo = need("TG_SMOKE_REPO");
     const headSha = need("TG_SMOKE_HEAD_SHA");
@@ -84,9 +84,9 @@ describe.skipIf(!SMOKE)("LIVE smoke against api.github.com (real App + installat
       repo,
       headSha,
       payload: {
-        name: "TenantGuard",
+        name: "Aker Build",
         conclusion: "neutral", // a benign, honest conclusion — report-only, asserts nothing about the repo
-        title: "TenantGuard live smoke",
+        title: "Aker Build live smoke",
         summary: "Field-verification smoke test: confirms the App can write a Checks run via the live API.",
         annotations: [],
       },
@@ -94,7 +94,7 @@ describe.skipIf(!SMOKE)("LIVE smoke against api.github.com (real App + installat
 
     // A real check id proves the WRITE reached api.github.com through the allowlisted checks.create
     // (and, transitively, that the App-JWT -> installation-token exchange succeeded). Confirm it in the
-    // GitHub UI: the PR head commit should now show a neutral "TenantGuard" check.
+    // GitHub UI: the PR head commit should now show a neutral "Aker Build" check.
     expect(typeof id).toBe("number");
     expect(id).toBeGreaterThan(0);
   });

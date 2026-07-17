@@ -1,4 +1,4 @@
-import { confidenceTier } from "@tenantguard/gates";
+import { confidenceTier } from "@aker-build/gates";
 import { renderReport } from "./render.js";
 import type { ReviewReport, ReviewFinding, Verdict } from "./types.js";
 
@@ -89,5 +89,5 @@ export function renderChecksPayload(report: ReviewReport): ChecksPayload {
         ? "Needs verification"
         : "Ready";
 
-  return { name: "TenantGuard", conclusion: CONCLUSION[report.verdict], title, summary, annotations };
+  return { name: "Aker Build", conclusion: CONCLUSION[report.verdict], title, summary, annotations };
 }

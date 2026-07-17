@@ -3,7 +3,7 @@
 **Feature Branch**: `014-github-app-report-only`
 **Created**: 2026-06-21
 **Status**: Draft
-**Input**: User description: "Report-only GitHub App for TenantGuard (roadmap P4, EXPAND phase). Installs on a repo and, on each pull request, runs the existing review-pr chain and posts findings back to the PR as a GitHub Checks run plus inline annotations using the file:line evidence spans from the P2 confidence model. Confidence tiers drive presentation: confirmed findings render as a failed/neutral check with detail; suspected findings render as collapsed advisory notes so the PR is not flooded. Constitution-safe and report-only: no commits, no pushes, no auto-merge, no auto-fix, no agent execution. Stateless by default: computes from source truth per-PR with no database and stores no source code or secrets. Productizes the existing report-only dogfood GitHub Action behavior as an installable App, and consumes the already-merged report-only GitHub Checks renderer."
+**Input**: User description: "Report-only GitHub App for Aker Build (roadmap P4, EXPAND phase). Installs on a repo and, on each pull request, runs the existing review-pr chain and posts findings back to the PR as a GitHub Checks run plus inline annotations using the file:line evidence spans from the P2 confidence model. Confidence tiers drive presentation: confirmed findings render as a failed/neutral check with detail; suspected findings render as collapsed advisory notes so the PR is not flooded. Constitution-safe and report-only: no commits, no pushes, no auto-merge, no auto-fix, no agent execution. Stateless by default: computes from source truth per-PR with no database and stores no source code or secrets. Productizes the existing report-only dogfood GitHub Action behavior as an installable App, and consumes the already-merged report-only GitHub Checks renderer."
 
 ## Clarifications
 
@@ -15,9 +15,9 @@
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - See TenantGuard findings on a pull request without local setup (Priority: P1)
+### User Story 1 - See Aker Build findings on a pull request without local setup (Priority: P1)
 
-A developer opens a pull request on a repository where the TenantGuard App is installed. Without running any CLI locally or configuring a workflow file, they see a TenantGuard check appear on the PR. The check reports whether the diff introduces tenant-isolation, migration, contract, or other gate risks, with each finding pointing to the exact file and line. The reviewer reads the findings inline next to the code and decides what to do — the App never changes the code or the merge state.
+A developer opens a pull request on a repository where the Aker Build App is installed. Without running any CLI locally or configuring a workflow file, they see an Aker Build check appear on the PR. The check reports whether the diff introduces tenant-isolation, migration, contract, or other gate risks, with each finding pointing to the exact file and line. The reviewer reads the findings inline next to the code and decides what to do — the App never changes the code or the merge state.
 
 **Why this priority**: This is the entire reason the App exists — putting trusted findings where review already happens, with zero per-repo setup friction. It is the smallest slice that delivers the EXPAND-phase value (reach) and is independently shippable. Without it, nothing else matters.
 
@@ -25,7 +25,7 @@ A developer opens a pull request on a repository where the TenantGuard App is in
 
 **Acceptance Scenarios**:
 
-1. **Given** the App is installed on a repository, **When** a pull request is opened, **Then** a TenantGuard Checks run is created on that PR's head commit reporting the review outcome.
+1. **Given** the App is installed on a repository, **When** a pull request is opened, **Then** an Aker Build Checks run is created on that PR's head commit reporting the review outcome.
 2. **Given** a pull request whose diff introduces a `confirmed` finding, **When** the App reviews it, **Then** the finding appears as an inline annotation at the evidence `file:line` and the check conclusion reflects that confirmed findings exist.
 3. **Given** a pull request whose diff introduces no findings and no scope violations, **When** the App reviews it, **Then** the check concludes "ready" / success with a human-readable summary and no annotations.
 4. **Given** any pull request, **When** the App finishes reviewing, **Then** no commit, push, branch update, label, merge, or code change is made by the App — it only creates/updates a check and its annotations.
@@ -50,7 +50,7 @@ A reviewer looks at a PR that has both high-certainty (`confirmed`) and heuristi
 
 ### User Story 3 - Install and trust the App's safety boundary (Priority: P3)
 
-An engineering lead evaluating TenantGuard installs the App on an organization or repository and grants it the minimum access it needs to read code and write checks. They can read, from the App's documented permissions and behavior, that it can never write to their code, push, merge, or run agents — it only reads source at a PR ref and reports. They can uninstall it cleanly with no residue.
+An engineering lead evaluating Aker Build installs the App on an organization or repository and grants it the minimum access it needs to read code and write checks. They can read, from the App's documented permissions and behavior, that it can never write to their code, push, merge, or run agents — it only reads source at a PR ref and reports. They can uninstall it cleanly with no residue.
 
 **Why this priority**: Adoption by the target buyer (platform/eng-lead) requires a legible, minimal, auditable safety posture. It is a precondition for org rollout but not for proving the core report-on-PR value, hence P3.
 
@@ -72,7 +72,7 @@ An engineering lead evaluating TenantGuard installs the App on an organization o
 - **Secret-like content encountered** in config or diff: the App MUST follow the existing secret-safety behavior — never capture, store, or print the secret value; report only that secret-like content was detected and where.
 - **Re-run / synchronize**: when a PR receives new commits, the App MUST re-review the new head and update (not duplicate) its check.
 - **App lacks the Checks permission** on a repo: the App MUST surface an actionable message about missing permission rather than failing silently.
-- **No TenantGuard config present** in the repo: the App MUST run with documented defaults (consistent with the CLI), not refuse to run.
+- **No Aker Build config present** in the repo: the App MUST run with documented defaults (consistent with the CLI), not refuse to run.
 - **Draft pull request**: the App MUST review draft PRs under the same report-only rules, but MUST downgrade a `failure` conclusion to `neutral` so a work-in-progress draft never shows a blocking-looking red check (a clean draft may still conclude `success`).
 
 ## Requirements *(mandatory)*
@@ -106,7 +106,7 @@ An engineering lead evaluating TenantGuard installs the App on an organization o
 
 ### Measurable Outcomes
 
-- **SC-001**: After installing the App on a repository, a reviewer sees a TenantGuard check on a newly opened pull request with zero additional per-repo configuration steps.
+- **SC-001**: After installing the App on a repository, a reviewer sees an Aker Build check on a newly opened pull request with zero additional per-repo configuration steps.
 - **SC-002**: For a PR introducing a known `confirmed` finding, the finding is reported at its correct file and line on the PR in 100% of runs in the acceptance suite.
 - **SC-003**: Across all acceptance runs, the App performs zero write operations to the repository other than creating/updating its check and annotations (verifiable: no commits, branches, labels, merges, or code changes attributable to the App).
 - **SC-004**: Across all acceptance runs, the App persists zero bytes of repository source code and zero secret values.
@@ -120,6 +120,6 @@ An engineering lead evaluating TenantGuard installs the App on an organization o
 - Confidence tiers and `file:line` evidence spans are supplied by the already-merged P2 confidence model; this feature consumes them, it does not redefine them.
 - "Reviewable pull request events" are at least opened, reopened, and synchronized; draft PRs are reviewed under the same report-only rules but always conclude neutral (see Clarifications / FR-015).
 - The App reads source at the PR head ref via GitHub's API/checkout mechanism; it does not require a hosted clone or persistent storage.
-- Default configuration (when no `tenantguard` config is present) matches the CLI's documented defaults, including path-scope behavior from feature 013.
+- Default configuration (when no `aker-build` config is present) matches the CLI's documented defaults, including path-scope behavior from feature 013.
 - v1 distribution is self-hostable and single-tenant (an org runs its own App instance/runner), per Clarifications; the specific runtime/host topology (where the webhook handler executes) is an implementation concern deferred to planning. A public multi-tenant hosted App is out of scope.
 - This feature is roadmap P4 (EXPAND); it does NOT include org-level aggregation/dashboard (P5) or any enforcing/blocking-merge behavior (P6). Setting a check conclusion is reporting, not enforcement: GitHub branch-protection (configured by the repo owner, not the App) is the only thing that could make a check required, and that is explicitly out of scope here.

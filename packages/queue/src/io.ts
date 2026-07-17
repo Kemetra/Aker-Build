@@ -1,4 +1,4 @@
-import { writeOutput } from "@tenantguard/scanner";
+import { writeOutput } from "@aker-build/scanner";
 import type { Queue, RouterDecision } from "./types.js";
 
 export const QUEUE_FILENAME = "queue.json";

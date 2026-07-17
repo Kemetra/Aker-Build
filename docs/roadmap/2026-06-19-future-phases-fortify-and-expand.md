@@ -1,4 +1,4 @@
-# TenantGuard Future Phases — Fortify, then Expand
+# Aker Build Future Phases — Fortify, then Expand
 
 Status: Approved 2026-06-21 (owner approval). FORTIFY (P1–P3) shipped; EXPAND begins with P4 (report-only GitHub App, spec 014).
 Date: 2026-06-19
@@ -8,7 +8,7 @@ Action → launch) are already settled. This document covers what comes next.
 
 ## Executive decision
 
-After launch, TenantGuard's single biggest risk is **not believed findings**.
+After launch, Aker Build's single biggest risk is **not believed findings**.
 Its entire value rests on `risks.json` being trusted. So the future roadmap is
 ordered fortify-first, then expand:
 
@@ -36,7 +36,7 @@ enforce (P6) findings whose precision you have not measured (P3).
 
 ## Identity decision (locked)
 
-TenantGuard stays the **control plane, not an actor**. It scans, judges,
+Aker Build stays the **control plane, not an actor**. It scans, judges,
 routes, and advises. It never runs agents, never mutates code, never
 auto-commits, never auto-merges. Expansion grows *reach* (more eyes on the same
 advisory output), never *hands on code*.
@@ -142,7 +142,7 @@ detector change can silently degrade quality.
 **Boundary discipline.** The harness is a separate package/dir that consumes
 public `scan` / `gates` outputs only — never reaches into detector internals.
 That keeps it honest (tests the contract, not the implementation) and doubles
-as the external "does TenantGuard work on my repo?" proof.
+as the external "does Aker Build work on my repo?" proof.
 
 This is eval-driven development applied to a static analyzer: the corpus is the
 test suite, but assertions are *statistical* (precision/recall), because a

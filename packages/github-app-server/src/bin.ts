@@ -3,7 +3,7 @@
 // the server by calling the exported `start()` composition, which reads credentials from the
 // environment (composeDeps), wires the concrete octokit/git adapters, and binds the HTTP listener.
 //
-// NOTE (matches the `tenantguard` and `tenantguard-benchmark` bins): this file uses `.js` import
+// NOTE (matches the `aker-build` and `aker-build-benchmark` bins): this file uses `.js` import
 // specifiers that resolve to `.ts` sources, so it requires a TS-aware runtime — a build step, or a
 // dev runner like `tsx`. Plain `node` does NOT do `.js`→`.ts` resolution. The in-repo working TS
 // execution path is vitest (see tests/bin.test.ts, which proves this shim calls `start()` once, and

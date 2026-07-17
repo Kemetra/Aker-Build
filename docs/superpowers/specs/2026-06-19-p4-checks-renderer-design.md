@@ -16,7 +16,7 @@ hosting are explicitly **out of scope** — a separate infra spec, when that sur
 > Why this slice is the right one: the App's *value* and its *constitution risk* both live in the
 > output mapping (what blocks, what's advisory, what gets annotated where). That mapping is pure
 > data and testable. The transport (webhooks/auth) is undifferentiated plumbing that adds no
-> TenantGuard-specific logic and pulls in the deferred hosted surface. Build the brain, defer the
+> Aker Build-specific logic and pulls in the deferred hosted surface. Build the brain, defer the
 > pipes.
 
 ## What already exists (reuse)
@@ -35,7 +35,7 @@ A pure `renderChecksPayload(report: ReviewReport): ChecksPayload` returning:
 
 ```ts
 interface ChecksPayload {
-  name: string;                 // "TenantGuard"
+  name: string;                 // "Aker Build"
   conclusion: "success" | "neutral" | "failure";
   title: string;                // e.g. "Not ready — 1 confirmed risk"
   summary: string;              // the existing renderReport() markdown, reused verbatim

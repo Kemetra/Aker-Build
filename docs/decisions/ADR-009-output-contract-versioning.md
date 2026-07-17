@@ -2,12 +2,12 @@
 
 - Status: Proposed
 - Date: 2026-06-19
-- Deciders: TenantGuard maintainers
+- Deciders: Aker Build maintainers
 - Related specs: proposed `012-output-contract-and-report-versioning`
 
 ## Context
 
-TenantGuard's value is carried by generated artifacts:
+Aker Build's value is carried by generated artifacts:
 
 ```text
 project-map.json
@@ -17,8 +17,8 @@ route.json
 prompt-<id>.md
 review.json
 review.md
-tenantguard-report.json
-tenantguard-report.md
+aker-build-report.json
+aker-build-report.md
 ```
 
 Once users install the CLI or run it in CI, these artifacts become external contracts. If fields drift silently, prompts, CI summaries, and downstream automation become unreliable.
@@ -52,7 +52,7 @@ Breaking changes require:
 
 ## Rationale
 
-- TenantGuard's credibility depends on evidence and reproducibility.
+- Aker Build's credibility depends on evidence and reproducibility.
 - AI-agent prompts need stable inputs.
 - CI integration needs stable machine-readable outputs.
 - Versioned schemas make launch support and bug reports easier.
@@ -66,7 +66,7 @@ Breaking changes require:
 | `queue.json` | Yes | Yes | Must carry lock scope, gates, validation, stop conditions. |
 | `route.json` | Yes | Yes | Must explain selected and blocked items. |
 | `review.json` | Yes | Yes | Must explain Ready / Not Ready / Needs Verification. |
-| `tenantguard-report.json` | Yes | Yes | Aggregate source for Markdown report. |
+| `aker-build-report.json` | Yes | Yes | Aggregate source for Markdown report. |
 | `*.md` reports | No | Optional frontmatter | Human-facing rendering. |
 | `prompt-<id>.md` | No | Include metadata comment | Copy-paste artifact, not a data API. |
 

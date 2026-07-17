@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 export type SpecKitArtifactKind = "constitution" | "spec" | "plan" | "tasks" | "checklist";
 

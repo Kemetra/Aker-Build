@@ -1,4 +1,4 @@
-import type { QueueItem } from "@tenantguard/queue";
+import type { QueueItem } from "@aker-build/queue";
 import type { ScopeGap } from "./types.js";
 
 /**

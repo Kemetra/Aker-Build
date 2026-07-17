@@ -1,7 +1,7 @@
 # Output Contract: `route.json`
 
 The shape of the router decision. Consumed by 006 (prompt compiler) and printed to stdout by
-`tenantguard route`. Schema lives in `packages/queue` (`routeDecisionSchema`).
+`aker-build route`. Schema lives in `packages/queue` (`routeDecisionSchema`).
 
 ---
 

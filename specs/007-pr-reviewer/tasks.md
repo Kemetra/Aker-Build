@@ -8,7 +8,7 @@ description: "Task list for 007-pr-reviewer implementation"
 **Input**: Design documents from `/specs/007-pr-reviewer/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/review-cli.md, contracts/review-json.md, quickstart.md
 
-**Tests**: INCLUDED — TenantGuard mandates TDD (constitution §Development Workflow; the 004/005/006
+**Tests**: INCLUDED — Aker Build mandates TDD (constitution §Development Workflow; the 004/005/006
 precedent maps every SC to a named test). Write each test FIRST and confirm it FAILS (RED) before the
 implementation that makes it pass (GREEN).
 
@@ -27,7 +27,7 @@ US3 (scope) are additive P2 stories.
 
 **Purpose**: New package scaffolding consistent with the other packages (project-map/scanner/gates/queue/prompt).
 
-- [X] T001 Create `packages/review/` with `package.json` (name `@tenantguard/review`, type module, deps on `@tenantguard/gates`, `@tenantguard/queue`, `@tenantguard/scanner`, `zod`, `commander` not needed here; devDeps `vitest`, `typescript`) mirroring `packages/prompt/package.json`. **Lockfile change approved (additive importer block only).**
+- [X] T001 Create `packages/review/` with `package.json` (name `@aker-build/review`, type module, deps on `@aker-build/gates`, `@aker-build/queue`, `@aker-build/scanner`, `zod`, `commander` not needed here; devDeps `vitest`, `typescript`) mirroring `packages/prompt/package.json`. **Lockfile change approved (additive importer block only).**
 - [X] T002 [P] Add `packages/review/tsconfig.json` (extends root config; `exclude: ["tests/fixtures"]` per the 004 lesson) mirroring `packages/prompt/tsconfig.json`.
 - [X] T003 [P] Add `packages/review/vitest.config.ts` (globals, node env) mirroring the other packages.
 - [X] T004 Write **ADR-006** (`docs/decisions/ADR-006-diff-source.md`): diff source = read-only `git diff --name-only` (+ `gh` for PR mode); no diff-parsing dependency; no bundled GitHub client. Mirrors ADR-002/003/004/005. (Research R1/R5.)
@@ -40,7 +40,7 @@ US3 (scope) are additive P2 stories.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [X] T005 [P] Define types in `packages/review/src/types.ts`: `ReviewMode`, `Verdict`, `ReviewFinding` (gate finding | scope violation), `ScopeViolation`, `ScopeResult`, `ReviewReport`, `ReviewOptions`. Reuse `Evidence` from `@tenantguard/project-map` and `Finding`/`Severity`/`FindingStatus` from `@tenantguard/gates` VERBATIM — never redefine. (data-model Entities.)
+- [X] T005 [P] Define types in `packages/review/src/types.ts`: `ReviewMode`, `Verdict`, `ReviewFinding` (gate finding | scope violation), `ScopeViolation`, `ScopeResult`, `ReviewReport`, `ReviewOptions`. Reuse `Evidence` from `@aker-build/project-map` and `Finding`/`Severity`/`FindingStatus` from `@aker-build/gates` VERBATIM — never redefine. (data-model Entities.)
 - [X] T006 [P] Define the Zod schema + `validateReview` + `REVIEW_SCHEMA_VERSION` in `packages/review/src/schema.ts` per contracts/review-json.md (verdict enum, findings union, scope, mode, changed_files). Reuse the 002/004 evidence/finding field shapes.
 - [X] T007 [US-shared] Write FAILING test `packages/review/tests/git-source.test.ts`: `changedFiles(repoRoot)` returns repo-relative POSIX paths from `git diff --name-only` (working + staged + untracked), de-duplicated and code-unit sorted (uses copy-to-tempdir + `git init` fixture).
 - [X] T008 [US-shared] Implement the read-only git runner `packages/review/src/git.ts`: `changedFiles(repoRoot, base?)` shelling out to `git diff --name-only` (read-only); normalize/dedupe/sort by code-unit comparison. Make T007 pass (GREEN). (Research R1, R7.)
@@ -53,7 +53,7 @@ US3 (scope) are additive P2 stories.
 
 ## Phase 3: User Story 1 — Review a local diff (Priority: P1) 🎯 MVP
 
-**Goal**: `tenantguard review-pr --local-diff` returns Ready / Not Ready / Needs Verification with
+**Goal**: `aker-build review-pr --local-diff` returns Ready / Not Ready / Needs Verification with
 evidence, with no credentials. Scope check is skipped + noted (US3 adds it).
 
 **Independent Test**: Run local-diff review on a repo with a deliberate boundary violation on a changed
@@ -72,7 +72,7 @@ file → verdict Not Ready, naming the violated gate and citing evidence; runs w
 ### Implementation for User Story 1
 
 - [X] T018 [US1] Implement the verdict engine `packages/review/src/verdict.ts`: `decideVerdict(attributableFindings, scopeResult)` — risk OR scope-violation → `not_ready`; else needs_verification → `needs_verification`; else `ready` (data-model R3, FR-012). Handles `scope.checked=false` so US1 works without US3. Makes T011–T013 pass.
-- [X] T019 [US1] Implement `packages/review/src/io.ts`: write `review.json` (validated via `validateReview`) + `review.md` to the out-dir using the scanner's read-only `writeOutput`; expose `loadQueueItem(out, id)`. Reuse `@tenantguard/scanner` io.
+- [X] T019 [US1] Implement `packages/review/src/io.ts`: write `review.json` (validated via `validateReview`) + `review.md` to the out-dir using the scanner's read-only `writeOutput`; expose `loadQueueItem(out, id)`. Reuse `@aker-build/scanner` io.
 - [X] T020 [US1] Implement the Markdown renderer `packages/review/src/render.ts`: fixed-order sections (verdict, contributing findings w/ gate id + evidence, scope note, changed files); no secret values. Makes T015/T016 (md half) pass.
 - [X] T021 [US1] Implement the orchestrator `packages/review/src/review.ts` `reviewLocalDiff(opts, deps)`: `git.changedFiles` → `gates.runGates` (full set, verbatim) → `attribute` → scope (skipped when no item) → `verdict` → assemble `ReviewReport`. Read-only throughout; `deps` seam (default-real) per R8. Makes T014/T016 pass.
 - [X] T022 [US1] Implement `packages/review/src/index.ts` public surface: `reviewLocalDiff`, error classes `MissingQueueError`/`UnknownItemError`/`InvalidReviewError`/`GitUnavailableError`. (PR exports added in US2.) Make T011–T016 pass (GREEN).
@@ -100,7 +100,7 @@ flags the out-of-scope change; a no-`--item` run notes scope was not checked.
 ### Implementation for User Story 3
 
 - [X] T027 [US3] Implement `packages/review/src/scope.ts`: `checkScope(changedFiles, item)` → `ScopeResult` per data-model `out_of_scope` rule (forbidden OR outside-non-empty-allowed); `allowed_files: []` = no allow constraint. Makes T024 pass.
-- [X] T028 [US3] Wire `--item` through `review.ts`/`io.ts`: load `QueueItem` from `queue.json` (via `@tenantguard/queue` type + scanner read), call `checkScope`; absent item ⇒ `{checked:false}`. `MissingQueueError`/`UnknownItemError`. Makes T025 pass. **Also fixed an SC-007 self-reference bug: the reviewer's out-dir is now excluded from changed files (`excludeOutDir`) + regression test `out-dir-excluded.test.ts`.**
+- [X] T028 [US3] Wire `--item` through `review.ts`/`io.ts`: load `QueueItem` from `queue.json` (via `@aker-build/queue` type + scanner read), call `checkScope`; absent item ⇒ `{checked:false}`. `MissingQueueError`/`UnknownItemError`. Makes T025 pass. **Also fixed an SC-007 self-reference bug: the reviewer's out-dir is now excluded from changed files (`excludeOutDir`) + regression test `out-dir-excluded.test.ts`.**
 - [X] T029 [US3] Add `--item <ID>` to `packages/cli/src/commands/review.ts`; map `MissingQueueError`→exit 1, `UnknownItemError`→exit 2. Make T026 pass (GREEN).
 
 **Checkpoint**: US1 + US3 work — local-diff review with optional declared-scope enforcement.
@@ -109,7 +109,7 @@ flags the out-of-scope change; a no-`--item` run notes scope was not checked.
 
 ## Phase 5: User Story 2 — Review a GitHub PR (Priority: P2)
 
-**Goal**: `tenantguard review-pr <number>` reviews a PR via the user's `gh` CLI (same verdict core);
+**Goal**: `aker-build review-pr <number>` reviews a PR via the user's `gh` CLI (same verdict core);
 graceful-degrades when GitHub access is unavailable without blocking local-diff.
 
 **Independent Test**: With `gh` unavailable, PR review reports the gap clearly (exit 2) and local-diff

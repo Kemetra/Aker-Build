@@ -9,8 +9,8 @@ The review stage that closes the produce→route→prompt→**review** loop. A n
 evaluates a change — a **local diff** (P1) or a **GitHub PR** (P2) — against the shipped 004 SaaS gates
 and an optional declared scope, and returns a **Ready / Not Ready / Needs Verification** verdict with
 evidence. Output is a machine-readable `review.json` plus a human-readable Markdown report. v0 is
-deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `tenantguard
-review-pr --local-diff [--item <ID>]` and `tenantguard review-pr <number> [--item <ID>]`.
+deterministic, read-only, local-first, secret-free, and domain-neutral. Exposed via `aker-build
+review-pr --local-diff [--item <ID>]` and `aker-build review-pr <number> [--item <ID>]`.
 
 **Technical approach** (decided at this plan layer; see research.md):
 
@@ -18,7 +18,7 @@ review-pr --local-diff [--item <ID>]` and `tenantguard review-pr <number> [--ite
    spec's deferred choice. v0 needs only the **changed-files set**, not hunks. Recorded as **ADR-006**
    (a 007 task, mirroring ADR-002/003/004/005). See Research R1.
 2. **Gates reused verbatim**: run the **full 004 gate set over current repo state** via
-   `@tenantguard/gates` `runGates`, then keep findings whose **evidence `path` ∈ changed files**
+   `@aker-build/gates` `runGates`, then keep findings whose **evidence `path` ∈ changed files**
    ("diff-attributable"). 004 is **not** modified — no new fields, no diff-native engine. See R2.
 3. **Verdict off `status`** (no "blocking gate" field exists in 004): any diff-attributable `risk` or
    out-of-scope change → Not Ready; else any diff-attributable `needs_verification` → Needs
@@ -36,15 +36,15 @@ are reviewed (AC-009; constitution §Development Workflow).
 ## Technical Context
 
 **Language/Version**: TypeScript on Node.js LTS (per ADR-001).
-**Primary Dependencies**: `@tenantguard/gates` (`runGates` + `Finding`/`RiskList` types — diff-attributed
-  verbatim); `@tenantguard/queue` (`QueueItem` type + reading `queue.json` for `--item` scope);
-  `@tenantguard/scanner` (read-only `io.ts` for the output write + `isGitRepo`); **Commander** (CLI,
+**Primary Dependencies**: `@aker-build/gates` (`runGates` + `Finding`/`RiskList` types — diff-attributed
+  verbatim); `@aker-build/queue` (`QueueItem` type + reading `queue.json` for `--item` scope);
+  `@aker-build/scanner` (read-only `io.ts` for the output write + `isGitRepo`); **Commander** (CLI,
   ADR-002); **Zod** (validate `review.json`, mirroring 002/004/005). **No diff/patch-parsing library**
   (changed files come from `git diff --name-only`); **no bundled GitHub client** (PR mode uses the user's
   `gh` CLI). A small read-only **git runner** (and a `gh` runner for PR mode) is the only new primitive.
 **Storage**: Reads `queue.json` (read-only, only with `--item`) and invokes read-only `git`/`gh`
   commands. Writes `review.json` + `review.md` to the **designated out-dir outside tracked source**
-  (default `./.tenantguard/`, FR-013).
+  (default `./.aker-build/`, FR-013).
 **Testing**: Vitest. Fixtures = copy-to-tempdir + `git init` repos (003/004 pattern) with seeded diffs;
   the changed-files source and gate run are unit-testable with injected/synthetic inputs.
 **Target Platform**: Local dev machine / CI runner; Node CLI. Local-diff needs no network; PR mode needs
@@ -67,7 +67,7 @@ are reviewed (AC-009; constitution §Development Workflow).
 | Principle | Relevance | Status |
 |-----------|-----------|--------|
 | I. Source Truth First | The review inspects **current** source evidence (the diff, the gates run over current state, `queue.json`); insufficient evidence yields **Needs Verification**, never an unverified pass (FR-007). | ✅ Pass |
-| II. CLI First | Delivered as `tenantguard review-pr`; local-diff runs with no network/credentials (FR-004); PR mode is an additive, separately-degrading surface (FR-006). | ✅ Pass |
+| II. CLI First | Delivered as `aker-build review-pr`; local-diff runs with no network/credentials (FR-004); PR mode is an additive, separately-degrading surface (FR-006). | ✅ Pass |
 | III. Evidence-Based | Every contributing finding carries the gate id + evidence (`path`/`line`); scope violations name the offending file. No verdict without evidence. | ✅ Pass |
 | IV. Spec-Compatible | Reviews any repo's diff; `--item` scope is optional, so no Spec-Kit/queue dependency is forced. | ✅ Pass |
 | V. Agent Safety | The reviewer **verifies** agent/human output against the same gates that scoped the task — the back-half of the safety loop. | ✅ Pass |
@@ -128,15 +128,15 @@ packages/review/             # PR reviewer + verdict engine (created at implemen
     ├── pr-degrade.test.ts             # GitHub unavailable → clear gap, local-diff still works (FR-006)
     └── determinism.test.ts            # same input → byte-identical review.json + md (SC-007)
 
-packages/cli/                 # extend the existing tenantguard CLI (no new package)
-├── src/commands/review.ts    # `tenantguard review-pr [--local-diff|<number>] [--item] [--out] [--stdout] [--format]`
+packages/cli/                 # extend the existing aker-build CLI (no new package)
+├── src/commands/review.ts    # `aker-build review-pr [--local-diff|<number>] [--item] [--out] [--stdout] [--format]`
 └── tests/cli.review.test.ts  # local-diff + PR; exit codes; run-queue-first (with --item); unknown id; gh-unavailable
 ```
 
 **Structure Decision**: A new `packages/review` library (git/gh source + attribution + scope + verdict +
 render) plus a thin new command in the **existing** `packages/cli`. `packages/review` depends on
-`@tenantguard/gates` (the gate run + `Finding` input), `@tenantguard/queue` (the `QueueItem` scope
-input), and `@tenantguard/scanner` (read-only io + `isGitRepo`). A **Zod** schema validates
+`@aker-build/gates` (the gate run + `Finding` input), `@aker-build/queue` (the `QueueItem` scope
+input), and `@aker-build/scanner` (read-only io + `isGitRepo`). A **Zod** schema validates
 `review.json` (a consumed JSON artifact, unlike 006's Markdown-only output). This plan **does not
 create** any of the above; the split is confirmable at `/speckit-tasks`.
 

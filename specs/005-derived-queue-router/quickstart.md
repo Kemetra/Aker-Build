@@ -1,6 +1,6 @@
 # Quickstart: Derived Queue & Router
 
-Planned usage of `tenantguard queue` / `route` once implemented (after plan + tasks review).
+Planned usage of `aker-build queue` / `route` once implemented (after plan + tasks review).
 Illustrative — **no code exists yet**.
 
 ---
@@ -8,17 +8,17 @@ Illustrative — **no code exists yet**.
 ## Full pipeline
 
 ```bash
-tenantguard scan        # → .tenantguard/project-map.json  (003)
-tenantguard gates       # → .tenantguard/risks.json        (004)
-tenantguard queue       # → .tenantguard/queue.json        (005)
-tenantguard route       # → .tenantguard/route.json + prints the chosen next task
+aker-build scan        # → .aker-build/project-map.json  (003)
+aker-build gates       # → .aker-build/risks.json        (004)
+aker-build queue       # → .aker-build/queue.json        (005)
+aker-build route       # → .aker-build/route.json + prints the chosen next task
 ```
 
 ## Inspect
 
 ```bash
-tenantguard queue --stdout | jq '.items[] | {id, status, type, gates}'
-tenantguard route --stdout | jq '.next'
+aker-build queue --stdout | jq '.items[] | {id, status, type, gates}'
+aker-build route --stdout | jq '.next'
 ```
 
 Example `route` stdout:

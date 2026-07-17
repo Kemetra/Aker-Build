@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { validateQueue, validateRouteDecision } from "@tenantguard/queue";
+import { validateQueue, validateRouteDecision } from "@aker-build/queue";
 import { runQueueCommand } from "../src/commands/queue.js";
 import { runRouteCommand } from "../src/commands/route.js";
 
@@ -30,7 +30,7 @@ function repo(opts: { withMap?: boolean; withRisks?: boolean } = {}): { repoRoot
   git("init", "-q");
   git("config", "user.email", "t@t.t");
   git("config", "user.name", "t");
-  const outDir = join(repoRoot, ".tenantguard");
+  const outDir = join(repoRoot, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   if (opts.withMap !== false) writeFileSync(join(outDir, "project-map.json"), JSON.stringify(MAP), "utf8");
   if (opts.withRisks !== false) writeFileSync(join(outDir, "risks.json"), JSON.stringify(RISKS), "utf8");
@@ -43,7 +43,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T027 `tenantguard queue` / `route` commands", () => {
+describe("T027 `aker-build queue` / `route` commands", () => {
   it("queue produces a valid queue.json and exits 0", () => {
     const { repoRoot, outDir } = repo();
     created.push(repoRoot);

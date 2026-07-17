@@ -2,7 +2,7 @@
 
 The shape of the queue deriver's output. Consumed by `route` and by 006 (prompt compiler). The schema
 lives in `packages/queue` (`queueSchema`) and **imports `evidenceSchema`** from
-`@tenantguard/project-map` (FR-003, R3).
+`@aker-build/project-map` (FR-003, R3).
 
 ---
 

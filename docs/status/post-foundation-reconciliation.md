@@ -1,4 +1,4 @@
-# TenantGuard Post-Foundation Reconciliation
+# Aker Build Post-Foundation Reconciliation
 
 Status: Updated by 010 release-readiness implementation
 Date: 2026-06-19
@@ -8,7 +8,7 @@ Purpose: Record the evidence-backed state after foundation + nine specs, identif
 
 Verified from GitHub `main` during planning:
 
-- `README.md` positions TenantGuard as a CLI-first SaaS Build Kernel and states the core flow: scan sources -> project map -> gates -> queue -> route -> prompt -> review.
+- `README.md` positions Aker Build as a CLI-first SaaS Build Kernel and states the core flow: scan sources -> project map -> gates -> queue -> route -> prompt -> review.
 - `README.md` status says the MVP CLI is implemented and dogfooding has landed; GitHub App and hosted dashboard remain deferred.
 - `CLAUDE.md` says implementation is allowed only through reviewed spec, plan, and tasks files.
 - `CLAUDE.md` says the active phase is MVP implementation / dogfooding.
@@ -36,7 +36,7 @@ Verified from GitHub `main` during planning:
 
 ### DRIFT-001: Blueprint spec numbering is stale
 
-`docs/tenantguard_project_blueprint.md` lists:
+`docs/aker-build_project_blueprint.md` lists:
 
 ```text
 009-spec-kit-adapter

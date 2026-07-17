@@ -1,6 +1,6 @@
-import type { Evidence, ProjectMap } from "@tenantguard/project-map";
-import type { RiskList } from "@tenantguard/gates";
-import type { SpecKitContext } from "@tenantguard/spec-kit-adapter";
+import type { Evidence, ProjectMap } from "@aker-build/project-map";
+import type { RiskList } from "@aker-build/gates";
+import type { SpecKitContext } from "@aker-build/spec-kit-adapter";
 
 /** Ordered level used for both priority and risk. */
 export type Level = "low" | "medium" | "high" | "critical";

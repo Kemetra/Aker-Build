@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { Octokit } from "@octokit/rest";
 import { createAppAuth } from "@octokit/auth-app";
-import type { Workspace } from "@tenantguard/github-app";
+import type { Workspace } from "@aker-build/github-app";
 import { loadCredentials, type AppCredentials } from "./config.js";
 import { makeGitHubApi, type OctokitLike } from "./octokit-api.js";
 import { makeGitWorkspace } from "./git-workspace.js";
@@ -65,7 +65,7 @@ export async function handleRequest(
 
 /**
  * Compose the runtime from env credentials + concrete adapters. The installation id is captured here
- * (single-tenant): an operator sets `TENANTGUARD_INSTALLATION_ID`. Credentials never leave this
+ * (single-tenant): an operator sets `AKER_BUILD_INSTALLATION_ID`. Credentials never leave this
  * process; the per-event token is minted transiently by the workspace and discarded.
  */
 export function composeDeps(env: Record<string, string | undefined> = process.env): DispatchDeps {
@@ -97,11 +97,11 @@ export function composeDeps(env: Record<string, string | undefined> = process.en
  * error that NAMES the variable but never echoes the offending value.
  */
 export function readInstallationId(env: Record<string, string | undefined>): number {
-  const raw = env.TENANTGUARD_INSTALLATION_ID;
+  const raw = env.AKER_BUILD_INSTALLATION_ID;
   const id = raw ? Number(raw) : NaN;
   if (!Number.isInteger(id) || id <= 0) {
     // Names the variable; never prints a value (FR-007).
-    throw new Error("missing or invalid required environment variable: TENANTGUARD_INSTALLATION_ID");
+    throw new Error("missing or invalid required environment variable: AKER_BUILD_INSTALLATION_ID");
   }
   return id;
 }

@@ -1,11 +1,11 @@
 {
-  "name": "@tenantguard/cli",
+  "name": "@aker-build/cli",
   "version": "0.0.0",
-  "description": "TenantGuard CLI — scan, gates, queue, route, prompt, and review PRs safely",
+  "description": "Aker Build CLI — scan, gates, queue, route, prompt, and review PRs safely",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "tenantguard": "./src/bin.ts"
+    "aker-build": "./src/bin.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -13,14 +13,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/config": "workspace:*",
-    "@tenantguard/gates": "workspace:*",
-    "@tenantguard/project-map": "workspace:*",
-    "@tenantguard/prompt": "workspace:*",
-    "@tenantguard/queue": "workspace:*",
-    "@tenantguard/report": "workspace:*",
-    "@tenantguard/review": "workspace:*",
-    "@tenantguard/scanner": "workspace:*",
+    "@aker-build/config": "workspace:*",
+    "@aker-build/gates": "workspace:*",
+    "@aker-build/project-map": "workspace:*",
+    "@aker-build/prompt": "workspace:*",
+    "@aker-build/queue": "workspace:*",
+    "@aker-build/report": "workspace:*",
+    "@aker-build/review": "workspace:*",
+    "@aker-build/scanner": "workspace:*",
     "commander": "^12.1.0",
     "yaml": "^2.6.1"
   },

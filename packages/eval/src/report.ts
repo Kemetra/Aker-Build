@@ -87,7 +87,7 @@ export function runBenchmark(
 /** Render the report as human-facing markdown (canonical artifact is the JSON). */
 export function renderMarkdown(report: BenchmarkReport): string {
   const pct = (v: number | null): string => (v === null ? "—" : `${(v * 100).toFixed(0)}%`);
-  const lines: string[] = ["# TenantGuard Benchmark Report", ""];
+  const lines: string[] = ["# Aker Build Benchmark Report", ""];
   lines.push(`Schema version: ${report.schema_version}`, "");
   lines.push("## Per gate × tier", "");
   lines.push("| Gate | Tier | Precision | Recall | TP | FP | FN |");

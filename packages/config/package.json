@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/config",
+  "name": "@aker-build/config",
   "version": "0.0.0",
-  "description": "TenantGuard local config schema and reader",
+  "description": "Aker Build local config schema and reader",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",

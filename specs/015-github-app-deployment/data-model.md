@@ -55,7 +55,7 @@ Constraint: these three are the ONLY GitHub writes the runtime performs (FR-012/
 
 ## Reused 014 shapes (NOT redefined)
 
-- `PullRequestEvent`, `ChecksPayload`, `HandlerDeps`/`RunnerDeps` — consumed verbatim from `@tenantguard/github-app`.
+- `PullRequestEvent`, `ChecksPayload`, `HandlerDeps`/`RunnerDeps` — consumed verbatim from `@aker-build/github-app`.
 - The verdict/findings/annotations come from the existing engine via `handleEvent`; this layer supplies transport only (FR-013).
 
 ## Secret-handling invariant (cross-cutting, Principle VII / FR-006)

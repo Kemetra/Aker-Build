@@ -1,5 +1,5 @@
-import { validate } from "@tenantguard/project-map";
-import { filterPaths, loadConfig } from "@tenantguard/config";
+import { validate } from "@aker-build/project-map";
+import { filterPaths, loadConfig } from "@aker-build/config";
 import type { ScanResult, ScanOptions } from "./types.js";
 import { listFiles, isGitRepo, writeOutput } from "./io.js";
 import { assemble } from "./assemble.js";
@@ -8,7 +8,7 @@ import { detectSecrets } from "./detect/secrets.js";
 /**
  * Read-only scan of a local Git repo → a 002-conforming ProjectMap + run notes.
  * - Strictly read-only on the scanned repo (FR-003).
- * - Validates the assembled map against @tenantguard/project-map before returning (R5).
+ * - Validates the assembled map against @aker-build/project-map before returning (R5).
  * - No network, no credentials (FR-011).
  */
 export function scan(targetPath: string, opts: ScanOptions = {}): ScanResult {

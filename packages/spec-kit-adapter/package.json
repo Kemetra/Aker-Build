@@ -1,7 +1,7 @@
 {
-  "name": "@tenantguard/spec-kit-adapter",
+  "name": "@aker-build/spec-kit-adapter",
   "version": "0.0.0",
-  "description": "Read-only Spec Kit artifact adapter for TenantGuard",
+  "description": "Read-only Spec Kit artifact adapter for Aker Build",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tenantguard/project-map": "workspace:*"
+    "@aker-build/project-map": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

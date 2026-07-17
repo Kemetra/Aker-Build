@@ -1,11 +1,11 @@
-// Public surface for @tenantguard/prompt.
+// Public surface for @aker-build/prompt.
 // Compile a safe, scoped Markdown prompt from a routed queue item (006).
 
 import { compileItem } from "./compile.js";
 import { loadItem, writePrompt } from "./io.js";
 import type { CompileOptions, CompiledPrompt } from "./types.js";
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Compile a safe prompt for queue item `<id>`. Reads queue.json from `out`, looks up the item, and

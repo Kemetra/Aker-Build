@@ -5,5 +5,5 @@ const router: { post: (path: string, handler: Handler) => void } = {
 };
 
 router.post("/sync", () => {
-  // Demo-only worker route; TenantGuard should flag this boundary issue.
+  // Demo-only worker route; Aker Build should flag this boundary issue.
 });

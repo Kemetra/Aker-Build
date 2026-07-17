@@ -29,7 +29,7 @@
 - [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
 
-## TenantGuard-Specific Guardrails
+## Aker Build-Specific Guardrails
 
 - [x] Docs-only — no production / marketing-site / dashboard / App / package / lockfile / Action files
 - [x] CLI-MVP-reviewed hard gate on launch is explicit (no launch before 003–007)

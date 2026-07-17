@@ -1,14 +1,14 @@
-# TenantGuard — Defect Assessment & Uniqueness Fortification
+# Aker Build — Defect Assessment & Uniqueness Fortification
 
 Status: Design, pending review
 Date: 2026-07-16
-Scope: What is defective or too thin today, and what to fortify/add so TenantGuard
+Scope: What is defective or too thin today, and what to fortify/add so Aker Build
 launches as a unique, professional product. This refines (does not replace) the
 locked fortify-then-expand roadmap (`docs/roadmap/2026-06-19-future-phases-fortify-and-expand.md`).
 
 ## The uniqueness thesis
 
-TenantGuard's differentiator is a single compound claim no competitor makes:
+Aker Build's differentiator is a single compound claim no competitor makes:
 
 > Deterministic, evidence-pinned findings (not LLM opinions), calibrated by
 > confidence tier, **proven** by a published benchmark scorecard, feeding a safe
@@ -17,7 +17,7 @@ TenantGuard's differentiator is a single compound claim no competitor makes:
 - vs Semgrep/CodeQL: generic SAST; no agent loop, no queue/prompt compiler, no
   tenant-isolation focus, no published per-tier precision claim.
 - vs CodeRabbit/Greptile: LLM review opinions; non-deterministic, unprovable.
-- vs SaaS boilerplates: they ship code; TenantGuard ships *control*.
+- vs SaaS boilerplates: they ship code; Aker Build ships *control*.
 
 Every leg of that claim exists in the repo today — and every leg is currently
 too thin to carry the claim publicly. That is the defect pattern.
@@ -29,8 +29,8 @@ too thin to carry the claim publicly. That is the defect pattern.
 | D1 | **Not installable.** No npm package; CLI runs via `pnpm dlx tsx packages/cli/src/bin.ts`. A product you cannot `npx` is a prototype to outsiders. | `README.md` ("npm-published binary is a follow-up"), root `package.json` `private: true`, ADR-010 decided but unexecuted | Critical (professionalism) |
 | D2 | **The "prove it" claim is unproven.** Benchmark corpus has 2 cases (`unprotected-admin-route`, `clean-guarded`) covering 1 of the 5 promised failure patterns; `thresholds.json` covers only TG-G4/confirmed. No scorecard is published anywhere user-visible. | `benchmark/cases/` (2 dirs), `benchmark/thresholds.json` (1 gate) vs roadmap P3 promising missing-tenant-filter, destructive-migration, non-idempotent-webhook, leaked-secret cases | Critical (uniqueness) |
 | D3 | **Flagship detector has a structural false-positive.** `data-access.ts` requires the tenant token on the *same line* as the query; multi-line ORM style (Prisma `where: { tenantId }` on the next line) is misclassified `no_tenant_filter`. Same-line myopia also affects G4 route/guard matching. | `packages/scanner/src/detect/data-access.ts:15,37`; `packages/gates/src/gates/g4-security.ts:34-43` | High |
-| D4 | **Framework coverage is Express-shaped.** `SOURCE_EXT` admits py/go/rb but query/route/guard regexes are JS-ORM/Express idioms; Next.js route handlers, NestJS decorators, Django/SQLAlchemy, Go handlers are invisible. Silent non-coverage reads as "TenantGuard found nothing" = false confidence. | `data-access.ts:5-12`, `g4-security.ts:7-14` | High |
-| D5 | **P4 renderer merged but unwired.** `renderChecksPayload` exists; the dogfood workflow still publishes only a run-summary markdown — no Checks run, no inline `file:line` annotations on PRs. The evidence-span payoff is unrealized. | `packages/review/src/checks.ts` vs `.github/workflows/tenantguard.yml:47-54` | Medium |
+| D4 | **Framework coverage is Express-shaped.** `SOURCE_EXT` admits py/go/rb but query/route/guard regexes are JS-ORM/Express idioms; Next.js route handlers, NestJS decorators, Django/SQLAlchemy, Go handlers are invisible. Silent non-coverage reads as "Aker Build found nothing" = false confidence. | `data-access.ts:5-12`, `g4-security.ts:7-14` | High |
+| D5 | **P4 renderer merged but unwired.** `renderChecksPayload` exists; the dogfood workflow still publishes only a run-summary markdown — no Checks run, no inline `file:line` annotations on PRs. The evidence-span payoff is unrealized. | `packages/review/src/checks.ts` vs `.github/workflows/aker-build.yml:47-54` | Medium |
 | D6 | **013 in limbo.** Config path-scope enforcement sits in draft PR #25, unreviewed for coherence with P2's `min_tier` config. Two config semantics risk shipping half-merged. | Branch `013-config-path-scope-enforcement`, PR #25 (draft), memory note | Medium |
 | D7 | **Docs drift.** `CLAUDE.md` still points at 012 as the active feature; P1–P4 merged since. `README` has no scorecard, no positioning against alternatives, no badge. | `CLAUDE.md` (active plan pointer), `README.md` | Low |
 | D8 | **Windows-only smoke script.** `scripts/smoke-first-run.ps1` is the documented first-run path; Linux/macOS users (most of the target audience) get no one-liner. | `README.md` quickstart | Low |
@@ -85,15 +85,15 @@ amend, or explicitly park with a recorded decision. No new code beyond reconcili
   thresholds catch precision drops.
 
 ### W4 — Wire P4 into the dogfood (realize the renderer)
-Add a step to `.github/workflows/tenantguard.yml` that posts the
+Add a step to `.github/workflows/aker-build.yml` that posts the
 `renderChecksPayload` output as a real Checks run (needs `checks: write`),
 report-only semantics unchanged (`neutral` conclusions; only CLI errors fail).
 Inline `file:line` annotations become the visible demo of evidence spans.
 
 ### W5 — Ship professional (distribution + polish)
-- Execute ADR-010: publish `tenantguard` to npm (bin wired, `files` whitelist,
-  provenance), so quickstart becomes `npx tenantguard scan`.
-- Composite GitHub Action (`uses: kemetra/tenantguard-action@v1`, or an
+- Execute ADR-010: publish `aker-build` to npm (bin wired, `files` whitelist,
+  provenance), so quickstart becomes `npx aker-build scan`.
+- Composite GitHub Action (`uses: kemetra/aker-build-action@v1`, or an
   `action.yml` inside this repo per ADR-007) wrapping the
   same chain — the dogfood workflow becomes its first consumer.
 - Docs: fix CLAUDE.md active-plan pointer; README gets scorecard, comparison
@@ -102,9 +102,9 @@ Inline `file:line` annotations become the visible demo of evidence spans.
 
 ### W6 (post-launch, uniqueness amplifier) — Agent-native surface
 Smallest slice of approach C: package `route` + `prompt` + `review-pr` as an MCP
-server / Claude Code skill so agents *consume* TenantGuard's control plane
+server / Claude Code skill so agents *consume* Aker Build's control plane
 directly (agent asks "what's my next safest task + prompt?"). Report-only wall
-holds: TenantGuard still never executes agents. This is the surface no SAST or
+holds: Aker Build still never executes agents. This is the surface no SAST or
 LLM-review competitor can copy without rebuilding the whole kernel. Own spec cycle.
 
 ## Error handling & principles (all workstreams)
@@ -121,7 +121,7 @@ LLM-review competitor can copy without rebuilding the whole kernel. Own spec cyc
    evidence lands), scorecard visible in README.
 2. The multi-line Prisma tenant-filter case passes (D3 dead).
 3. Dogfood PRs show inline Checks annotations (D5 dead).
-4. `npx tenantguard scan` works from a clean machine (D1 dead).
+4. `npx aker-build scan` works from a clean machine (D1 dead).
 5. PR #25 resolved with a recorded decision (D6 dead).
 
 ## Out of scope (unchanged non-goals)

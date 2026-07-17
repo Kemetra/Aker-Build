@@ -1,6 +1,6 @@
-# Contributing to TenantGuard
+# Contributing to Aker Build
 
-TenantGuard is built with its own spec-first workflow. Keep changes scoped, evidence-backed, and local-first.
+Aker Build is built with its own spec-first workflow. Keep changes scoped, evidence-backed, and local-first.
 
 ## Setup
 

@@ -1,4 +1,4 @@
-// Public surface for @tenantguard/eval — the detection-quality benchmark harness.
+// Public surface for @aker-build/eval — the detection-quality benchmark harness.
 export { loadCases, CorpusError } from "./corpus.js";
 export { runCase } from "./run-case.js";
 export { scoreCase, precisionRecall, addCounts, TIERS } from "./metrics.js";

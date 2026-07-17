@@ -1,5 +1,5 @@
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 // A migration file: lives under a migrations dir.
 const MIGRATION_PATH = /(^|\/)migrations?\//i;

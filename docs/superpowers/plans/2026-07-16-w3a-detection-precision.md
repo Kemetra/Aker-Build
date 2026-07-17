@@ -6,7 +6,7 @@
 
 **Architecture:** First slice of spec workstream W3 (`docs/superpowers/specs/2026-07-16-defect-assessment-and-uniqueness-fortification-design.md`). The detector stays a read-only, evidence-emitting, single-file regex scanner — no AST, no new architecture. W3b (framework signature packs + coverage-honesty field) is a separate later plan.
 
-**Tech Stack:** TypeScript, pnpm workspaces, Vitest, existing `@tenantguard/scanner` / `@tenantguard/gates` / `@tenantguard/eval` packages.
+**Tech Stack:** TypeScript, pnpm workspaces, Vitest, existing `@aker-build/scanner` / `@aker-build/gates` / `@aker-build/eval` packages.
 
 ## Design decisions (locked, per approved spec W3 + final-review follow-ups)
 
@@ -14,7 +14,7 @@
 2. **Statement window:** tenant-token search covers the match line plus the next 5 lines (multi-line builder calls like Prisma's `where:` on the following line). Fixed window, no paren balancing — YAGNI.
 3. **Confidence honesty:** same-line tenant token → `tenant_scoped`/`high` (unchanged). Any window-based classification (scoped-via-window OR no-token-in-window) → `medium`, because a 6-line regex window can neither prove presence robustly nor prove absence. `no_tenant_filter` therefore drops from `high` to `medium` — G4's finding stays `suspected`-tier either way (G4 already emits its own `medium` evidence), so no downstream tier change.
 4. **G4 stays at `suspected` for data-access findings.** Upgrading to `confirmed` waits until the receiver-gated detector has a proven FP≈0 record across at least one more eval cycle. Not in this plan.
-5. **Dogfood config:** repo-local `tenantguard.config.json` excludes fixture/benchmark dirs. CONSTRAINT: `matchesPathPattern` (packages/config/src/index.ts:157-160) treats `foo/**` with a LITERAL prefix compare — wildcard prefixes like `packages/*/tests/**` silently match nothing, so every exclude must be a literal dir prefix.
+5. **Dogfood config:** repo-local `aker-build.config.json` excludes fixture/benchmark dirs. CONSTRAINT: `matchesPathPattern` (packages/config/src/index.ts:157-160) treats `foo/**` with a LITERAL prefix compare — wildcard prefixes like `packages/*/tests/**` silently match nothing, so every exclude must be a literal dir prefix.
 
 ## Global Constraints
 
@@ -53,7 +53,7 @@ git commit --no-gpg-sign -m "docs: W3a detection-precision plan"
 - Possibly modify: `packages/scanner/tests/fixtures/saas/**` (only if `p1-integration.test.ts` fails — see Step 5)
 
 **Interfaces:**
-- Consumes: `readFileSafe` from `../io.js`; `Evidence` from `@tenantguard/project-map` (unchanged).
+- Consumes: `readFileSafe` from `../io.js`; `Evidence` from `@aker-build/project-map` (unchanged).
 - Produces: same `detectDataAccess(root, files): Evidence[]` signature; same signals `tenant_scoped`/`no_tenant_filter`; NEW confidence semantics (decision 3). G4 (`packages/gates/src/gates/g4-security.ts`) consumes only `signal`/`path`/`line` — no gate change needed.
 
 - [ ] **Step 1: Update + add tests (failing first)**
@@ -95,7 +95,7 @@ In `packages/scanner/tests/data-access.test.ts`:
 
 - [ ] **Step 2: Run to verify the new tests fail**
 
-Run: `pnpm --filter @tenantguard/scanner test -- data-access`
+Run: `pnpm --filter @aker-build/scanner test -- data-access`
 Expected: FAIL — multi-line case currently yields `no_tenant_filter`; bare-array case currently yields 2 findings; the confidence change fails.
 
 - [ ] **Step 3: Rewrite the detector**
@@ -104,7 +104,7 @@ Replace the constants + loop body in `packages/scanner/src/detect/data-access.ts
 
 ```ts
 import { readFileSafe } from "../io.js";
-import type { Evidence } from "@tenantguard/project-map";
+import type { Evidence } from "@aker-build/project-map";
 
 // Only inspect source files that plausibly contain query code.
 const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
@@ -165,12 +165,12 @@ export function detectDataAccess(root: string, files: string[]): Evidence[] {
 
 - [ ] **Step 4: Run the detector tests**
 
-Run: `pnpm --filter @tenantguard/scanner test -- data-access`
+Run: `pnpm --filter @aker-build/scanner test -- data-access`
 Expected: PASS (all, including the updated confidence expectation).
 
 - [ ] **Step 5: Run the full scanner + gates suites**
 
-Run: `pnpm --filter @tenantguard/scanner test` and `pnpm --filter @tenantguard/gates test`
+Run: `pnpm --filter @aker-build/scanner test` and `pnpm --filter @aker-build/gates test`
 Expected: scanner PASS (if `p1-integration.test.ts` fails on its `data_access` assertions, inspect `packages/scanner/tests/fixtures/saas/` — its query lines may lack a db-ish receiver; fix the FIXTURE by renaming the receiver to `db`/`prisma`, never the gating).
 
 The gates suite WILL fail until you fix its fixture: in `packages/gates/tests/fixtures/data-access/src/db.ts` the tenant-scoped query is on line 6, inside the line-2 query's new 5-line window, so line 2 would be misread as `tenant_scoped`. Replace the fixture with (tenant query moved below the window):
@@ -234,7 +234,7 @@ export function evict(cache: Map<string, string>, key: string) {
 
 ```json
 {
-  "description": "Bare array/Map method calls (users.find, cache.delete) are not DB queries. Ground truth: nothing fires. Hard negative pinning W3a receiver gating — before W3a these were the dominant false-positive class on TenantGuard's own source.",
+  "description": "Bare array/Map method calls (users.find, cache.delete) are not DB queries. Ground truth: nothing fires. Hard negative pinning W3a receiver gating — before W3a these were the dominant false-positive class on Aker Build's own source.",
   "gates_under_test": ["TG-G4"],
   "expected_findings": []
 }
@@ -242,7 +242,7 @@ export function evict(cache: Map<string, string>, key: string) {
 
 - [ ] **Step 2: Run the eval suite and full benchmark**
 
-Run: `pnpm --filter @tenantguard/eval test`
+Run: `pnpm --filter @aker-build/eval test`
 Expected: PASS.
 Run: `pnpm dlx tsx packages/eval/src/bin.ts`
 Expected: exit 0, "All thresholds met."; Cases table has 15 rows; `multiline-tenant-scope` now scores 0 TP / 0 FP / 0 FN; `bare-array-method` 0/0/0; TG-G4 suspected row: 2 TP / 0 FP / 0 FN → precision 100% / recall 100%. If TG-G4 suspected FP is not 0, the detector missed something — debug the detector (Task 1), do not touch expected.json files.
@@ -259,7 +259,7 @@ git commit --no-gpg-sign -m "feat(eval): bare-array-method hard negative — rec
 ### Task 3: Dogfood config — exclude fixture/benchmark dirs + composition test
 
 **Files:**
-- Create: `tenantguard.config.json` (repo root)
+- Create: `aker-build.config.json` (repo root)
 - Create: `packages/gates/tests/config-composition.test.ts`
 
 **Interfaces:**
@@ -268,12 +268,12 @@ git commit --no-gpg-sign -m "feat(eval): bare-array-method hard negative — rec
 
 - [ ] **Step 1: Create the config (LITERAL dir prefixes only — see design decision 5)**
 
-`tenantguard.config.json`:
+`aker-build.config.json`:
 
 ```json
 {
   "version": 1,
-  "project": { "name": "tenantguard", "type": "cli-kernel" },
+  "project": { "name": "aker-build", "type": "cli-kernel" },
   "paths": {
     "exclude": [
       "benchmark/**",
@@ -288,8 +288,8 @@ git commit --no-gpg-sign -m "feat(eval): bare-array-method hard negative — rec
 - [ ] **Step 2: Measure the dogfood effect (before/after evidence for the report)**
 
 ```bash
-git stash push tenantguard.config.json && pnpm dlx tsx packages/cli/src/bin.ts scan --out .tenantguard && pnpm dlx tsx packages/cli/src/bin.ts gates --out .tenantguard && node -e "const r=require('./.tenantguard/risks.json'); console.log('findings WITHOUT config:', r.findings.length)"
-git stash pop && pnpm dlx tsx packages/cli/src/bin.ts scan --out .tenantguard && pnpm dlx tsx packages/cli/src/bin.ts gates --out .tenantguard && node -e "const r=require('./.tenantguard/risks.json'); console.log('findings WITH config:', r.findings.length)"
+git stash push aker-build.config.json && pnpm dlx tsx packages/cli/src/bin.ts scan --out .aker-build && pnpm dlx tsx packages/cli/src/bin.ts gates --out .aker-build && node -e "const r=require('./.aker-build/risks.json'); console.log('findings WITHOUT config:', r.findings.length)"
+git stash pop && pnpm dlx tsx packages/cli/src/bin.ts scan --out .aker-build && pnpm dlx tsx packages/cli/src/bin.ts gates --out .aker-build && node -e "const r=require('./.aker-build/risks.json'); console.log('findings WITH config:', r.findings.length)"
 ```
 
 Expected: the WITH count is meaningfully lower (fixture/benchmark/example findings gone — including the `secret-in-log` fixture's confirmed-critical), and the remaining data-access findings drop sharply versus the pre-W3a count (~39) thanks to Task 1's receiver gating. Record both numbers in your report.
@@ -305,13 +305,13 @@ Assert: (1) no finding references `excluded/admin.ts` in any status; (2) `kept/a
 
 - [ ] **Step 4: Run gates suite**
 
-Run: `pnpm --filter @tenantguard/gates test`
+Run: `pnpm --filter @aker-build/gates test`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tenantguard.config.json packages/gates/tests/config-composition.test.ts
+git add aker-build.config.json packages/gates/tests/config-composition.test.ts
 git commit --no-gpg-sign -m "feat(config): dogfood path excludes + path-scope x min_tier composition test (ADR-012 follow-up)"
 ```
 
@@ -344,7 +344,7 @@ In `specs/013-config-path-scope-enforcement/tasks.md`, mark T014–T016 as done 
 
 - [ ] **Step 4: Final verification**
 
-Run: `pnpm --filter @tenantguard/scanner test && pnpm --filter @tenantguard/gates test && pnpm --filter @tenantguard/eval test && pnpm typecheck && pnpm dlx tsx packages/eval/src/bin.ts`
+Run: `pnpm --filter @aker-build/scanner test && pnpm --filter @aker-build/gates test && pnpm --filter @aker-build/eval test && pnpm typecheck && pnpm dlx tsx packages/eval/src/bin.ts`
 Expected: all PASS; benchmark exit 0; README table matches printed table exactly.
 
 - [ ] **Step 5: Commit**

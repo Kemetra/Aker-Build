@@ -9,7 +9,7 @@ export interface MapCmdOptions {
   errSink?: (line: string) => void;
 }
 
-const DEFAULT_OUT = ".tenantguard";
+const DEFAULT_OUT = ".aker-build";
 
 /**
  * Run the `map` command — show / re-emit the produced Project Map. Returns an exit code.
@@ -22,7 +22,7 @@ export function runMap(opts: MapCmdOptions = {}): number {
 
   const file = resolve(out, "project-map.json");
   if (!existsSync(file)) {
-    printErr(`No produced map at ${file}. Run \`tenantguard scan\` first.`);
+    printErr(`No produced map at ${file}. Run \`aker-build scan\` first.`);
     return 1;
   }
   const map = JSON.parse(readFileSync(file, "utf8"));

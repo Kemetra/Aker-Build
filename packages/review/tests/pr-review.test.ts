@@ -53,7 +53,7 @@ describe("PR review reuses the attribute→verdict core over PR changed files (T
 
   it("keeps excluded PR files visible while ignoring them for attribution", () => {
     const repoRoot = mkdtempSync(join(tmpdir(), "tg-pr-config-"));
-    const configPath = join(repoRoot, "tenantguard.config.json");
+    const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,
       JSON.stringify({ version: 1, paths: { exclude: ["apps/api/routes/admin.ts"] } }),

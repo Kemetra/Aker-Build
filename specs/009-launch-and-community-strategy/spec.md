@@ -3,7 +3,7 @@
 **Feature Branch**: `009-launch-and-community-strategy`
 **Created**: 2026-06-18
 **Status**: Reviewed strategy - execution pending; 010 handles release-readiness and first-run demo prerequisites.
-**Input**: User description: "Create a docs-only specification for TenantGuard's launch and community strategy: launch purpose, target audience, core marketing message, GitHub repo readiness checklist, pre-launch checklist, launch channels, content plan, growth loops, success metrics, launch stages, non-goals, acceptance criteria, and dependencies. Docs only; no production code."
+**Input**: User description: "Create a docs-only specification for Aker Build's launch and community strategy: launch purpose, target audience, core marketing message, GitHub repo readiness checklist, pre-launch checklist, launch channels, content plan, growth loops, success metrics, launch stages, non-goals, acceptance criteria, and dependencies. Docs only; no production code."
 
 **Depends on**: `001-product-foundation` (positioning, MVP scope, non-goals, principles)
 **Blocks**: — (informs later README/demo/community work; does NOT block CLI implementation)
@@ -12,7 +12,7 @@
 
 ## Purpose *(mandatory)*
 
-This spec defines **how TenantGuard reaches its first users and earns its first community**, as a
+This spec defines **how Aker Build reaches its first users and earns its first community**, as a
 written, reviewable strategy — not as marketing code or a website. It exists so that when the CLI
 MVP (specs `003`–`007`) is implemented and reviewed, the team can execute a launch from a prepared,
 agreed plan instead of improvising.
@@ -31,7 +31,7 @@ One-line framing for the launch:
 ## User Scenarios & Testing *(mandatory)*
 
 "Users" here are the **maintainer/team executing the launch** and the **first developers who
-discover TenantGuard**. The "system" is the launch plan plus the public repo it points at.
+discover Aker Build**. The "system" is the launch plan plus the public repo it points at.
 
 ### User Story 1 - Execute a credible launch from a prepared plan (Priority: P1)
 
@@ -64,12 +64,12 @@ without contacting anyone.
 poorly and damage credibility. This is what turns reach into real usage.
 
 **Independent Test**: A new visitor, given only the public repo, can run the documented demo on the
-example repo and produce a `tenantguard-report.md` (or equivalent MVP output) without help.
+example repo and produce a `aker-build-report.md` (or equivalent MVP output) without help.
 
 **Acceptance Scenarios**:
 
 1. **Given** the repo, **When** a newcomer reads the README top section, **Then** they can state in one
-   sentence what TenantGuard does and who it is for.
+   sentence what Aker Build does and who it is for.
 2. **Given** the documented quickstart, **When** a newcomer runs it, **Then** they reach a real CLI
    output (map/risks/queue/prompt/report) in a small, bounded number of steps.
 
@@ -103,7 +103,7 @@ a clear contribution path compounds.
 
 ## Launch Purpose *(mandatory)*
 
-- Establish TenantGuard's public positioning: **PR guardrails for AI-generated SaaS code** —
+- Establish Aker Build's public positioning: **PR guardrails for AI-generated SaaS code** —
   "build SaaS with AI agents without losing architecture control."
 - Convert attention into **activation** (a successful first CLI run) and **durable community**
   (contributors, real-repo usage), not vanity metrics.
@@ -114,7 +114,7 @@ a clear contribution path compounds.
 
 ## Target Audience *(mandatory)*
 
-| Audience | Primary pain TenantGuard speaks to |
+| Audience | Primary pain Aker Build speaks to |
 |----------|------------------------------------|
 | Indie hackers using Claude / Codex / Cursor | AI agents change too many files; no safe task boundaries |
 | SaaS founders | Shipping fast with AI while keeping architecture and tenant isolation intact |
@@ -235,8 +235,8 @@ This mapping is the launch's honesty guarantee: the plan markets only what the k
 Mechanisms where usage produces visibility that drives more usage:
 
 ```text
-- README badge        — a "Guarded by TenantGuard" badge users add to their own repos
-- Shareable report    — tenantguard-report.md is clean, self-explanatory, and link-friendly to share
+- README badge        — a "Guarded by Aker Build" badge users add to their own repos
+- Shareable report    — aker-build-report.md is clean, self-explanatory, and link-friendly to share
 - CI summary footer    — a small, honest attribution line on PR summaries (later, with the Action)
 - Stack templates     — starter configs/templates for popular SaaS stacks lower first-run friction
 ```
@@ -257,7 +257,7 @@ Balanced across attention, activation, and durability — activation/usage weigh
 - demo runs           — activation: people actually ran the CLI
 - issues opened       — engagement and real-world friction surfaced
 - contributors        — community durability (PRs merged from non-core authors)
-- real repo usage     — the strongest signal: TenantGuard run against real, non-example repos
+- real repo usage     — the strongest signal: Aker Build run against real, non-example repos
 ```
 
 A launch that gains stars but no demo runs / issues / real usage is explicitly treated as
@@ -404,7 +404,7 @@ No other artifacts (no website, no scripts, no assets) are produced by this feat
 - **Strategy, not execution.** This spec is a reviewable plan; actually writing posts, recording the
   GIF, building the example repo, or adding the badge are later, separately-scoped tasks — and some
   (example repo, the Action, CI footer) belong to other specs/waves.
-- **Open-source distribution.** TenantGuard launches as an open-source CLI (npm-distributable);
+- **Open-source distribution.** Aker Build launches as an open-source CLI (npm-distributable);
   npm-downloads as a metric assumes public package distribution, decided at plan/ADR layer.
 - **License choice deferred** to the plan/ADR layer; the readiness checklist requires *a* permissive
   OSI license, not a specific one.

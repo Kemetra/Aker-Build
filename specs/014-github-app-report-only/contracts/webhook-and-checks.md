@@ -33,12 +33,12 @@ Two contracts define the App's boundaries: what it **accepts** (inbound webhook)
 
 ```jsonc
 {
-  "name": "TenantGuard",
+  "name": "Aker Build",
   "head_sha": "<headSha>",
   "status": "completed",
   "conclusion": "failure",             // success | neutral | failure  (R4 mapping)
   "output": {
-    "title": "TenantGuard review",
+    "title": "Aker Build review",
     "summary": "<human-readable; lists any findings beyond the 50 annotated>",
     "annotations": [
       {
