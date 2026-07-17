@@ -1,6 +1,6 @@
 # Aker Build
 
-[![CI](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml/badge.svg?branch=main)](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml) [![License: MIT](https://img.shields.io/github/license/Kemetra/Aker-Build)](LICENSE)
+[![CI](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml/badge.svg?branch=main)](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml) [![License: MIT](https://img.shields.io/github/license/Kemetra/Aker-Build)](LICENSE) [![Sponsor](https://img.shields.io/badge/Sponsor-Kemetra-EA4AAA?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/Kemetra)
 
 ![Aker Build logo](docs/aker-logo.png)
 
@@ -107,6 +107,17 @@ aker-build report [path]
 ```
 
 The npm-published `aker-build` binary is a follow-up release task. Until then, local and CI usage runs the TypeScript CLI through `tsx`.
+
+## Support Aker Build
+
+Aker Build is developed in public. Sponsorship helps fund benchmark expansion,
+framework coverage, documentation, contributor support, and the work required to
+turn the CLI kernel into a dependable GitHub-native product.
+
+[**Sponsor Aker Build through GitHub Sponsors**](https://github.com/sponsors/Kemetra)
+
+Sponsorship supports development; it does not buy a gate result, suppress a finding,
+or change the project's published evidence and safety boundaries.
 
 ## Documentation
 
