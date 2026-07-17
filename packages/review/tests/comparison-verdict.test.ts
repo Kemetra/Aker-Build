@@ -58,4 +58,11 @@ describe("comparison-driven verdict", () => {
     };
     expect(decideComparisonVerdict([], scope, false)).toBe("not_ready");
   });
+
+  it("never promotes a confirmed risk to not_ready on an incomplete comparison", () => {
+    expect(decideComparisonVerdict([finding()], noScope, false)).toBe("needs_verification");
+    expect(decideComparisonVerdict([
+      finding({ classification: "changed", change: "worsened" }),
+    ], noScope, false)).toBe("needs_verification");
+  });
 });

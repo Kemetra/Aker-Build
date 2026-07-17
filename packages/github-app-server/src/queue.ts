@@ -93,8 +93,13 @@ export class BoundedJobQueue {
   }
 
   onIdle(): Promise<void> {
-    if (this.#active === 0 && this.#waiting.length === 0) return Promise.resolve();
+    if (this.#isDrained()) return Promise.resolve();
     return new Promise((resolve) => this.#idleWaiters.add(resolve));
+  }
+
+  /** Idle means nothing active, waiting, or reserved — reserved work is in-flight intake not yet committed. */
+  #isDrained(): boolean {
+    return this.#active === 0 && this.#waiting.length === 0 && this.#reserved === 0;
   }
 
   #drain(): void {
@@ -115,7 +120,7 @@ export class BoundedJobQueue {
   }
 
   #notifyIdle(): void {
-    if (this.#active !== 0 || this.#waiting.length !== 0) return;
+    if (!this.#isDrained()) return;
     for (const resolve of this.#idleWaiters) resolve();
     this.#idleWaiters.clear();
   }

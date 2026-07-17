@@ -123,34 +123,49 @@ function addGatesCommand(program: Command): void {
     );
 }
 
-function addQueueCommand(program: Command): void {
-  formattedOutput(pathCommand(program, {
-    name: "queue",
-    description: "Derive queue.json from the project map + gate findings",
-  }), {
-    out: "output directory (holds project-map.json + risks.json; queue.json written here)",
-    stdout: "print queue.json to stdout instead of writing a file",
-    format: "json | yaml",
-    defaultFormat: "json",
-  })
-    .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" }) => {
-      process.exitCode = runQueueCommand(path, opts);
+/**
+ * Shared shape for `queue`/`route`/`report`: a formatted path command whose runner takes (path, opts).
+ * Generic over the runner's options so each command keeps its own `format` union; commander supplies
+ * the parsed options object at runtime.
+ */
+function addFormattedPathCommand<TOptions extends { out: string; stdout?: boolean }>(
+  program: Command,
+  path: PathCommandDefinition,
+  output: FormattedOutputDefinition,
+  run: (targetPath: string, opts: TOptions) => number,
+): void {
+  formattedOutput(pathCommand(program, path), output)
+    .action((targetPath: string, opts: TOptions) => {
+      process.exitCode = run(targetPath, opts);
     });
 }
 
+function addQueueCommand(program: Command): void {
+  addFormattedPathCommand(
+    program,
+    { name: "queue", description: "Derive queue.json from the project map + gate findings" },
+    {
+      out: "output directory (holds project-map.json + risks.json; queue.json written here)",
+      stdout: "print queue.json to stdout instead of writing a file",
+      format: "json | yaml",
+      defaultFormat: "json",
+    },
+    runQueueCommand,
+  );
+}
+
 function addRouteCommand(program: Command): void {
-  formattedOutput(pathCommand(program, {
-    name: "route",
-    description: "Select one next-safest task (with reason) + list blocked items",
-  }), {
-    out: "directory holding queue.json; route.json written here",
-    stdout: "print the full decision JSON to stdout",
-    format: "json | yaml",
-    defaultFormat: "json",
-  })
-    .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" }) => {
-      process.exitCode = runRouteCommand(path, opts);
-    });
+  addFormattedPathCommand(
+    program,
+    { name: "route", description: "Select one next-safest task (with reason) + list blocked items" },
+    {
+      out: "directory holding queue.json; route.json written here",
+      stdout: "print the full decision JSON to stdout",
+      format: "json | yaml",
+      defaultFormat: "json",
+    },
+    runRouteCommand,
+  );
 }
 
 function addPromptCommand(program: Command): void {
@@ -192,16 +207,15 @@ function addReviewCommand(program: Command): void {
 }
 
 function addReportCommand(program: Command): void {
-  formattedOutput(pathCommand(program, {
-    name: "report",
-    description: "Summarize produced Aker Build artifacts into aker-build-report.json and Markdown",
-  }), {
-    out: "directory holding produced artifacts; report files written here",
-    stdout: "print the report instead of writing files",
-    format: "json | yaml | md",
-    defaultFormat: "json",
-  })
-    .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" | "md" }) => {
-      process.exitCode = runReportCommand(path, opts);
-    });
+  addFormattedPathCommand(
+    program,
+    { name: "report", description: "Summarize produced Aker Build artifacts into aker-build-report.json and Markdown" },
+    {
+      out: "directory holding produced artifacts; report files written here",
+      stdout: "print the report instead of writing files",
+      format: "json | yaml | md",
+      defaultFormat: "json",
+    },
+    runReportCommand,
+  );
 }

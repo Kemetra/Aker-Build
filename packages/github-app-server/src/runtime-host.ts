@@ -126,7 +126,25 @@ async function routeWebhook(req: IncomingMessage, res: ServerResponse, path: str
   const result = await acceptWebhook(req, runtime);
   recordIntakeResult(result.reason, runtime);
   res.writeHead(result.status, { "content-type": "application/json" });
-  res.end(JSON.stringify({ ok: result.status < 400, status: result.reason }), () => result.afterResponse?.());
+  activateOnceSettled(res, result.afterResponse);
+  res.end(JSON.stringify({ ok: result.status < 400, status: result.reason }));
+}
+
+/**
+ * An accepted delivery's queue reservation is already committed; the job must activate exactly once
+ * regardless of how the response settles. Relying solely on `res.end`'s callback misses the case
+ * where the client/socket closes before that callback fires, leaving the job stuck counting against
+ * queue capacity. `close` fires in both the normal-finish and premature-disconnect cases, so listening
+ * on it alone (guarded to run once) covers both without double-activating.
+ */
+function activateOnceSettled(res: ServerResponse, afterResponse: (() => void) | undefined): void {
+  if (!afterResponse) return;
+  let done = false;
+  res.once("close", () => {
+    if (done) return;
+    done = true;
+    afterResponse();
+  });
 }
 
 async function acceptWebhook(req: IncomingMessage, runtime: RuntimeService) {

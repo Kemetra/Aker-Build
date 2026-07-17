@@ -115,11 +115,15 @@ function assertCommandBoundary(git: ReturnType<typeof recordingGit>): void {
 
 function assertFetchAuthentication(git: ReturnType<typeof recordingGit>): void {
   const fetch = git.calls.find((call) => call.command.kind === "fetch");
-  expect(fetch?.options?.timeoutMs).toBe(3210);
-  expect(fetch?.options?.env?.GIT_CONFIG_COUNT).toBe("1");
-  expect(fetch?.options?.env?.GIT_CONFIG_KEY_0).toBe("http.extraheader");
-  expect(fetch?.options?.env?.GIT_CONFIG_VALUE_0).not.toContain(TOKEN);
-  expect(fetch?.options?.env?.GIT_CONFIG_VALUE_0).toContain("AUTHORIZATION: basic ");
+  const options = fetch?.options;
+  const env = options?.env;
+  expect(options?.timeoutMs).toBe(3210);
+  expect(env).toBeDefined();
+  const auth = env!;
+  expect(auth.GIT_CONFIG_COUNT).toBe("1");
+  expect(auth.GIT_CONFIG_KEY_0).toBe("http.extraheader");
+  expect(auth.GIT_CONFIG_VALUE_0).not.toContain(TOKEN);
+  expect(auth.GIT_CONFIG_VALUE_0).toContain("AUTHORIZATION: basic ");
 }
 
 function commandText(command: GitCommand): string {

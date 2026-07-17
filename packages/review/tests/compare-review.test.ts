@@ -94,4 +94,21 @@ describe("shared base/head review engine", () => {
     expect(report.comparison.complete).toBe(false);
     expect(report.comparison.incomplete_reasons).toEqual(["diff_unavailable"]);
   });
+
+  it("excludes not_applicable gate results from comparison counts and findings", () => {
+    const notApplicable: Finding = {
+      gate_id: "TG-G6",
+      status: "not_applicable",
+      severity: null,
+      evidence: [{ type: "line", path: "access.ts", line: 1, signal: "no billing surface", confidence: "high" }],
+    };
+    const { base, head } = trees("same\n", "same\n");
+    const report = compareReview(input(base, head), {
+      analyze: () => [notApplicable],
+    });
+
+    expect(report.verdict).toBe("ready");
+    expect(report.findings).toEqual([]);
+    expect(report.comparison.counts).toEqual({ new: 0, existing: 0, resolved: 0, changed: 0, unattributed: 0 });
+  });
 });

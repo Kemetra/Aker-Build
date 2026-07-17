@@ -32,17 +32,17 @@ export class RuntimeConfigError extends Error {
 export function loadRuntimeConfig(env: Record<string, string | undefined> = process.env): RuntimeConfig {
   return {
     host: loadHost(env),
-    port: integer(env, "PORT", 3000, 1, 65_535),
-    maxBodyBytes: integer(env, "AKER_BUILD_MAX_BODY_BYTES", 5 * 1024 * 1024, 64 * 1024, 10 * 1024 * 1024),
-    workerConcurrency: integer(env, "AKER_BUILD_WORKER_CONCURRENCY", 2, 1, 16),
-    maxWaitingJobs: integer(env, "AKER_BUILD_MAX_WAITING_JOBS", 32, 1, 512),
-    checkStartTimeoutMs: integer(env, "AKER_BUILD_CHECK_START_TIMEOUT_MS", 5_000, 1_000, 8_000),
-    jobTimeoutMs: integer(env, "AKER_BUILD_JOB_TIMEOUT_MS", 120_000, 10_000, 600_000),
-    gitTimeoutMs: integer(env, "AKER_BUILD_GIT_TIMEOUT_MS", 60_000, 5_000, 300_000),
+    port: integer(env, "PORT", { fallback: 3000, min: 1, max: 65_535 }),
+    maxBodyBytes: integer(env, "AKER_BUILD_MAX_BODY_BYTES", { fallback: 5 * 1024 * 1024, min: 64 * 1024, max: 10 * 1024 * 1024 }),
+    workerConcurrency: integer(env, "AKER_BUILD_WORKER_CONCURRENCY", { fallback: 2, min: 1, max: 16 }),
+    maxWaitingJobs: integer(env, "AKER_BUILD_MAX_WAITING_JOBS", { fallback: 32, min: 1, max: 512 }),
+    checkStartTimeoutMs: integer(env, "AKER_BUILD_CHECK_START_TIMEOUT_MS", { fallback: 5_000, min: 1_000, max: 8_000 }),
+    jobTimeoutMs: integer(env, "AKER_BUILD_JOB_TIMEOUT_MS", { fallback: 120_000, min: 10_000, max: 600_000 }),
+    gitTimeoutMs: integer(env, "AKER_BUILD_GIT_TIMEOUT_MS", { fallback: 60_000, min: 5_000, max: 300_000 }),
     scanBudget: loadScanBudget(env),
-    staleWorkspaceAgeMs: integer(env, "AKER_BUILD_STALE_WORKSPACE_AGE_MS", 15 * 60_000, 60_000, 24 * 60 * 60_000),
-    deliveryTtlMs: integer(env, "AKER_BUILD_DELIVERY_TTL_MS", 15 * 60_000, 60_000, 24 * 60 * 60_000),
-    deliveryCacheEntries: integer(env, "AKER_BUILD_DELIVERY_CACHE_ENTRIES", 4096, 64, 10_000),
+    staleWorkspaceAgeMs: integer(env, "AKER_BUILD_STALE_WORKSPACE_AGE_MS", { fallback: 15 * 60_000, min: 60_000, max: 24 * 60 * 60_000 }),
+    deliveryTtlMs: integer(env, "AKER_BUILD_DELIVERY_TTL_MS", { fallback: 15 * 60_000, min: 60_000, max: 24 * 60 * 60_000 }),
+    deliveryCacheEntries: integer(env, "AKER_BUILD_DELIVERY_CACHE_ENTRIES", { fallback: 4096, min: 64, max: 10_000 }),
     tmpRoot: loadTmpRoot(env),
     ...loadHttpTimeouts(env),
   };
@@ -56,9 +56,9 @@ function loadHost(env: Record<string, string | undefined>): string {
 
 function loadScanBudget(env: Record<string, string | undefined>): ScanBudget {
   return {
-    maxFiles: integer(env, "AKER_BUILD_SCAN_MAX_FILES", 50_000, 100, 250_000),
-    maxFileBytes: integer(env, "AKER_BUILD_SCAN_MAX_FILE_BYTES", 2 * 1024 * 1024, 64 * 1024, 10 * 1024 * 1024),
-    maxTotalBytes: integer(env, "AKER_BUILD_SCAN_MAX_TOTAL_BYTES", 250 * 1024 * 1024, 1024 * 1024, 2 * 1024 * 1024 * 1024),
+    maxFiles: integer(env, "AKER_BUILD_SCAN_MAX_FILES", { fallback: 50_000, min: 100, max: 250_000 }),
+    maxFileBytes: integer(env, "AKER_BUILD_SCAN_MAX_FILE_BYTES", { fallback: 2 * 1024 * 1024, min: 64 * 1024, max: 10 * 1024 * 1024 }),
+    maxTotalBytes: integer(env, "AKER_BUILD_SCAN_MAX_TOTAL_BYTES", { fallback: 250 * 1024 * 1024, min: 1024 * 1024, max: 2 * 1024 * 1024 * 1024 }),
   };
 }
 
@@ -70,26 +70,30 @@ function loadTmpRoot(env: Record<string, string | undefined>): string {
 
 function loadHttpTimeouts(env: Record<string, string | undefined>): Pick<RuntimeConfig, "requestTimeoutMs" | "headersTimeoutMs" | "keepAliveTimeoutMs" | "socketTimeoutMs"> {
   return {
-    requestTimeoutMs: integer(env, "AKER_BUILD_REQUEST_TIMEOUT_MS", 10_000, 1_000, 30_000),
-    headersTimeoutMs: integer(env, "AKER_BUILD_HEADERS_TIMEOUT_MS", 5_000, 1_000, 15_000),
-    keepAliveTimeoutMs: integer(env, "AKER_BUILD_KEEP_ALIVE_TIMEOUT_MS", 5_000, 1_000, 30_000),
-    socketTimeoutMs: integer(env, "AKER_BUILD_SOCKET_TIMEOUT_MS", 15_000, 1_000, 60_000),
+    requestTimeoutMs: integer(env, "AKER_BUILD_REQUEST_TIMEOUT_MS", { fallback: 10_000, min: 1_000, max: 30_000 }),
+    headersTimeoutMs: integer(env, "AKER_BUILD_HEADERS_TIMEOUT_MS", { fallback: 5_000, min: 1_000, max: 15_000 }),
+    keepAliveTimeoutMs: integer(env, "AKER_BUILD_KEEP_ALIVE_TIMEOUT_MS", { fallback: 5_000, min: 1_000, max: 30_000 }),
+    socketTimeoutMs: integer(env, "AKER_BUILD_SOCKET_TIMEOUT_MS", { fallback: 15_000, min: 1_000, max: 60_000 }),
   };
+}
+
+interface IntegerBounds {
+  fallback: number;
+  min: number;
+  max: number;
 }
 
 function integer(
   env: Record<string, string | undefined>,
   name: string,
-  fallback: number,
-  min: number,
-  max: number,
+  bounds: IntegerBounds,
 ): number {
   const raw = env[name];
-  if (raw === undefined) return fallback;
+  if (raw === undefined) return bounds.fallback;
   if (!/^[0-9]+$/u.test(raw)) throw new RuntimeConfigError(name);
   const value = Number(raw);
   assertSafeInteger(value, name);
-  assertInRange(value, min, max, name);
+  assertInRange(value, bounds.min, bounds.max, name);
   return value;
 }
 

@@ -135,6 +135,16 @@ describe("ForkWorkerExecutor", () => {
     }
   });
 
+  it("neutralizes the check instead of crashing when the child emits an error event", async () => {
+    const child = new FakeChild();
+    const neutral = vi.fn(async () => {});
+    const executor = new ForkWorkerExecutor({ spawn: () => child, timeoutMs: 100, completeNeutral: neutral });
+    const running = executor.execute(job);
+    child.emit("error", new Error("spawn EAGAIN"));
+    await expect(running).resolves.toMatchObject({ code: "worker_crashed" });
+    expect(neutral).toHaveBeenCalledWith(job, "worker_crashed");
+  });
+
   it("terminateAll kills active children and marks them as shutdown", async () => {
     const child = new FakeChild();
     const neutral = vi.fn(async () => {});

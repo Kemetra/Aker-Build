@@ -142,7 +142,7 @@ async function populateCheckout(
 ): Promise<void> {
   initializeRepository(checkout, deps, timeoutMs);
   const token = await deps.authToken();
-  fetchHead(checkout, identity, token, deps, timeoutMs);
+  fetchHead(checkout, { ...identity, token }, deps, timeoutMs);
   checkoutFetchHead(checkout, deps, timeoutMs);
 }
 
@@ -153,14 +153,13 @@ function initializeRepository(checkout: CheckoutWorkspace, deps: GitWorkspaceDep
 
 function fetchHead(
   checkout: CheckoutWorkspace,
-  identity: { owner: string; repo: string; headSha: string },
-  token: string,
+  request: { owner: string; repo: string; headSha: string; token: string },
   deps: GitWorkspaceDeps,
   timeoutMs: number,
 ): void {
-  const remoteUrl = deps.remoteUrl?.(identity.owner, identity.repo) ?? `https://github.com/${identity.owner}/${identity.repo}.git`;
-  const result = deps.git.run({ kind: "fetch", remoteUrl, ref: identity.headSha }, checkout.repoRoot, {
-    env: authorizationEnvironment(token),
+  const remoteUrl = deps.remoteUrl?.(request.owner, request.repo) ?? `https://github.com/${request.owner}/${request.repo}.git`;
+  const result = deps.git.run({ kind: "fetch", remoteUrl, ref: request.headSha }, checkout.repoRoot, {
+    env: authorizationEnvironment(request.token),
     timeoutMs,
   });
   if (result.code !== 0) throw new WorkspaceError("git fetch failed for the PR head ref");
@@ -287,27 +286,36 @@ function readMarker(wrapper: string): Marker {
   const stat = lstatSync(markerPath);
   if (!stat.isFile() || stat.isSymbolicLink()) throw new WorkspaceDisposalError("workspace marker is invalid");
   const value = JSON.parse(readFileSync(markerPath, "utf8")) as Partial<Marker>;
-  if (
-    value.formatVersion !== 1 ||
-    typeof value.createdAt !== "string" ||
-    typeof value.nonce !== "string" ||
-    !/^[0-9a-f]{32}$/u.test(value.nonce)
-  ) {
-    throw new WorkspaceDisposalError("workspace marker is invalid");
-  }
-  return value as Marker;
+  if (!isValidMarker(value)) throw new WorkspaceDisposalError("workspace marker is invalid");
+  return value;
+}
+
+function isValidMarker(value: Partial<Marker>): value is Marker {
+  return (
+    value.formatVersion === 1 &&
+    typeof value.createdAt === "string" &&
+    typeof value.nonce === "string" &&
+    /^[0-9a-f]{32}$/u.test(value.nonce)
+  );
 }
 
 function validateOwnedWrapper(wrapper: string, root: string, nonce: string): void {
+  const resolved = resolveOwnedWrapperPath(wrapper, root);
+  const marker = readMarker(resolved);
+  if (marker.nonce !== nonce) throw new WorkspaceDisposalError("workspace marker does not match");
+}
+
+function resolveOwnedWrapperPath(wrapper: string, root: string): string {
   const stat = lstatSync(wrapper);
   if (!stat.isDirectory() || stat.isSymbolicLink()) throw new WorkspaceDisposalError("workspace wrapper is invalid");
   const resolved = realpathSync(wrapper);
   if (!isContained(root, resolved)) throw new WorkspaceDisposalError("workspace is outside the managed root");
-  if (dirname(resolved) !== root || !resolved.startsWith(join(root, WORKSPACE_PREFIX))) {
-    throw new WorkspaceDisposalError("workspace wrapper is invalid");
-  }
-  const marker = readMarker(resolved);
-  if (marker.nonce !== nonce) throw new WorkspaceDisposalError("workspace marker does not match");
+  if (!isDirectWorkspaceChild(resolved, root)) throw new WorkspaceDisposalError("workspace wrapper is invalid");
+  return resolved;
+}
+
+function isDirectWorkspaceChild(resolved: string, root: string): boolean {
+  return dirname(resolved) === root && resolved.startsWith(join(root, WORKSPACE_PREFIX));
 }
 
 function removeOwnedWrapper(wrapper: string, root: string, nonce: string): void {

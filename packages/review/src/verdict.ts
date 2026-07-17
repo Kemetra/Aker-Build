@@ -51,13 +51,17 @@ export function decideComparisonVerdict(
   const confirmedRisk = active.some(
     (finding) => finding.status === "risk" && confidenceTier(finding) === "confirmed",
   );
-  if (confirmedRisk) return "not_ready";
-
   const uncertainFinding = active.some((finding) =>
     finding.status === "risk" || finding.status === "needs_verification",
   );
   const unattributed = findings.some((finding) => finding.classification === "unattributed");
-  if (!comparisonComplete || unattributed || uncertainFinding) return "needs_verification";
+
+  // Incompleteness always forces needs_verification (never ready) — a confirmed risk found on an
+  // incomplete comparison may be an artifact of the missing base/head/diff data, so only a complete
+  // comparison may promote it to not_ready. Scope violations are the sole exception (handled above).
+  if (!comparisonComplete) return "needs_verification";
+  if (confirmedRisk) return "not_ready";
+  if (unattributed || uncertainFinding) return "needs_verification";
 
   return "ready";
 }

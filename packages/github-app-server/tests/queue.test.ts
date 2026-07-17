@@ -74,4 +74,19 @@ describe("BoundedJobQueue", () => {
     reservation!.release();
     expect(queue.reserve()).not.toBeNull();
   });
+
+  it("does not report idle while a reservation is held open, uncommitted", async () => {
+    const queue = new BoundedJobQueue({ concurrency: 1, maxWaiting: 0, execute: async () => {} });
+    const reservation = queue.reserve();
+    expect(reservation).not.toBeNull();
+
+    let idle = false;
+    void queue.onIdle().then(() => { idle = true; });
+    await Promise.resolve();
+    expect(idle).toBe(false);
+
+    reservation!.release();
+    await queue.onIdle();
+    expect(idle).toBe(true);
+  });
 });

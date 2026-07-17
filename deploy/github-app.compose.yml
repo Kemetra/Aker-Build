@@ -19,6 +19,11 @@ services:
       AKER_BUILD_INSTALLATION_ID: "${AKER_BUILD_INSTALLATION_ID:?required}"
     volumes:
       - aker-build-tmp:/var/lib/aker-build/tmp
+      # Review snapshot/analysis directories are created under the OS default tmpdir (/tmp), not
+      # AKER_BUILD_TMP_ROOT. The root filesystem above is read-only, so /tmp needs its own writable
+      # tmpfs or every review worker fails on snapshot creation.
+      - type: tmpfs
+        target: /tmp
 
 volumes:
   aker-build-tmp:

@@ -80,13 +80,13 @@ export function compareReview(
   let headFindings: readonly Finding[] = [];
   try {
     try {
-      baseFindings = analyze(input.baseRoot, join(analysisRoot, "base"), input.configPath);
+      baseFindings = applicableFindings(analyze(input.baseRoot, join(analysisRoot, "base"), input.configPath));
     } catch (error) {
       if (isScanBudgetError(error)) throw error;
       reasons.push("base_unavailable");
     }
     try {
-      headFindings = analyze(input.headRoot, join(analysisRoot, "head"), input.configPath);
+      headFindings = applicableFindings(analyze(input.headRoot, join(analysisRoot, "head"), input.configPath));
     } catch (error) {
       if (isScanBudgetError(error)) throw error;
       reasons.push("head_unavailable");
@@ -168,6 +168,11 @@ function analyzeTree(treeRoot: string, analysisOut: string, configPath?: string)
   mkdirSync(join(treeRoot, ".git"), { recursive: true });
   scanToFile(treeRoot, analysisOut, { configPath });
   return runGates(treeRoot, { out: analysisOut, configPath }).risks.findings;
+}
+
+/** Gates with no relevant surface report `not_applicable`; only risk/needs_verification contribute. */
+function applicableFindings(findings: readonly Finding[]): readonly Finding[] {
+  return findings.filter((finding) => finding.status !== "not_applicable");
 }
 
 function countClassifications(

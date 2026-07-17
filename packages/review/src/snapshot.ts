@@ -77,9 +77,9 @@ export function createCheckoutSnapshots(request: CheckoutSnapshotRequest): Snaps
   const root = mkdtempSync(join(tmpdir(), SNAPSHOT_PREFIX));
   const dispose = ownedDisposer(root);
   const refs = resolveCheckoutRefs(request);
-  if (refs.reason) return failure(root, dispose, refs.base, refs.head, refs.reason);
+  if (refs.reason) return failure(root, dispose, { base: refs.base, head: refs.head }, refs.reason);
   const extracted = materializeCheckoutSnapshots({ ...request, refs, root });
-  if (extracted.reason) return failure(root, dispose, refs.base, refs.head, extracted.reason);
+  if (extracted.reason) return failure(root, dispose, { base: refs.base, head: refs.head }, extracted.reason);
   return {
     complete: true,
     root,
@@ -124,8 +124,8 @@ function materializeCheckoutSnapshots(input: CheckoutSnapshotRequest & { refs: C
   const headRoot = join(input.root, "head");
   mkdirSync(baseRoot);
   mkdirSync(headRoot);
-  if (!archiveCommit(input.baseRepoRoot, input.refs.baseSha, baseRoot, input.root, "base.tar")) return { reason: "base_unavailable" };
-  if (!archiveCommit(input.headRepoRoot, input.refs.headSha, headRoot, input.root, "head.tar")) return { reason: "head_unavailable" };
+  if (!archiveCommit(input.baseRepoRoot, input.refs.baseSha, baseRoot, { ownedRoot: input.root, archiveName: "base.tar" })) return { reason: "base_unavailable" };
+  if (!archiveCommit(input.headRepoRoot, input.refs.headSha, headRoot, { ownedRoot: input.root, archiveName: "head.tar" })) return { reason: "head_unavailable" };
   const extractedIssue = inspectExtractedTree(baseRoot) ?? inspectExtractedTree(headRoot);
   return extractedIssue ? { reason: extractedIssue } : { baseRoot, headRoot };
 }
@@ -139,15 +139,15 @@ function createSnapshots(request: SnapshotRequest): SnapshotPairResult {
     sha: null,
   };
   const refs = resolveSnapshotRefs({ request, unresolvedBase, unresolvedHead });
-  if (refs.reason) return failure(root, dispose, refs.base, refs.head, refs.reason);
+  if (refs.reason) return failure(root, dispose, { base: refs.base, head: refs.head }, refs.reason);
   const extracted = materializeSnapshots({ repoRoot: request.repoRoot, refs, root });
-  if (extracted.reason) return failure(root, dispose, refs.base, refs.head, extracted.reason);
+  if (extracted.reason) return failure(root, dispose, { base: refs.base, head: refs.head }, extracted.reason);
 
   if (request.overlayWorkingTree) {
     const overlayIssue = overlayWorkingChanges(request.repoRoot, extracted.headRoot);
-    if (overlayIssue) return failure(root, dispose, refs.base, refs.head, overlayIssue);
+    if (overlayIssue) return failure(root, dispose, { base: refs.base, head: refs.head }, overlayIssue);
     const finalIssue = inspectExtractedTree(extracted.headRoot);
-    if (finalIssue) return failure(root, dispose, refs.base, refs.head, finalIssue);
+    if (finalIssue) return failure(root, dispose, { base: refs.base, head: refs.head }, finalIssue);
   }
 
   return {
@@ -192,8 +192,8 @@ function materializeSnapshots(input: { repoRoot: string; refs: SnapshotRefs; roo
   const headRoot = join(input.root, "head");
   mkdirSync(baseRoot);
   mkdirSync(headRoot);
-  if (!archiveCommit(input.repoRoot, input.refs.baseSha, baseRoot, input.root, "base.tar")) return { reason: "base_unavailable" };
-  if (!archiveCommit(input.repoRoot, input.refs.headSha, headRoot, input.root, "head.tar")) return { reason: "head_unavailable" };
+  if (!archiveCommit(input.repoRoot, input.refs.baseSha, baseRoot, { ownedRoot: input.root, archiveName: "base.tar" })) return { reason: "base_unavailable" };
+  if (!archiveCommit(input.repoRoot, input.refs.headSha, headRoot, { ownedRoot: input.root, archiveName: "head.tar" })) return { reason: "head_unavailable" };
   const extractedIssue = inspectExtractedTree(baseRoot) ?? inspectExtractedTree(headRoot);
   return extractedIssue ? { reason: extractedIssue } : { baseRoot, headRoot };
 }
@@ -233,10 +233,9 @@ function archiveCommit(
   repoRoot: string,
   sha: string,
   destination: string,
-  ownedRoot: string,
-  archiveName: string,
+  archiveTarget: { ownedRoot: string; archiveName: string },
 ): boolean {
-  const archive = join(ownedRoot, archiveName);
+  const archive = join(archiveTarget.ownedRoot, archiveTarget.archiveName);
   try {
     execFileSync("git", ["archive", "--format=tar", `--output=${archive}`, sha, "--"], {
       cwd: repoRoot,
@@ -352,8 +351,7 @@ function gitOutput(repoRoot: string, args: readonly string[]): string {
 function failure(
   root: string,
   dispose: () => void,
-  base: ComparisonRef,
-  head: ComparisonRef,
+  refs: { base: ComparisonRef; head: ComparisonRef },
   reason: ComparisonIncompleteReason,
 ): SnapshotPairFailure {
   return {
@@ -361,8 +359,8 @@ function failure(
     root,
     baseRoot: null,
     headRoot: null,
-    base,
-    head,
+    base: refs.base,
+    head: refs.head,
     incompleteReasons: [reason],
     dispose,
   };

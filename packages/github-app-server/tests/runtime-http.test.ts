@@ -7,8 +7,13 @@ import { startRuntimeServer, type RuntimeServer } from "../src/runtime-host.js";
 import type { IntakeController } from "../src/intake.js";
 
 const servers: RuntimeServer[] = [];
+const heldReservations: Array<{ release(): void }> = [];
 
 afterEach(async () => {
+  // A queue held at capacity (ready: false) must release its reservations before shutdown, or
+  // onIdle() — which now correctly waits for #reserved to drain (Codex P2 fix) — blocks for the
+  // full jobTimeoutMs instead of resolving instantly, exceeding vitest's hook timeout.
+  heldReservations.splice(0).forEach((reservation) => reservation.release());
   await Promise.all(servers.splice(0).map((server) => server.shutdown()));
 });
 
@@ -18,6 +23,7 @@ function runtime(over: { ready?: boolean; accept?: IntakeController["accept"] } 
   if (over.ready === false) {
     const held = [queue.reserve(), queue.reserve()];
     expect(held.every(Boolean)).toBe(true);
+    heldReservations.push(...held.filter((reservation) => reservation !== null));
   }
   const executor = { terminateAll: vi.fn(async () => {}) };
   const metrics = new RuntimeMetrics();

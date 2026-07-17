@@ -31,6 +31,7 @@ export interface WorkerChild {
   kill(signal?: NodeJS.Signals): boolean;
   once(event: "message", listener: (message: unknown) => void): this;
   once(event: "exit", listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
+  once(event: "error", listener: (error: Error) => void): this;
   removeAllListeners(event?: string): this;
 }
 
@@ -62,64 +63,56 @@ export class ForkWorkerExecutor {
       return this.#neutralizeWithoutChild(job, "worker_crashed");
     }
     return new Promise((resolve) => {
-      let settled = false;
+      const finish = this.#makeFinisher(job, child, resolve);
       const timer = setTimeout(() => {
         child.kill("SIGKILL");
         void finish("worker_timeout");
       }, this.#timeoutMs);
+      const settle = wrapWithTimerClear(finish, timer);
 
-      const finish = async (reason: IncompleteReason | null, message?: WorkerResultMessage): Promise<void> => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        child.removeAllListeners();
-        this.#active.delete(child);
-        if (reason) {
-          try {
-            await this.#completeNeutral(job, reason);
-          } catch {
-            // A failed final Checks update cannot be made safe by exposing or retrying arbitrary data.
-          }
-        }
-        resolve({
-          code: reason ?? message?.incompleteReason ??
-            (message?.code === "worker_failed" || !message ? "worker_crashed" : message.code),
-          usage: message?.usage ?? EMPTY_USAGE,
-          githubRetries: message?.githubRetries ?? 0,
-        });
-      };
-
-      this.#active.set(child, { finish });
-      child.once("message", (message) => {
-        if (isWorkerResult(message)) {
-          void finish(message.code === "worker_failed" ? "worker_crashed" : null, message);
-        } else {
-          child.kill("SIGKILL");
-          void finish("worker_crashed");
-        }
-      });
-      child.once("exit", () => void finish("worker_crashed"));
-      try {
-        if (!child.send({ type: "run", job })) {
-          child.kill("SIGKILL");
-          void finish("worker_crashed");
-        }
-      } catch {
-        child.kill("SIGKILL");
-        void finish("worker_crashed");
-      }
+      this.#active.set(child, { finish: settle });
+      wireChildEvents(child, settle);
+      this.#dispatch(child, job, settle);
     });
+  }
+
+  #makeFinisher(
+    job: DeliveryJob,
+    child: WorkerChild,
+    resolve: (result: WorkerExecutionResult) => void,
+  ): (reason: IncompleteReason | null, message?: WorkerResultMessage) => Promise<void> {
+    let settled = false;
+    return async (reason, message) => {
+      if (settled) return;
+      settled = true;
+      child.removeAllListeners();
+      this.#active.delete(child);
+      if (reason) await this.#neutralize(job, reason);
+      resolve(executionResult(reason, message));
+    };
+  }
+
+  async #neutralize(job: DeliveryJob, reason: IncompleteReason): Promise<void> {
+    try {
+      await this.#completeNeutral(job, reason);
+    } catch {
+      // A failed final Checks update cannot be made safe by exposing or retrying arbitrary data.
+    }
+  }
+
+  #dispatch(child: WorkerChild, job: DeliveryJob, finish: Finish): void {
+    try {
+      if (!child.send({ type: "run", job })) killAndCrash(child, finish);
+    } catch {
+      killAndCrash(child, finish);
+    }
   }
 
   async #neutralizeWithoutChild(
     job: DeliveryJob,
     reason: IncompleteReason,
   ): Promise<WorkerExecutionResult> {
-    try {
-      await this.#completeNeutral(job, reason);
-    } catch {
-      // Preserve the fixed result even when GitHub is unavailable; never surface arbitrary details.
-    }
+    await this.#neutralize(job, reason);
     return { code: reason, usage: EMPTY_USAGE, githubRetries: 0 };
   }
 
@@ -136,6 +129,46 @@ export class ForkWorkerExecutor {
   activeCount(): number {
     return this.#active.size;
   }
+}
+
+type Finish = (reason: IncompleteReason | null, message?: WorkerResultMessage) => Promise<void>;
+
+/** Wraps `finish` so the pending timeout is always cleared, whichever path settles the promise first. */
+function wrapWithTimerClear(finish: Finish, timer: ReturnType<typeof setTimeout>): Finish {
+  return (reason, message) => {
+    clearTimeout(timer);
+    return finish(reason, message);
+  };
+}
+
+function killAndCrash(child: WorkerChild, finish: Finish): void {
+  child.kill("SIGKILL");
+  void finish("worker_crashed");
+}
+
+/**
+ * A spawn error event with no listener is an unhandled EventEmitter error and crashes the parent
+ * process; registering `error` alongside `message`/`exit` neutralizes the check instead.
+ */
+function wireChildEvents(child: WorkerChild, finish: Finish): void {
+  child.once("message", (message) => {
+    if (!isWorkerResult(message)) return killAndCrash(child, finish);
+    void finish(message.code === "worker_failed" ? "worker_crashed" : null, message);
+  });
+  child.once("exit", () => void finish("worker_crashed"));
+  child.once("error", () => void finish("worker_crashed"));
+}
+
+function executionResult(
+  reason: IncompleteReason | null,
+  message: WorkerResultMessage | undefined,
+): WorkerExecutionResult {
+  return {
+    code: reason ?? message?.incompleteReason ??
+      (message?.code === "worker_failed" || !message ? "worker_crashed" : message.code),
+    usage: message?.usage ?? EMPTY_USAGE,
+    githubRetries: message?.githubRetries ?? 0,
+  };
 }
 
 export function spawnWorkerChild(): WorkerChild {

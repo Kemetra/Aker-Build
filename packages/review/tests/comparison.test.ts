@@ -33,6 +33,17 @@ function compare(input: Omit<ComparisonInput, "baseRoot" | "headRoot">): ReturnT
   return classifyFindings({ ...input, baseRoot, headRoot });
 }
 
+/** Classify a single side-only finding (base xor head) against static source, unchanged lines. */
+function classifyLoneFinding(side: "base" | "head", finding: Finding): ReturnType<typeof classifyFindings>[number] {
+  const [classified] = compare({
+    base: side === "base" ? [finding] : [],
+    head: side === "head" ? [finding] : [],
+    readSource: sourceReader({ [`${side}:src/access.ts`]: block.join("\n") }),
+    lineChanged: () => false,
+  });
+  return classified!;
+}
+
 const block = ["before one", "before two", "dangerous call", "after one", "after two"];
 
 describe("diff-aware finding comparison", () => {
@@ -93,14 +104,8 @@ describe("diff-aware finding comparison", () => {
   });
 
   it("classifies base-only findings as resolved", () => {
-    const [finding] = compare({
-      base: [risk(3)],
-      head: [],
-      readSource: sourceReader({ "base:src/access.ts": block.join("\n") }),
-      lineChanged: () => false,
-    });
-
-    expect(finding).toMatchObject({ classification: "resolved", source: "base", line_changed: false });
+    expect(classifyLoneFinding("base", risk(3)))
+      .toMatchObject({ classification: "resolved", source: "base", line_changed: false });
   });
 
   it("classifies material severity and suppression changes with direction", () => {
@@ -141,14 +146,8 @@ describe("diff-aware finding comparison", () => {
   });
 
   it("marks an unpaired head finding outside changed lines as unattributed", () => {
-    const [finding] = compare({
-      base: [],
-      head: [risk(3)],
-      readSource: sourceReader({ "head:src/access.ts": block.join("\n") }),
-      lineChanged: () => false,
-    });
-
-    expect(finding).toMatchObject({ classification: "unattributed", source: "head", line_changed: false });
+    expect(classifyLoneFinding("head", risk(3)))
+      .toMatchObject({ classification: "unattributed", source: "head", line_changed: false });
   });
 
   it("emits a deterministic opaque fingerprint and does not change the public finding id", () => {

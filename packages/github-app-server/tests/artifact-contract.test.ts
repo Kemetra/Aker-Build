@@ -36,6 +36,10 @@ describe("compiled App-server artifact contract", () => {
     expect(compose).toContain("cap_drop:");
     expect(compose).toContain("no-new-privileges:true");
     expect(compose).toContain("aker-build-tmp");
+    // Review snapshot/analysis work writes under the OS tmpdir (/tmp), not AKER_BUILD_TMP_ROOT;
+    // the read-only rootfs needs its own writable mount there or every review worker fails.
+    expect(compose).toMatch(/type:\s*tmpfs/u);
+    expect(compose).toMatch(/target:\s*\/tmp/u);
     const workflow = read(".github/workflows/aker-build.yml");
     expect(workflow).toContain("Container build");
     expect(workflow).toContain("docker build");
