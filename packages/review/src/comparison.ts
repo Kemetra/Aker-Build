@@ -46,68 +46,79 @@ export function findingFingerprint(
 
 /** Pair base/head finding multisets and classify every paired or unpaired member. */
 export function classifyFindings(input: ClassificationInput): ComparedGateFinding[] {
+  const groups = groupedFindings(input);
+  return groups.fingerprints
+    .flatMap((fingerprint) => classifyFingerprintGroup(input, groups.base.get(fingerprint), groups.head.get(fingerprint)))
+    .sort(compareResult);
+}
+
+function groupedFindings(input: ClassificationInput): {
+  base: Map<string, FingerprintedFinding[]>;
+  head: Map<string, FingerprintedFinding[]>;
+  fingerprints: string[];
+} {
   const readSource = input.readSource ?? readFileSafe;
-  const base = input.base.map((finding) => fingerprinted(finding, input.baseRoot, readSource));
-  const head = input.head.map((finding) => fingerprinted(finding, input.headRoot, readSource));
-  const baseGroups = groupByFingerprint(base);
-  const headGroups = groupByFingerprint(head);
-  const fingerprints = [...new Set([...baseGroups.keys(), ...headGroups.keys()])].sort(compareText);
-  const compared: ComparedGateFinding[] = [];
+  const base = groupByFingerprint(input.base.map((finding) => fingerprinted(finding, input.baseRoot, readSource)));
+  const head = groupByFingerprint(input.head.map((finding) => fingerprinted(finding, input.headRoot, readSource)));
+  return { base, head, fingerprints: [...new Set([...base.keys(), ...head.keys()])].sort(compareText) };
+}
 
-  for (const fingerprint of fingerprints) {
-    const baseGroup = [...(baseGroups.get(fingerprint) ?? [])].sort(compareEntry);
-    const headGroup = [...(headGroups.get(fingerprint) ?? [])].sort(compareEntry);
-    const pairs: Array<[FingerprintedFinding, FingerprintedFinding]> = [];
+function classifyFingerprintGroup(
+  input: ClassificationInput,
+  baseEntries: readonly FingerprintedFinding[] | undefined,
+  headEntries: readonly FingerprintedFinding[] | undefined,
+): ComparedGateFinding[] {
+  const base = [...(baseEntries ?? [])].sort(compareEntry);
+  const head = [...(headEntries ?? [])].sort(compareEntry);
+  const pairs = pairEntries(base, head);
+  return [...classifyPairs(input, pairs), ...classifyHeadEntries(input, head), ...classifyBaseEntries(base)];
+}
 
-    // Preserve exact material matches first. This prevents duplicate reorderings from producing
-    // artificial changes when the fingerprint multiset is otherwise unchanged.
-    for (let headIndex = 0; headIndex < headGroup.length;) {
-      const headEntry = headGroup[headIndex]!;
-      const baseIndex = baseGroup.findIndex((entry) => entry.material === headEntry.material);
-      if (baseIndex < 0) {
-        headIndex += 1;
-        continue;
-      }
-      pairs.push([baseGroup.splice(baseIndex, 1)[0]!, headGroup.splice(headIndex, 1)[0]!]);
-    }
+function pairEntries(
+  base: FingerprintedFinding[],
+  head: FingerprintedFinding[],
+): Array<[FingerprintedFinding, FingerprintedFinding]> {
+  const pairs = pairExactMaterials(base, head);
+  while (base.length > 0 && head.length > 0) pairs.push([base.shift()!, head.shift()!]);
+  return pairs;
+}
 
-    while (baseGroup.length > 0 && headGroup.length > 0) {
-      pairs.push([baseGroup.shift()!, headGroup.shift()!]);
-    }
-
-    for (const [baseEntry, headEntry] of pairs) {
-      const change = baseEntry.material === headEntry.material
-        ? undefined
-        : changeDirection(baseEntry.finding, headEntry.finding);
-      const lineChanged = changedLine(input.lineChanged, headEntry);
-      const classification: FindingClassification = change === "worsened" && !lineChanged
-        ? "unattributed"
-        : change ? "changed" : "existing";
-      compared.push(withComparison(
-        headEntry,
-        classification,
-        "head",
-        lineChanged,
-        change,
-      ));
-    }
-
-    for (const entry of headGroup) {
-      const lineChanged = changedLine(input.lineChanged, entry);
-      compared.push(withComparison(
-        entry,
-        lineChanged ? "new" : "unattributed",
-        "head",
-        lineChanged,
-      ));
-    }
-
-    for (const entry of baseGroup) {
-      compared.push(withComparison(entry, "resolved", "base", false));
-    }
+function pairExactMaterials(
+  base: FingerprintedFinding[],
+  head: FingerprintedFinding[],
+): Array<[FingerprintedFinding, FingerprintedFinding]> {
+  const pairs: Array<[FingerprintedFinding, FingerprintedFinding]> = [];
+  for (let headIndex = 0; headIndex < head.length;) {
+    const baseIndex = base.findIndex((entry) => entry.material === head[headIndex]!.material);
+    if (baseIndex < 0) headIndex += 1;
+    else pairs.push([base.splice(baseIndex, 1)[0]!, head.splice(headIndex, 1)[0]!]);
   }
+  return pairs;
+}
 
-  return compared.sort(compareResult);
+function classifyPairs(
+  input: ClassificationInput,
+  pairs: readonly [FingerprintedFinding, FingerprintedFinding][],
+): ComparedGateFinding[] {
+  return pairs.map(([base, head]) => classifiedPair(input, base, head));
+}
+
+function classifiedPair(input: ClassificationInput, base: FingerprintedFinding, head: FingerprintedFinding): ComparedGateFinding {
+  const change = base.material === head.material ? undefined : changeDirection(base.finding, head.finding);
+  const lineChanged = changedLine(input.lineChanged, head);
+  const classification = change === "worsened" && !lineChanged ? "unattributed" : change ? "changed" : "existing";
+  return withComparison(head, classification, "head", lineChanged, change);
+}
+
+function classifyHeadEntries(input: ClassificationInput, entries: readonly FingerprintedFinding[]): ComparedGateFinding[] {
+  return entries.map((entry) => {
+    const lineChanged = changedLine(input.lineChanged, entry);
+    return withComparison(entry, lineChanged ? "new" : "unattributed", "head", lineChanged);
+  });
+}
+
+function classifyBaseEntries(entries: readonly FingerprintedFinding[]): ComparedGateFinding[] {
+  return entries.map((entry) => withComparison(entry, "resolved", "base", false));
 }
 
 function fingerprinted(finding: Finding, root: string, readSource: SourceReader): FingerprintedFinding {

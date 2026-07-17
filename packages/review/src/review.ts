@@ -11,7 +11,7 @@ import { decideVerdict } from "./verdict.js";
 import { loadQueueItem } from "./io.js";
 import { compareReview, assembleIncompleteReview } from "./compare-review.js";
 import { diffTrees } from "./diff.js";
-import { createLocalSnapshots } from "./snapshot.js";
+import { createLocalSnapshots, type SnapshotPairFailure, type SnapshotPairSuccess } from "./snapshot.js";
 import type {
   AnyReviewReport,
   ReviewReport,
@@ -35,6 +35,12 @@ export interface ReviewDeps {
 
 const DEFAULT_OUT = ".aker-build";
 
+interface LocalReviewContext {
+  options: ReviewOptions;
+  out: string;
+  repoRoot: string;
+}
+
 /**
  * Review the current local diff. The normal v2 path archives the resolved base plus a conservative
  * working-tree overlay, derives zero-context changed ranges locally, analyzes both snapshots, and
@@ -45,57 +51,73 @@ export function reviewLocalDiff(opts: ReviewOptions = {}, deps: ReviewDeps = {})
   // production path below is the sole v2 producer and does not use filename-only attribution.
   if (deps.changedFiles || deps.runGates) return reviewLocalDiffV1(opts, deps);
 
-  const out = opts.out ?? DEFAULT_OUT;
-  const repoRoot = deps.repoRoot ?? ".";
+  const context = localReviewContext(opts, deps);
+  assertProjectMapPresent(context.out);
+  return reviewSnapshots(context);
+}
+
+function localReviewContext(options: ReviewOptions, deps: ReviewDeps): LocalReviewContext {
+  return { options, out: options.out ?? DEFAULT_OUT, repoRoot: deps.repoRoot ?? "." };
+}
+
+function assertProjectMapPresent(out: string): void {
   const mapPath = resolve(out, "project-map.json");
-  if (!existsSync(mapPath)) {
-    throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`aker-build scan\` first.`);
-  }
+  if (!existsSync(mapPath)) throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`aker-build scan\` first.`);
+}
 
-  const snapshots = createLocalSnapshots(repoRoot, opts.base ?? "HEAD");
+function reviewSnapshots(context: LocalReviewContext): AnyReviewReport {
+  const snapshots = createLocalSnapshots(context.repoRoot, context.options.base ?? "HEAD");
   try {
-    if (!snapshots.complete) {
-      if (opts.base && snapshots.incompleteReasons.includes("base_unavailable")) {
-        throw new GitUnavailableError("Unable to resolve the requested base ref.");
-      }
-      const changed = safeVisibleChangedFiles(repoRoot, opts.base ?? "HEAD", out, opts.configPath);
-      const scope = scopeForChangedFiles(changed, out, opts.item);
-      return assembleIncompleteReview({
-        mode: "local-diff",
-        base: snapshots.base,
-        head: snapshots.head,
-        scope,
-        githubAvailable: null,
-        incompleteReasons: snapshots.incompleteReasons,
-        changedFiles: changed,
-      });
-    }
-
-    const rawDiff = diffTrees(snapshots.baseRoot, snapshots.headRoot);
-    const visiblePaths = new Set(applyConfigPathFilter(
-      excludeOutDir(rawDiff.changedFiles.map((file) => file.path), repoRoot, out),
-      repoRoot,
-      opts.configPath,
-    ));
-    const filteredDiff = {
-      ...rawDiff,
-      changedFiles: rawDiff.changedFiles.filter((file) => visiblePaths.has(file.path)),
-    };
-    const changed = filteredDiff.changedFiles.map((file) => file.path);
-    const scope = scopeForChangedFiles(changed, out, opts.item);
-    return compareReview({
-      mode: "local-diff",
-      baseRoot: snapshots.baseRoot,
-      headRoot: snapshots.headRoot,
-      base: snapshots.base,
-      head: snapshots.head,
-      scope,
-      githubAvailable: null,
-      configPath: opts.configPath,
-    }, { diff: () => filteredDiff });
+    return snapshots.complete ? completeSnapshotReview(context, snapshots) : incompleteSnapshotReview(context, snapshots);
   } finally {
     snapshots.dispose();
   }
+}
+
+function incompleteSnapshotReview(context: LocalReviewContext, snapshots: SnapshotPairFailure): AnyReviewReport {
+  if (context.options.base && snapshots.incompleteReasons.includes("base_unavailable")) {
+    throw new GitUnavailableError("Unable to resolve the requested base ref.");
+  }
+  const changed = safeVisibleChangedFiles(
+    context.repoRoot,
+    context.options.base ?? "HEAD",
+    context.out,
+    context.options.configPath,
+  );
+  return assembleIncompleteReview({
+    mode: "local-diff",
+    base: snapshots.base,
+    head: snapshots.head,
+    scope: scopeForChangedFiles(changed, context.out, context.options.item),
+    githubAvailable: null,
+    incompleteReasons: snapshots.incompleteReasons,
+    changedFiles: changed,
+  });
+}
+
+function completeSnapshotReview(context: LocalReviewContext, snapshots: SnapshotPairSuccess): AnyReviewReport {
+  const filteredDiff = visibleDiff(context, snapshots);
+  const changed = filteredDiff.changedFiles.map((file) => file.path);
+  return compareReview({
+    mode: "local-diff",
+    baseRoot: snapshots.baseRoot,
+    headRoot: snapshots.headRoot,
+    base: snapshots.base,
+    head: snapshots.head,
+    scope: scopeForChangedFiles(changed, context.out, context.options.item),
+    githubAvailable: null,
+    configPath: context.options.configPath,
+  }, { diff: () => filteredDiff });
+}
+
+function visibleDiff(context: LocalReviewContext, snapshots: SnapshotPairSuccess): ReturnType<typeof diffTrees> {
+  const diff = diffTrees(snapshots.baseRoot, snapshots.headRoot);
+  const visiblePaths = new Set(applyConfigPathFilter(
+    excludeOutDir(diff.changedFiles.map((file) => file.path), context.repoRoot, context.out),
+    context.repoRoot,
+    context.options.configPath,
+  ));
+  return { ...diff, changedFiles: diff.changedFiles.filter((file) => visiblePaths.has(file.path)) };
 }
 
 function reviewLocalDiffV1(opts: ReviewOptions, deps: ReviewDeps): ReviewReport {

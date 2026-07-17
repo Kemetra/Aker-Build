@@ -85,40 +85,70 @@ async function route(
 ): Promise<void> {
   try {
     const path = new URL(req.url ?? "/", "http://runtime.invalid").pathname;
-    if (path === "/healthz") return json(res, 200, { status: "ok" });
-    if (path === "/readyz") {
-      const ready = runtime.queue.isReady();
-      return json(res, ready ? 200 : 503, { status: ready ? "ready" : "not_ready" });
-    }
-    if (path === "/metrics") {
-      const stats = runtime.queue.stats();
-      runtime.metrics.set("queue_depth", stats.waiting + stats.reserved);
-      runtime.metrics.set("active_workers", stats.active);
-      return json(res, 200, runtime.metrics.snapshot());
-    }
-    if (path !== "/webhook") return json(res, 404, { ok: false, error: "not_found" });
-    if (req.method !== "POST") return json(res, 405, { ok: false, error: "method_not_allowed" });
-
-    const rawBody = await readBody(req, runtime.config.maxBodyBytes);
-    runtime.metrics.increment("intake_total");
-    const result = await runtime.intake.accept({
-      rawBody,
-      signature: header(req.headers["x-hub-signature-256"]),
-      eventName: header(req.headers["x-github-event"]),
-      deliveryId: header(req.headers["x-github-delivery"]),
-    });
-    if (result.reason === "accepted") runtime.metrics.increment("accepted_total");
-    else if (result.reason === "duplicate") runtime.metrics.increment("duplicate_total");
-    else if (result.reason === "queue_full" || result.reason === "delivery_cache_full") {
-      runtime.metrics.increment("queue_rejected_total");
-    }
-    const body = JSON.stringify({ ok: result.status < 400, status: result.reason });
-    res.writeHead(result.status, { "content-type": "application/json" });
-    res.end(body, () => result.afterResponse?.());
+    if (routeFixedEndpoint(path, res, runtime)) return;
+    await routeWebhook(req, res, path, runtime);
   } catch (error) {
     if (error instanceof BodyTooLargeError) return json(res, 413, { ok: false, error: "body_too_large" });
     return json(res, 500, { ok: false, error: "internal_error" });
   }
+}
+
+function routeFixedEndpoint(path: string, res: ServerResponse, runtime: RuntimeService): boolean {
+  const endpoint = fixedEndpoints(res, runtime)[path];
+  if (!endpoint) return false;
+  endpoint();
+  return true;
+}
+
+function fixedEndpoints(res: ServerResponse, runtime: RuntimeService): Record<string, () => void> {
+  return {
+    "/healthz": () => json(res, 200, { status: "ok" }),
+    "/readyz": () => writeReadiness(res, runtime),
+    "/metrics": () => writeMetrics(res, runtime),
+  };
+}
+
+function writeReadiness(res: ServerResponse, runtime: RuntimeService): void {
+  const ready = runtime.queue.isReady();
+  json(res, ready ? 200 : 503, { status: ready ? "ready" : "not_ready" });
+}
+
+function writeMetrics(res: ServerResponse, runtime: RuntimeService): void {
+  const stats = runtime.queue.stats();
+  runtime.metrics.set("queue_depth", stats.waiting + stats.reserved);
+  runtime.metrics.set("active_workers", stats.active);
+  json(res, 200, runtime.metrics.snapshot());
+}
+
+async function routeWebhook(req: IncomingMessage, res: ServerResponse, path: string, runtime: RuntimeService): Promise<void> {
+  if (path !== "/webhook") return json(res, 404, { ok: false, error: "not_found" });
+  if (req.method !== "POST") return json(res, 405, { ok: false, error: "method_not_allowed" });
+  const result = await acceptWebhook(req, runtime);
+  recordIntakeResult(result.reason, runtime);
+  res.writeHead(result.status, { "content-type": "application/json" });
+  res.end(JSON.stringify({ ok: result.status < 400, status: result.reason }), () => result.afterResponse?.());
+}
+
+async function acceptWebhook(req: IncomingMessage, runtime: RuntimeService) {
+  const rawBody = await readBody(req, runtime.config.maxBodyBytes);
+  runtime.metrics.increment("intake_total");
+  return runtime.intake.accept({
+    rawBody,
+    signature: header(req.headers["x-hub-signature-256"]),
+    eventName: header(req.headers["x-github-event"]),
+    deliveryId: header(req.headers["x-github-delivery"]),
+  });
+}
+
+function recordIntakeResult(reason: string, runtime: RuntimeService): void {
+  const metric = intakeMetric(reason);
+  if (metric) runtime.metrics.increment(metric);
+}
+
+function intakeMetric(reason: string): "accepted_total" | "duplicate_total" | "queue_rejected_total" | undefined {
+  if (reason === "accepted") return "accepted_total";
+  if (reason === "duplicate") return "duplicate_total";
+  return reason === "queue_full" || reason === "delivery_cache_full" ? "queue_rejected_total" : undefined;
 }
 
 function header(value: string | string[] | undefined): string | undefined {

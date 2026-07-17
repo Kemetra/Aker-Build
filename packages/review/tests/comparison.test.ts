@@ -4,6 +4,7 @@ import { classifyFindings, findingFingerprint } from "../src/comparison.js";
 
 const baseRoot = "base";
 const headRoot = "head";
+type ComparisonInput = Parameters<typeof classifyFindings>[0];
 
 function risk(
   line: number,
@@ -28,6 +29,10 @@ function sourceReader(sources: Record<string, string>) {
   return (root: string, path: string): string | null => sources[`${root}:${path}`] ?? null;
 }
 
+function compare(input: Omit<ComparisonInput, "baseRoot" | "headRoot">): ReturnType<typeof classifyFindings> {
+  return classifyFindings({ ...input, baseRoot, headRoot });
+}
+
 const block = ["before one", "before two", "dangerous call", "after one", "after two"];
 
 describe("diff-aware finding comparison", () => {
@@ -37,11 +42,9 @@ describe("diff-aware finding comparison", () => {
       "head:src/access.ts": ["padding", "padding", "padding", "padding", "padding", "padding", ...block].join("\n"),
     });
 
-    const result = classifyFindings({
+    const result = compare({
       base: [risk(3)],
       head: [risk(9)],
-      baseRoot,
-      headRoot,
       readSource,
       lineChanged: () => false,
     });
@@ -58,11 +61,9 @@ describe("diff-aware finding comparison", () => {
       "head:src/access.ts": edited,
     });
 
-    const [finding] = classifyFindings({
+    const [finding] = compare({
       base: [risk(3)],
       head: [risk(3)],
-      baseRoot,
-      headRoot,
       readSource,
       lineChanged: () => false,
     });
@@ -77,11 +78,9 @@ describe("diff-aware finding comparison", () => {
       "head:src/access.ts": repeated,
     });
 
-    const result = classifyFindings({
+    const result = compare({
       base: [risk(3)],
       head: [risk(3), risk(11)],
-      baseRoot,
-      headRoot,
       readSource,
       lineChanged: (_path, line) => line === 11,
     });
@@ -94,11 +93,9 @@ describe("diff-aware finding comparison", () => {
   });
 
   it("classifies base-only findings as resolved", () => {
-    const [finding] = classifyFindings({
+    const [finding] = compare({
       base: [risk(3)],
       head: [],
-      baseRoot,
-      headRoot,
       readSource: sourceReader({ "base:src/access.ts": block.join("\n") }),
       lineChanged: () => false,
     });
@@ -111,19 +108,15 @@ describe("diff-aware finding comparison", () => {
       "base:src/access.ts": block.join("\n"),
       "head:src/access.ts": block.join("\n"),
     });
-    const worsened = classifyFindings({
+    const worsened = compare({
       base: [risk(3, { severity: "medium" })],
       head: [risk(3, { severity: "critical" })],
-      baseRoot,
-      headRoot,
       readSource,
       lineChanged: () => true,
     });
-    const improved = classifyFindings({
+    const improved = compare({
       base: [risk(3)],
       head: [risk(3, { suppression: { id: "accepted", reason: "owned", owner: "security", matched_by: "path" } })],
-      baseRoot,
-      headRoot,
       readSource,
       lineChanged: () => false,
     });
@@ -137,11 +130,9 @@ describe("diff-aware finding comparison", () => {
       "base:src/access.ts": block.join("\n"),
       "head:src/access.ts": block.join("\n"),
     });
-    const [finding] = classifyFindings({
+    const [finding] = compare({
       base: [risk(3, { severity: "medium" })],
       head: [risk(3, { severity: "critical" })],
-      baseRoot,
-      headRoot,
       readSource,
       lineChanged: () => false,
     });
@@ -150,11 +141,9 @@ describe("diff-aware finding comparison", () => {
   });
 
   it("marks an unpaired head finding outside changed lines as unattributed", () => {
-    const [finding] = classifyFindings({
+    const [finding] = compare({
       base: [],
       head: [risk(3)],
-      baseRoot,
-      headRoot,
       readSource: sourceReader({ "head:src/access.ts": block.join("\n") }),
       lineChanged: () => false,
     });

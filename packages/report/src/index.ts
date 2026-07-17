@@ -156,53 +156,69 @@ function summarizeFindings(risks: RiskList | null): AkerBuildReport["summary"]["
 function buildReportUnchecked(repoRoot: string, outDir: string): AkerBuildReport {
   const artifacts = loadArtifacts(outDir);
   const specKit = readSpecKitArtifacts(repoRoot);
-
   return {
     schema_version: REPORT_SCHEMA_VERSION,
-    artifacts: {
-      present: artifacts.present,
-      missing: artifacts.missing,
-    },
+    artifacts: artifactSummary(artifacts),
     config: summarizeConfig(repoRoot),
-    spec_kit: {
-      present: specKit.present,
-      artifact_count: specKit.artifacts.length,
-      evidence_count: specKit.evidence.length,
-      secret_like_count: specKit.artifacts.filter((artifact) => artifact.secretLike).length,
-    },
-    summary: {
-      project_name: artifacts.projectMap?.project.name ?? null,
-      repo_count: artifacts.projectMap?.repos.length ?? 0,
-      tenant_status: artifacts.projectMap?.tenant_model.status ?? null,
-      findings: summarizeFindings(artifacts.risks),
-      queue: {
-        total: artifacts.queue?.items.length ?? 0,
-        ready: artifacts.queue?.items.filter((item) => item.status === "ready").length ?? 0,
-        blocked: artifacts.queue?.items.filter((item) => item.status === "blocked").length ?? 0,
-        done: artifacts.queue?.items.filter((item) => item.status === "done").length ?? 0,
-      },
-      route: {
-        next_id: artifacts.route?.next?.id ?? null,
-        blocked: artifacts.route?.blocked.length ?? 0,
-        no_safe_task_reasons: artifacts.route?.no_safe_task_reasons ?? [],
-      },
-      review: artifacts.review
-        ? {
-            verdict: artifacts.review.verdict,
-            changed_files: artifacts.review.changed_files.length,
-            findings: artifacts.review.findings.length,
-            ...(artifacts.review.schema_version === 2
-              ? {
-                  comparison: {
-                    complete: artifacts.review.comparison.complete,
-                    ...artifacts.review.comparison.counts,
-                  },
-                }
-              : {}),
-          }
-        : null,
-    },
+    spec_kit: specKitSummary(specKit),
+    summary: reportSummary(artifacts),
     suppressions: summarizeSuppressions(artifacts.risks),
+  };
+}
+
+function artifactSummary(artifacts: LoadedArtifacts): AkerBuildReport["artifacts"] {
+  return { present: artifacts.present, missing: artifacts.missing };
+}
+
+function specKitSummary(specKit: ReturnType<typeof readSpecKitArtifacts>): AkerBuildReport["spec_kit"] {
+  return {
+    present: specKit.present,
+    artifact_count: specKit.artifacts.length,
+    evidence_count: specKit.evidence.length,
+    secret_like_count: specKit.artifacts.filter((artifact) => artifact.secretLike).length,
+  };
+}
+
+function reportSummary(artifacts: LoadedArtifacts): AkerBuildReport["summary"] {
+  return {
+    project_name: artifacts.projectMap?.project.name ?? null,
+    repo_count: artifacts.projectMap?.repos.length ?? 0,
+    tenant_status: artifacts.projectMap?.tenant_model.status ?? null,
+    findings: summarizeFindings(artifacts.risks),
+    queue: queueSummary(artifacts),
+    route: routeSummary(artifacts),
+    review: reviewSummary(artifacts),
+  };
+}
+
+function queueSummary(artifacts: LoadedArtifacts): AkerBuildReport["summary"]["queue"] {
+  const items = artifacts.queue?.items ?? [];
+  return {
+    total: items.length,
+    ready: items.filter((item) => item.status === "ready").length,
+    blocked: items.filter((item) => item.status === "blocked").length,
+    done: items.filter((item) => item.status === "done").length,
+  };
+}
+
+function routeSummary(artifacts: LoadedArtifacts): AkerBuildReport["summary"]["route"] {
+  return {
+    next_id: artifacts.route?.next?.id ?? null,
+    blocked: artifacts.route?.blocked.length ?? 0,
+    no_safe_task_reasons: artifacts.route?.no_safe_task_reasons ?? [],
+  };
+}
+
+function reviewSummary(artifacts: LoadedArtifacts): AkerBuildReport["summary"]["review"] {
+  const review = artifacts.review;
+  if (!review) return null;
+  return {
+    verdict: review.verdict,
+    changed_files: review.changed_files.length,
+    findings: review.findings.length,
+    ...(review.schema_version === 2
+      ? { comparison: { complete: review.comparison.complete, ...review.comparison.counts } }
+      : {}),
   };
 }
 

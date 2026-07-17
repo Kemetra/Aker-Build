@@ -28,11 +28,30 @@ export async function retryTransient<T>(operation: () => Promise<T>, options: Re
 }
 
 export function isTransientGitHubError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const status = "status" in error && typeof error.status === "number" ? error.status : undefined;
-  if (status !== undefined) return status === 408 || status === 409 || status === 425 || status === 429 || status >= 500;
-  const code = "code" in error && typeof error.code === "string" ? error.code : undefined;
-  return code !== undefined && ["ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "ECONNREFUSED"].includes(code);
+  const status = errorStatus(error);
+  if (status !== undefined) return isTransientStatus(status);
+  const code = errorCode(error);
+  return code !== undefined && isTransientCode(code);
+}
+
+function errorStatus(error: unknown): number | undefined {
+  return isRecord(error) && typeof error.status === "number" ? error.status : undefined;
+}
+
+function errorCode(error: unknown): string | undefined {
+  return isRecord(error) && typeof error.code === "string" ? error.code : undefined;
+}
+
+function isTransientStatus(status: number): boolean {
+  return [408, 409, 425, 429].includes(status) || status >= 500;
+}
+
+function isTransientCode(code: string): boolean {
+  return ["ECONNRESET", "ETIMEDOUT", "EAI_AGAIN", "ECONNREFUSED"].includes(code);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
 }
 
 function throwIfAborted(signal: AbortSignal | undefined): void {

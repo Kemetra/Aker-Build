@@ -150,10 +150,14 @@ function consumeHunkHeader(state: ParserState, line: string): boolean {
 function headRange(line: string): ChangedLineRange | null | false {
   const match = /\+(\d+)(?:,(\d+))?\s/u.exec(line);
   if (!match) return false;
-  const start = Number(match[1]);
-  const count = match[2] == null ? 1 : Number(match[2]);
-  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(count) || count < 0) return false;
-  return count > 0 ? { start, end: start + count - 1 } : null;
+  return changedRange(Number(match[1]), match[2] == null ? 1 : Number(match[2]));
+}
+
+function changedRange(start: number, count: number): ChangedLineRange | null | false {
+  if (!Number.isSafeInteger(start)) return false;
+  if (!Number.isSafeInteger(count)) return false;
+  if (count < 0) return false;
+  return count === 0 ? null : { start, end: start + count - 1 };
 }
 
 /** Changed-line lookup shared by classification and annotation eligibility. */
@@ -189,25 +193,40 @@ function pathFromDiffHeader(
 ): string | null | false {
   // Added/deleted no-index entries may use the same directory label on both header sides, so
   // accept either known label after the destination `b/` prefix and prefer that unambiguous tail.
-  const destinationMarkers = [
+  return pathFromDestination(line, [
     ` b/${headMarker.slice(2)}`,
     ` b/${baseMarker.slice(2)}`,
-  ];
-  for (const marker of destinationMarkers) {
-    const at = line.lastIndexOf(marker);
-    if (at >= 0) return validateRelativePath(line.slice(at + marker.length));
-  }
-  const sourceMarkers = [baseMarker, `a/${headMarker.slice(2)}`];
-  for (const marker of sourceMarkers) {
-    const token = ` ${marker}`;
-    const at = line.indexOf(token);
-    if (at >= 0) {
-      const raw = line.slice(at + token.length);
-      const destinationAt = raw.lastIndexOf(" b/");
-      return validateRelativePath(destinationAt >= 0 ? raw.slice(0, destinationAt) : raw);
-    }
+  ]) ?? pathFromSource(line, [baseMarker, `a/${headMarker.slice(2)}`]);
+}
+
+function pathFromDestination(line: string, markers: readonly string[]): string | null | false {
+  for (const marker of markers) {
+    const path = pathAfterLastMarker(line, marker);
+    if (path !== null) return path;
   }
   return null;
+}
+
+function pathAfterLastMarker(line: string, marker: string): string | null | false {
+  const at = line.lastIndexOf(marker);
+  return at < 0 ? null : validateRelativePath(line.slice(at + marker.length));
+}
+
+function pathFromSource(line: string, markers: readonly string[]): string | null | false {
+  for (const marker of markers) {
+    const path = pathAfterSourceMarker(line, marker);
+    if (path !== null) return path;
+  }
+  return null;
+}
+
+function pathAfterSourceMarker(line: string, marker: string): string | null | false {
+  const token = ` ${marker}`;
+  const at = line.indexOf(token);
+  if (at < 0) return null;
+  const raw = line.slice(at + token.length);
+  const destinationAt = raw.lastIndexOf(" b/");
+  return validateRelativePath(destinationAt < 0 ? raw : raw.slice(0, destinationAt));
 }
 
 function pathFromMarker(raw: string, marker: string): string | null {

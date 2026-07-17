@@ -151,27 +151,51 @@ export function spawnWorkerChild(): WorkerChild {
 }
 
 export function isWorkerParentMessage(value: unknown): value is WorkerParentMessage {
-  if (!value || typeof value !== "object") return false;
+  if (!isRecord(value)) return false;
   const message = value as Partial<WorkerParentMessage>;
-  if (message.type !== "run" || !message.job || typeof message.job !== "object") return false;
-  const { event, checkId, deliveryHash } = message.job;
-  return (
-    Number.isSafeInteger(checkId) &&
-    checkId > 0 &&
-    /^[0-9a-f]{16}$/u.test(deliveryHash) &&
-    !!event &&
-    /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/u.test(event.owner) &&
-    /^[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$/u.test(event.repo) &&
-    event.repo !== "." &&
-    event.repo !== ".." &&
-    Number.isSafeInteger(event.prNumber) &&
-    event.prNumber > 0 &&
-    /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u.test(event.baseSha) &&
-    /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u.test(event.headSha) &&
-    typeof event.isDraft === "boolean" &&
-    Number.isSafeInteger(event.installationId) &&
-    (event.installationId ?? 0) > 0
-  );
+  return message.type === "run" && isValidDeliveryJob(message.job);
+}
+
+function isValidDeliveryJob(value: unknown): value is DeliveryJob {
+  if (!isRecord(value)) return false;
+  return isPositiveInteger(value.checkId) && isDeliveryHash(value.deliveryHash) && isValidPullRequestEvent(value.event);
+}
+
+function isValidPullRequestEvent(value: unknown): value is DeliveryJob["event"] {
+  if (!isRecord(value)) return false;
+  return isValidRepository(value.owner, value.repo) && isValidPullRequest(value) && isValidInstallation(value);
+}
+
+function isValidRepository(owner: unknown, repo: unknown): boolean {
+  return typeof owner === "string" && /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/u.test(owner) && isRepositoryName(repo);
+}
+
+function isRepositoryName(value: unknown): boolean {
+  return typeof value === "string" && /^[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$/u.test(value) && value !== "." && value !== "..";
+}
+
+function isValidPullRequest(value: Record<string, unknown>): boolean {
+  return isPositiveInteger(value.prNumber) && isCommitSha(value.baseSha) && isCommitSha(value.headSha) && typeof value.isDraft === "boolean";
+}
+
+function isValidInstallation(value: Record<string, unknown>): boolean {
+  return isPositiveInteger(value.installationId);
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function isDeliveryHash(value: unknown): value is string {
+  return typeof value === "string" && /^[0-9a-f]{16}$/u.test(value);
+}
+
+function isCommitSha(value: unknown): value is string {
+  return typeof value === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u.test(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
 }
 
 function isWorkerResult(value: unknown): value is WorkerResultMessage {

@@ -67,44 +67,68 @@ export function createCheckoutSnapshots(
 ): SnapshotPairResult {
   const root = mkdtempSync(join(tmpdir(), SNAPSHOT_PREFIX));
   const dispose = ownedDisposer(root);
-  const baseRef: ComparisonRef = { label: expectedBaseSha, sha: null };
-  const headRef: ComparisonRef = { label: expectedHeadSha, sha: null };
+  const refs = resolveCheckoutRefs(baseRepoRoot, headRepoRoot, expectedBaseSha, expectedHeadSha);
+  if (refs.reason) return failure(root, dispose, refs.base, refs.head, refs.reason);
+  const extracted = materializeCheckoutSnapshots(baseRepoRoot, headRepoRoot, refs, root);
+  if (extracted.reason) return failure(root, dispose, refs.base, refs.head, extracted.reason);
+  return {
+    complete: true,
+    root,
+    baseRoot: extracted.baseRoot,
+    headRoot: extracted.headRoot,
+    base: refs.base,
+    head: refs.head,
+    incompleteReasons: [],
+    dispose,
+  };
+}
+
+interface CheckoutRefs {
+  base: ComparisonRef;
+  head: ComparisonRef;
+  baseSha: string | null;
+  headSha: string | null;
+  reason?: ComparisonIncompleteReason;
+}
+
+function resolveCheckoutRefs(
+  baseRepoRoot: string,
+  headRepoRoot: string,
+  expectedBaseSha: string,
+  expectedHeadSha: string,
+): CheckoutRefs {
+  const unresolvedBase: ComparisonRef = { label: expectedBaseSha, sha: null };
+  const unresolvedHead: ComparisonRef = { label: expectedHeadSha, sha: null };
   const baseSha = resolveCommit(baseRepoRoot, "HEAD");
   if (!baseSha || baseSha !== expectedBaseSha.toLowerCase()) {
-    return failure(root, dispose, baseRef, headRef, "base_unavailable");
+    return { base: unresolvedBase, head: unresolvedHead, baseSha: null, headSha: null, reason: "base_unavailable" };
   }
   const base: ComparisonRef = { label: expectedBaseSha, sha: baseSha };
   const headSha = resolveCommit(headRepoRoot, "HEAD");
   if (!headSha || headSha !== expectedHeadSha.toLowerCase()) {
-    return failure(root, dispose, base, headRef, "head_unavailable");
+    return { base, head: unresolvedHead, baseSha, headSha: null, reason: "head_unavailable" };
   }
   const head: ComparisonRef = { label: expectedHeadSha, sha: headSha };
   const treeIssue = inspectTree(baseRepoRoot, baseSha, "base_unavailable")
     ?? inspectTree(headRepoRoot, headSha, "head_unavailable");
-  if (treeIssue) return failure(root, dispose, base, head, treeIssue);
+  return { base, head, baseSha, headSha, ...(treeIssue ? { reason: treeIssue } : {}) };
+}
 
+function materializeCheckoutSnapshots(
+  baseRepoRoot: string,
+  headRepoRoot: string,
+  refs: CheckoutRefs,
+  root: string,
+): MaterializedSnapshots {
+  if (!refs.baseSha || !refs.headSha) return { reason: "diff_unavailable" };
   const baseRoot = join(root, "base");
   const headRoot = join(root, "head");
   mkdirSync(baseRoot);
   mkdirSync(headRoot);
-  if (!archiveCommit(baseRepoRoot, baseSha, baseRoot, root, "base.tar")) {
-    return failure(root, dispose, base, head, "base_unavailable");
-  }
-  if (!archiveCommit(headRepoRoot, headSha, headRoot, root, "head.tar")) {
-    return failure(root, dispose, base, head, "head_unavailable");
-  }
+  if (!archiveCommit(baseRepoRoot, refs.baseSha, baseRoot, root, "base.tar")) return { reason: "base_unavailable" };
+  if (!archiveCommit(headRepoRoot, refs.headSha, headRoot, root, "head.tar")) return { reason: "head_unavailable" };
   const extractedIssue = inspectExtractedTree(baseRoot) ?? inspectExtractedTree(headRoot);
-  if (extractedIssue) return failure(root, dispose, base, head, extractedIssue);
-  return {
-    complete: true,
-    root,
-    baseRoot,
-    headRoot,
-    base,
-    head,
-    incompleteReasons: [],
-    dispose,
-  };
+  return extractedIssue ? { reason: extractedIssue } : { baseRoot, headRoot };
 }
 
 function createSnapshots(

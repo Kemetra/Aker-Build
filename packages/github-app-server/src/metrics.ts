@@ -33,7 +33,9 @@ export class RuntimeMetrics {
 
   set(name: Extract<MetricName, "queue_depth" | "active_workers">, value: number): void {
     this.#assertName(name);
-    if (!GAUGES.has(name) || !Number.isFinite(value) || value < 0) throw new Error("metric gauge is invalid");
+    if (!GAUGES.has(name)) throw new Error("metric gauge is invalid");
+    if (!Number.isFinite(value)) throw new Error("metric gauge is invalid");
+    if (value < 0) throw new Error("metric gauge is invalid");
     this.#values[name] = value;
   }
 

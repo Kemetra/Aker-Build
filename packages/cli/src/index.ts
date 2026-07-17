@@ -24,7 +24,22 @@ export function buildProgram(): Command {
     .name("aker-build")
     .description("Aker Build — CLI-first SaaS Build Kernel")
     .version("0.0.0");
+  registerCommands(program);
+  return program;
+}
 
+function registerCommands(program: Command): void {
+  addScanCommand(program);
+  addMapCommand(program);
+  addGatesCommand(program);
+  addQueueCommand(program);
+  addRouteCommand(program);
+  addPromptCommand(program);
+  addReviewCommand(program);
+  addReportCommand(program);
+}
+
+function addScanCommand(program: Command): void {
   program
     .command("scan")
     .description("Scan a local repo (read-only) and produce a Project Map")
@@ -36,7 +51,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; config?: string; stdout?: boolean; format: "json" | "yaml" }) => {
       process.exitCode = runScan(path, opts);
     });
+}
 
+function addMapCommand(program: Command): void {
   program
     .command("map")
     .description("Show / re-emit the produced Project Map")
@@ -45,7 +62,9 @@ export function buildProgram(): Command {
     .action((opts: { out: string; format: "json" | "yaml" }) => {
       process.exitCode = runMap(opts);
     });
+}
 
+function addGatesCommand(program: Command): void {
   program
     .command("gates")
     .description("Run the SaaS gate set (or a subset) over the scanned repo, produce risks.json")
@@ -60,7 +79,9 @@ export function buildProgram(): Command {
         process.exitCode = runGatesCommand(path, opts);
       },
     );
+}
 
+function addQueueCommand(program: Command): void {
   program
     .command("queue")
     .description("Derive queue.json from the project map + gate findings")
@@ -71,7 +92,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" }) => {
       process.exitCode = runQueueCommand(path, opts);
     });
+}
 
+function addRouteCommand(program: Command): void {
   program
     .command("route")
     .description("Select one next-safest task (with reason) + list blocked items")
@@ -82,7 +105,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" }) => {
       process.exitCode = runRouteCommand(path, opts);
     });
+}
 
+function addPromptCommand(program: Command): void {
   program
     .command("prompt")
     .description("Compile a safe, scoped agent prompt for a queue item")
@@ -93,7 +118,9 @@ export function buildProgram(): Command {
     .action((id: string, opts: { agent?: string; out: string; stdout?: boolean }) => {
       process.exitCode = runPromptCommand(id, opts);
     });
+}
 
+function addReviewCommand(program: Command): void {
   program
     .command("review-pr")
     .description("Review a local diff (or GitHub PR) against the gates + declared scope → Ready / Not Ready / Needs Verification")
@@ -113,7 +140,9 @@ export function buildProgram(): Command {
         process.exitCode = runReviewCommand(target, opts);
       },
     );
+}
 
+function addReportCommand(program: Command): void {
   program
     .command("report")
     .description("Summarize produced Aker Build artifacts into aker-build-report.json and Markdown")
@@ -124,6 +153,4 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" | "md" }) => {
       process.exitCode = runReportCommand(path, opts);
     });
-
-  return program;
 }

@@ -26,18 +26,25 @@ afterEach(() => {
   for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
 });
 
-/** Make a real, committed git repo with a couple of source files for the gates to inspect. */
-function makeRealRepo(): string {
-  const dir = mkdtempSync(join(tmpdir(), "tg-realrepo-"));
-  dirs.push(dir);
-  const git = (...a: string[]) => execFileSync("git", a, { cwd: dir, stdio: "pipe" });
+type Git = (...args: string[]) => unknown;
+
+function initializeGitRepository(git: Git, isolateFromHost = false): void {
   git("init", "--quiet");
   git("config", "user.email", "t@t.test");
   git("config", "user.name", "t");
   git("config", "commit.gpgsign", "false");
   git("config", "core.autocrlf", "false");
+  if (!isolateFromHost) return;
   git("config", "core.hooksPath", ".git/aker-build-no-hooks");
   git("config", "core.excludesFile", ".git/aker-build-no-global-ignore");
+}
+
+/** Make a real, committed git repo with a couple of source files for the gates to inspect. */
+function makeRealRepo(): string {
+  const dir = mkdtempSync(join(tmpdir(), "tg-realrepo-"));
+  dirs.push(dir);
+  const git = (...a: string[]) => execFileSync("git", a, { cwd: dir, stdio: "pipe" });
+  initializeGitRepository(git, true);
   mkdirSync(join(dir, "apps", "api"), { recursive: true });
   writeFileSync(join(dir, "apps", "api", "index.ts"), "export const x = 1;\n");
   writeFileSync(join(dir, "README.md"), "# real repo\n");
@@ -55,13 +62,7 @@ function makeRepoWithUnguardedAdminRoute(): string {
   const dir = mkdtempSync(join(tmpdir(), "tg-realrepo-bad-"));
   dirs.push(dir);
   const git = (...a: string[]) => execFileSync("git", a, { cwd: dir, stdio: "pipe" });
-  git("init", "--quiet");
-  git("config", "user.email", "t@t.test");
-  git("config", "user.name", "t");
-  git("config", "commit.gpgsign", "false");
-  git("config", "core.autocrlf", "false");
-  git("config", "core.hooksPath", ".git/aker-build-no-hooks");
-  git("config", "core.excludesFile", ".git/aker-build-no-global-ignore");
+  initializeGitRepository(git, true);
   mkdirSync(join(dir, "apps", "api", "routes"), { recursive: true });
   // Admin route, no requireRole/isAdmin/hasRole/checkRole/authorize token anywhere → confidence:high.
   writeFileSync(join(dir, "apps", "api", "routes", "admin.ts"), "app.get('/admin', (req, res) => res.send('hi'));\n");
@@ -83,11 +84,8 @@ function makeComparisonFixture(kind: "clean" | "admin"): ComparisonFixture {
   dirs.push(origin);
   const git = (cwd: string, ...args: string[]) =>
     execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-  git(origin, "init", "--quiet");
-  git(origin, "config", "user.email", "t@t.test");
-  git(origin, "config", "user.name", "t");
-  git(origin, "config", "commit.gpgsign", "false");
-  git(origin, "config", "core.autocrlf", "false");
+  const originGit = (...args: string[]) => git(origin, ...args);
+  initializeGitRepository(originGit);
   mkdirSync(join(origin, "apps", "api", "routes"), { recursive: true });
   writeFileSync(join(origin, "package.json"), '{"name":"fixture"}\n');
   writeFileSync(join(origin, "apps", "api", "index.ts"), "export const x = 1;\n");

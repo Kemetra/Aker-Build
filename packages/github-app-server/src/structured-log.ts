@@ -15,17 +15,39 @@ export interface RuntimeLogRecord {
 export function createStructuredLogger(write: (line: string) => void = (line) => process.stdout.write(`${line}\n`)) {
   return {
     log(input: RuntimeLogRecord): void {
-      const output: Partial<RuntimeLogRecord> = { event: input.event };
-      if (typeof input.deliveryHash === "string" && /^[0-9a-f]{16}$/u.test(input.deliveryHash)) {
-        output.deliveryHash = input.deliveryHash;
-      }
-      if (typeof input.owner === "string") output.owner = input.owner;
-      if (typeof input.repo === "string") output.repo = input.repo;
-      if (Number.isSafeInteger(input.prNumber) && (input.prNumber ?? 0) > 0) output.prNumber = input.prNumber;
-      if (typeof input.outcome === "string") output.outcome = input.outcome;
-      if (Number.isFinite(input.durationMs) && (input.durationMs ?? -1) >= 0) output.durationMs = input.durationMs;
-      if (Number.isFinite(input.count) && (input.count ?? -1) >= 0) output.count = input.count;
-      write(JSON.stringify(output));
+      write(JSON.stringify(sanitize(input)));
     },
   };
+}
+
+function sanitize(input: RuntimeLogRecord): Partial<RuntimeLogRecord> {
+  const output: Partial<RuntimeLogRecord> = { event: input.event };
+  addDeliveryHash(output, input.deliveryHash);
+  addText(output, "owner", input.owner);
+  addText(output, "repo", input.repo);
+  addPositiveInteger(output, "prNumber", input.prNumber);
+  addOutcome(output, input.outcome);
+  addNonNegativeNumber(output, "durationMs", input.durationMs);
+  addNonNegativeNumber(output, "count", input.count);
+  return output;
+}
+
+function addDeliveryHash(output: Partial<RuntimeLogRecord>, value: string | undefined): void {
+  if (typeof value === "string" && /^[0-9a-f]{16}$/u.test(value)) output.deliveryHash = value;
+}
+
+function addText(output: Partial<RuntimeLogRecord>, key: "owner" | "repo", value: string | undefined): void {
+  if (typeof value === "string") output[key] = value;
+}
+
+function addOutcome(output: Partial<RuntimeLogRecord>, value: RuntimeOutcome | undefined): void {
+  if (typeof value === "string") output.outcome = value;
+}
+
+function addPositiveInteger(output: Partial<RuntimeLogRecord>, key: "prNumber", value: number | undefined): void {
+  if (Number.isSafeInteger(value) && (value ?? 0) > 0) output[key] = value;
+}
+
+function addNonNegativeNumber(output: Partial<RuntimeLogRecord>, key: "durationMs" | "count", value: number | undefined): void {
+  if (Number.isFinite(value) && (value ?? -1) >= 0) output[key] = value;
 }

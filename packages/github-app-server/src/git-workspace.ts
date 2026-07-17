@@ -55,6 +55,10 @@ interface TrackedWorkspace {
   nonce: string;
 }
 
+interface CheckoutWorkspace extends TrackedWorkspace {
+  resolvedRoot: string;
+}
+
 export const WORKSPACE_PREFIX = "aker-build-app-";
 export const WORKSPACE_MARKER = ".aker-build-owner.json";
 const DEFAULT_GIT_TIMEOUT_MS = 60_000;
@@ -69,45 +73,14 @@ export function makeGitWorkspace(deps: GitWorkspaceDeps): ManagedWorkspace {
   const workspace: ManagedWorkspace = {
     async checkout({ owner, repo, headSha }) {
       assertRepositoryIdentity(owner, repo);
-      const wrapper = mkdtempSync(join(resolvedRoot, WORKSPACE_PREFIX));
-      const wrapperResolved = realpathSync(wrapper);
-      if (!isContained(resolvedRoot, wrapperResolved)) {
-        throw new WorkspaceError("workspace root containment failed");
-      }
-      const nonce = randomBytes(16).toString("hex");
-      const marker: Marker = { formatVersion: 1, createdAt: new Date().toISOString(), nonce };
-      writeFileSync(join(wrapperResolved, WORKSPACE_MARKER), JSON.stringify(marker), {
-        encoding: "utf8",
-        flag: "wx",
-      });
-      const repoRoot = join(wrapperResolved, "repo");
-      mkdirSync(repoRoot);
-      const repoResolved = realpathSync(repoRoot);
-      tracked.set(repoResolved, { repoRoot: repoResolved, wrapper: wrapperResolved, nonce });
+      const checkout = allocateWorkspace(resolvedRoot, tracked);
 
       try {
-        const init = deps.git.run({ kind: "init", repositoryPath: repoResolved }, resolvedRoot, { timeoutMs });
-        if (init.code !== 0) throw new WorkspaceError("git init failed");
-
-        const token = await deps.authToken();
-        const authValue = `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`;
-        const gitEnv = {
-          GIT_CONFIG_COUNT: "1",
-          GIT_CONFIG_KEY_0: "http.extraheader",
-          GIT_CONFIG_VALUE_0: authValue,
-        };
-        const url = deps.remoteUrl ? deps.remoteUrl(owner, repo) : `https://github.com/${owner}/${repo}.git`;
-        const fetch = deps.git.run({ kind: "fetch", remoteUrl: url, ref: headSha }, repoResolved, {
-          env: gitEnv,
-          timeoutMs,
-        });
-        if (fetch.code !== 0) throw new WorkspaceError("git fetch failed for the PR head ref");
-        const checkout = deps.git.run({ kind: "checkout_fetch_head" }, repoResolved, { timeoutMs });
-        if (checkout.code !== 0) throw new WorkspaceError("git checkout failed");
-        return repoResolved;
+        await populateCheckout(checkout, { owner, repo, headSha }, deps, timeoutMs);
+        return checkout.repoRoot;
       } catch (error) {
-        tracked.delete(repoResolved);
-        removeOwnedWrapper(wrapperResolved, resolvedRoot, nonce);
+        tracked.delete(checkout.repoRoot);
+        removeOwnedWrapper(checkout.wrapper, checkout.resolvedRoot, checkout.nonce);
         throw error;
       }
     },
@@ -139,6 +112,71 @@ export function makeGitWorkspace(deps: GitWorkspaceDeps): ManagedWorkspace {
   };
 
   return workspace;
+}
+
+function allocateWorkspace(resolvedRoot: string, tracked: Map<string, TrackedWorkspace>): CheckoutWorkspace {
+  const wrapper = mkdtempSync(join(resolvedRoot, WORKSPACE_PREFIX));
+  const wrapperResolved = realpathSync(wrapper);
+  if (!isContained(resolvedRoot, wrapperResolved)) throw new WorkspaceError("workspace root containment failed");
+  const nonce = randomBytes(16).toString("hex");
+  writeWorkspaceMarker(wrapperResolved, nonce);
+  const repoRoot = join(wrapperResolved, "repo");
+  mkdirSync(repoRoot);
+  const repoResolved = realpathSync(repoRoot);
+  const checkout = { repoRoot: repoResolved, wrapper: wrapperResolved, nonce, resolvedRoot };
+  tracked.set(repoResolved, checkout);
+  return checkout;
+}
+
+function writeWorkspaceMarker(wrapper: string, nonce: string): void {
+  const marker: Marker = { formatVersion: 1, createdAt: new Date().toISOString(), nonce };
+  writeFileSync(join(wrapper, WORKSPACE_MARKER), JSON.stringify(marker), { encoding: "utf8", flag: "wx" });
+}
+
+async function populateCheckout(
+  checkout: CheckoutWorkspace,
+  identity: { owner: string; repo: string; headSha: string },
+  deps: GitWorkspaceDeps,
+  timeoutMs: number,
+): Promise<void> {
+  initializeRepository(checkout, deps, timeoutMs);
+  const token = await deps.authToken();
+  fetchHead(checkout, identity, token, deps, timeoutMs);
+  checkoutFetchHead(checkout, deps, timeoutMs);
+}
+
+function initializeRepository(checkout: CheckoutWorkspace, deps: GitWorkspaceDeps, timeoutMs: number): void {
+  const result = deps.git.run({ kind: "init", repositoryPath: checkout.repoRoot }, checkout.resolvedRoot, { timeoutMs });
+  if (result.code !== 0) throw new WorkspaceError("git init failed");
+}
+
+function fetchHead(
+  checkout: CheckoutWorkspace,
+  identity: { owner: string; repo: string; headSha: string },
+  token: string,
+  deps: GitWorkspaceDeps,
+  timeoutMs: number,
+): void {
+  const remoteUrl = deps.remoteUrl?.(identity.owner, identity.repo) ?? `https://github.com/${identity.owner}/${identity.repo}.git`;
+  const result = deps.git.run({ kind: "fetch", remoteUrl, ref: identity.headSha }, checkout.repoRoot, {
+    env: authorizationEnvironment(token),
+    timeoutMs,
+  });
+  if (result.code !== 0) throw new WorkspaceError("git fetch failed for the PR head ref");
+}
+
+function authorizationEnvironment(token: string): Record<string, string> {
+  const authValue = `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`;
+  return {
+    GIT_CONFIG_COUNT: "1",
+    GIT_CONFIG_KEY_0: "http.extraheader",
+    GIT_CONFIG_VALUE_0: authValue,
+  };
+}
+
+function checkoutFetchHead(checkout: CheckoutWorkspace, deps: GitWorkspaceDeps, timeoutMs: number): void {
+  const result = deps.git.run({ kind: "checkout_fetch_head" }, checkout.repoRoot, { timeoutMs });
+  if (result.code !== 0) throw new WorkspaceError("git checkout failed");
 }
 
 export function cleanupStaleWorkspaces(args: {
