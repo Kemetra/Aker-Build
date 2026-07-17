@@ -35,7 +35,7 @@ jobs:
 
       # Node 22.13 ships an older Corepack keyring that cannot verify current pnpm releases.
       - name: Install verified Corepack
-        run: npm install --global corepack@0.31.0
+        run: npm install --global --force corepack@0.31.0
 
       - name: Enable Corepack
         run: corepack enable
@@ -114,7 +114,7 @@ jobs:
 
       # Node 22.13 ships an older Corepack keyring that cannot verify current pnpm releases.
       - name: Install verified Corepack
-        run: npm install --global corepack@0.31.0
+        run: npm install --global --force corepack@0.31.0
 
       - name: Enable Corepack
         run: corepack enable
@@ -149,7 +149,7 @@ jobs:
 
       # Node 22.13 ships an older Corepack keyring that cannot verify current pnpm releases.
       - name: Install verified Corepack
-        run: npm install --global corepack@0.31.0
+        run: npm install --global --force corepack@0.31.0
 
       - name: Enable Corepack
         run: corepack enable

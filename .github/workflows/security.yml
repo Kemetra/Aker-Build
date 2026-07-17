@@ -33,7 +33,7 @@ jobs:
 
       # Keep the pnpm signature keyring newer than the bundled Node 22.13 Corepack copy.
       - name: Install verified Corepack
-        run: npm install --global corepack@0.31.0
+        run: npm install --global --force corepack@0.31.0
 
       - name: Enable Corepack
         run: corepack enable
