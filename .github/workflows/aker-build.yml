@@ -1,44 +1,49 @@
-# Aker Build dogfoods itself: on every PR it runs its own scan → review-pr over
-# the PR's changed files and publishes the verdict (Ready / Not Ready / Needs
-# Verification) to the run summary. Report-only (008's default) — findings never
-# fail the check; only an Aker Build *error* (non-zero exit) red-Xes the job.
-#
-# This is the AC-008 consumer opt-in from spec 008, with Aker Build as its own
-# first consumer. The tooling IS this repo, so the CLI runs directly via tsx from
-# the checkout (no published binary yet — see ADR-007).
+# Aker Build dogfoods its report-only review while the quality matrix verifies the complete
+# workspace. Findings remain advisory; only command/test failures fail jobs.
 name: Aker Build
 
 on:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
-  contents: read           # read the code (read-only; no writes)
-  pull-requests: read      # `gh pr view` lists the PR's changed files
+  contents: read
 
 jobs:
   review:
+    name: Advisory dogfood review
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - name: Check out the PR head            # gates read file CONTENTS from the working tree
-        uses: actions/checkout@v4
+      - name: Check out the PR head
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
 
-      - name: Set up Node + pnpm
-        uses: actions/setup-node@v4
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22          # pnpm@11 (corepack-pinned) requires Node >=22.13
-      - run: corepack enable
+          node-version: 24
+          package-manager-cache: false
 
-      - name: Install workspace deps           # so @aker-build/* imports resolve under tsx
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install workspace dependencies
         run: corepack pnpm install --frozen-lockfile
 
-      # PR-NUMBER mode (not --local-diff): changed files come from `gh pr view`
-      # (relative to the PR base). --local-diff would be empty after a CI checkout
-      # (working tree == HEAD) and falsely report "Ready" on every PR.
-      - name: Run Aker Build (scan → review-pr <number>)
+      # PR-number mode reads exact base/head OIDs through `gh pr view`; full history above makes
+      # both objects available for the shared local archive comparison.
+      - name: Run Aker Build review
         env:
-          GH_TOKEN: ${{ github.token }}        # `gh` auth in CI (no stored token)
+          GH_TOKEN: ${{ github.token }}
         run: |
           corepack pnpm dlx tsx packages/cli/src/bin.ts scan --out .aker-build
           corepack pnpm dlx tsx packages/cli/src/bin.ts \
@@ -53,34 +58,103 @@ jobs:
             echo "Aker Build did not produce a review (see the step logs)." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # Report-only: critical-gate-blocking is OFF. To enable it later, set the repo
-      # variable AKER_BUILD_FAIL_ON_CRITICAL=true (Settings → Variables) — then a
-      # severity:"critical" finding fails the check (008 contracts/action-inputs.md).
-      - name: Enforce critical gates (opt-in)
+      # Report-only default. Repository owners may opt in through this variable; 016 does not set it.
+      - name: Enforce critical gates (owner opt-in only)
         if: ${{ vars.AKER_BUILD_FAIL_ON_CRITICAL == 'true' }}
         run: |
           crit=$(jq '[.findings[] | select(.severity == "critical")] | length' .aker-build/review.json)
           echo "critical findings: $crit"
           if [ "$crit" -gt 0 ]; then
-            echo "::error::Aker Build: $crit critical gate finding(s) — failing the check."
+            echo "::error::Aker Build: $crit critical gate finding(s)."
             exit 1
           fi
 
-  benchmark:
-    runs-on: ubuntu-latest
+  quality:
+    name: Quality (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: minimum-node
+            os: ubuntu-latest
+            node: 22.13.0
+            smoke: false
+          - name: linux-lts
+            os: ubuntu-latest
+            node: 24
+            smoke: true
+          - name: windows-lts
+            os: windows-latest
+            node: 24
+            smoke: true
+          - name: macos-lts
+            os: macos-latest
+            node: 24
+            smoke: false
+    env:
+      # This models a developer whose global Git config requires signing. Test fixtures must override
+      # it locally; no job mutates the runner's real global configuration.
+      GIT_CONFIG_GLOBAL: ${{ github.workspace }}/packages/eval/fixtures/hostile-gitconfig
+      GIT_CONFIG_NOSYSTEM: "1"
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Set up Node + pnpm
-        uses: actions/setup-node@v4
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
-      - run: corepack enable
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
 
-      - name: Install workspace deps
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install workspace dependencies
         run: corepack pnpm install --frozen-lockfile
 
-      # Runs the labeled corpus through the real scan → gates pipeline and fails
-      # on any benchmark/thresholds.json breach (detection-quality regression gate).
+      - name: Typecheck workspace
+        run: corepack pnpm typecheck
+
+      - name: Test workspace
+        run: corepack pnpm test
+
+      - name: Run first-run smoke
+        if: ${{ matrix.smoke }}
+        shell: pwsh
+        run: ./scripts/smoke-first-run.ps1 -RemoveTemp
+
+  benchmark:
+    name: benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install workspace dependencies
+        run: corepack pnpm install --frozen-lockfile
+
       - name: Run benchmark regression gate
         run: corepack pnpm dlx tsx packages/eval/src/bin.ts
+
+  container:
+    name: Container build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Build the non-publishing App image
+        run: docker build --file packages/github-app-server/Dockerfile --tag aker-build-app:ci .

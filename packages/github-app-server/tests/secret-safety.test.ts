@@ -14,7 +14,7 @@ const sign = (b: string) => `sha256=${createHmac("sha256", SECRET).update(b).dig
 const body = (over: Record<string, unknown> = {}) =>
   JSON.stringify({
     action: "opened",
-    pull_request: { number: 7, draft: false, head: { sha: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678" } },
+    pull_request: { number: 7, draft: false, base: { sha: "b1b2c3d4e5f60718293a4b5c6d7e8f9012345678" }, head: { sha: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678" } },
     repository: { owner: { login: "org" }, name: "repo" },
     installation: { id: 1 },
     ...over,

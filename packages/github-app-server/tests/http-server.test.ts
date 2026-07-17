@@ -11,7 +11,7 @@ const sign = (body: string) => `sha256=${createHmac("sha256", SECRET).update(bod
 
 const rawEvent = JSON.stringify({
   action: "opened",
-  pull_request: { number: 42, draft: false, head: { sha: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678" } },
+  pull_request: { number: 42, draft: false, base: { sha: "b1b2c3d4e5f60718293a4b5c6d7e8f9012345678" }, head: { sha: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678" } },
   repository: { owner: { login: "org" }, name: "repo" },
   installation: { id: 99 },
 });
@@ -89,11 +89,7 @@ describe("handleRequest — DispatchResult → HTTP status", () => {
   });
 });
 
-describe("composeDeps — the composition root (guards always-neutral at the REAL layer)", () => {
-  // composeDeps is the ONLY production code that wires `prepareRepo` into DispatchDeps. Every other
-  // test injects `prepareRepo` by hand, so deleting it from composeDeps would regress production to
-  // the always-neutral defect while those tests stay green (reviewer MEDIUM). This test pins the
-  // composition root itself, where the bug actually reappears.
+describe("composeDeps — the production composition root", () => {
   const fakeEnv = {
     AKER_BUILD_APP_ID: "123456",
     // A minimal RSA-looking key — octokit's auth is lazy, so construction never validates it here.
@@ -101,11 +97,6 @@ describe("composeDeps — the composition root (guards always-neutral at the REA
     AKER_BUILD_WEBHOOK_SECRET: "whsec",
     AKER_BUILD_INSTALLATION_ID: "99",
   };
-
-  it("wires prepareRepo so the live review actually scans the checkout (not always-neutral)", () => {
-    const deps = composeDeps(fakeEnv);
-    expect(typeof deps.prepareRepo).toBe("function"); // the always-neutral guard, at the real layer
-  });
 
   it("threads the env webhook secret and a real api + workspace into the deps", () => {
     const deps = composeDeps(fakeEnv);

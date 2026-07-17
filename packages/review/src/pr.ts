@@ -1,19 +1,30 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { runGates as realRunGates } from "@aker-build/gates";
+import { MissingProjectMapError } from "@aker-build/gates";
 import type { RunGatesResult } from "@aker-build/gates";
-import { prChangedFiles as realPrChangedFiles, prMetadata as realPrMetadata } from "./gh.js";
+import {
+  prChangedFiles as realPrChangedFiles,
+  prMetadata as realPrMetadata,
+  type GitHubPrMetadata,
+} from "./gh.js";
 import { diffAttributableFindings } from "./attribute.js";
 import { checkScope, SCOPE_SKIPPED } from "./scope.js";
 import { loadQueueItem } from "./io.js";
-import { applyConfigPathFilter, assemble } from "./review.js";
-import type { ReviewReport, ReviewOptions, ScopeResult, PrMetadata } from "./types.js";
+import { applyConfigPathFilter, assemble, excludeOutDir } from "./review.js";
+import { assembleIncompleteReview, compareReview } from "./compare-review.js";
+import { diffTrees } from "./diff.js";
+import { createRefSnapshots } from "./snapshot.js";
+import type { AnyReviewReport, ReviewReport, ReviewOptions, ScopeResult, PrMetadata } from "./types.js";
 
 /**
- * Injectable dependencies for PR review (default-real). The PR path differs from local-diff ONLY in
- * the changed-files source (gh vs git); the attribute→scope→verdict core is shared via `assemble`.
+ * Injectable PR dependencies. The normal v2 path resolves exact GitHub base/head OIDs and uses the
+ * shared snapshot comparison engine; changed-file and injected-gate seams remain only for frozen v1
+ * migration tests.
  */
 export interface PrReviewDeps {
   prChangedFiles?: (prNumber: number) => string[];
-  prMetadata?: (prNumber: number) => { title: string; state: string; baseRefName: string };
+  prMetadata?: (prNumber: number) => { title: string; state: string; baseRefName: string; baseRefOid?: string; headRefOid?: string };
   runGates?: (repoRoot: string, opts: { out: string; configPath?: string }) => RunGatesResult;
   /** Repo root the gates run over (the checked-out PR / current repo). */
   repoRoot?: string;
@@ -22,16 +33,74 @@ export interface PrReviewDeps {
 const DEFAULT_OUT = ".aker-build";
 
 /**
- * Review a GitHub PR by number (FR-005). Reuses the local-diff core over the PR's changed-files set,
- * and surfaces PR metadata (title/state/base) as evidence alongside the changed files. Propagates
- * `GitHubUnavailableError` from the gh source so the caller can report the gap and keep local-diff
- * available (FR-006). Read-only.
- *
- * v0 assumption: the gates run over the **current working tree** (`repoRoot`), so the PR branch must
- * be checked out locally for findings to attribute correctly to the PR's changed files. The changed-
- * files SET comes from GitHub; the code the gates inspect is the local checkout.
+ * Review a GitHub PR by number. The normal v2 path resolves exact base/head OIDs through `gh`,
+ * archives both local objects, derives changed ranges locally, and analyzes both snapshots. It is
+ * read-only and does not use GitHub patch text for correctness. Missing GitHub access still
+ * propagates as `GitHubUnavailableError` so callers can report the gap without disabling local mode.
  */
-export function reviewPr(prNumber: number, opts: ReviewOptions = {}, deps: PrReviewDeps = {}): ReviewReport {
+export function reviewPr(prNumber: number, opts: ReviewOptions = {}, deps: PrReviewDeps = {}): AnyReviewReport {
+  if (deps.prChangedFiles || deps.runGates) return reviewPrV1(prNumber, opts, deps);
+
+  const out = opts.out ?? DEFAULT_OUT;
+  const repoRoot = deps.repoRoot ?? ".";
+  const mapPath = resolve(out, "project-map.json");
+  if (!existsSync(mapPath)) {
+    throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`aker-build scan\` first.`);
+  }
+  const rawMeta = (deps.prMetadata ?? realPrMetadata)(prNumber);
+  if (!hasExactOids(rawMeta)) {
+    throw new Error("PR metadata did not include exact base/head commit OIDs.");
+  }
+  const meta: GitHubPrMetadata = rawMeta;
+  const prMeta: PrMetadata = {
+    number: prNumber,
+    title: meta.title,
+    state: meta.state,
+    base_ref: meta.baseRefName,
+  };
+  const snapshots = createRefSnapshots(repoRoot, meta.baseRefOid, meta.headRefOid);
+  try {
+    if (!snapshots.complete) {
+      const scope = scopeForChangedFiles([], out, opts.item);
+      return assembleIncompleteReview({
+        mode: "pr",
+        base: snapshots.base,
+        head: snapshots.head,
+        scope,
+        githubAvailable: true,
+        incompleteReasons: snapshots.incompleteReasons,
+        pr: prMeta,
+      });
+    }
+
+    const rawDiff = diffTrees(snapshots.baseRoot, snapshots.headRoot);
+    const visiblePaths = new Set(applyConfigPathFilter(
+      excludeOutDir(rawDiff.changedFiles.map((file) => file.path), repoRoot, out),
+      repoRoot,
+      opts.configPath,
+    ));
+    const filteredDiff = {
+      ...rawDiff,
+      changedFiles: rawDiff.changedFiles.filter((file) => visiblePaths.has(file.path)),
+    };
+    const scope = scopeForChangedFiles(filteredDiff.changedFiles.map((file) => file.path), out, opts.item);
+    return compareReview({
+      mode: "pr",
+      baseRoot: snapshots.baseRoot,
+      headRoot: snapshots.headRoot,
+      base: snapshots.base,
+      head: snapshots.head,
+      scope,
+      githubAvailable: true,
+      pr: prMeta,
+      configPath: opts.configPath,
+    }, { diff: () => filteredDiff });
+  } finally {
+    snapshots.dispose();
+  }
+}
+
+function reviewPrV1(prNumber: number, opts: ReviewOptions, deps: PrReviewDeps): ReviewReport {
   const out = opts.out ?? DEFAULT_OUT;
   const repoRoot = deps.repoRoot ?? ".";
   const getChanged = deps.prChangedFiles ?? realPrChangedFiles;
@@ -56,4 +125,18 @@ export function reviewPr(prNumber: number, opts: ReviewOptions = {}, deps: PrRev
     : SCOPE_SKIPPED;
 
   return assemble("pr", changed, attributable, scope, true, prMeta);
+}
+
+function hasExactOids(
+  metadata: ReturnType<NonNullable<PrReviewDeps["prMetadata"]>>,
+): metadata is GitHubPrMetadata {
+  const oid = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u;
+  return typeof metadata.baseRefOid === "string"
+    && oid.test(metadata.baseRefOid)
+    && typeof metadata.headRefOid === "string"
+    && oid.test(metadata.headRefOid);
+}
+
+function scopeForChangedFiles(changed: string[], out: string, item?: string): ScopeResult {
+  return item ? checkScope(changed, loadQueueItem(out, item)) : SCOPE_SKIPPED;
 }

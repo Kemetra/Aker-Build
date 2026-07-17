@@ -1,5 +1,5 @@
 import type { ChecksPayload } from "@aker-build/github-app";
-import type { GitHubApi } from "./github-api.js";
+import type { RuntimeGitHubApi } from "./github-api.js";
 
 /**
  * The narrow slice of octokit this adapter calls. Declaring it as a small structural type (rather
@@ -36,7 +36,10 @@ interface ChecksCreateParams {
   repo: string;
   name: string;
   head_sha: string;
-  conclusion: ChecksPayload["conclusion"];
+  conclusion?: ChecksPayload["conclusion"];
+  status?: "in_progress";
+  external_id?: string;
+  request?: { signal?: AbortSignal };
   output: { title: string; summary: string; annotations: ChecksPayload["annotations"] };
 }
 
@@ -44,7 +47,10 @@ interface ChecksUpdateParams {
   owner: string;
   repo: string;
   check_run_id: number;
-  conclusion: ChecksPayload["conclusion"];
+  conclusion?: ChecksPayload["conclusion"];
+  status?: "in_progress";
+  external_id?: string;
+  request?: { signal?: AbortSignal };
   output: { title: string; summary: string; annotations: ChecksPayload["annotations"] };
 }
 
@@ -54,12 +60,12 @@ function toOutput(payload: ChecksPayload) {
 }
 
 /**
- * Concrete `GitHubApi` over octokit. Deliberately thin: the only non-trivial logic is pagination in
- * `listChangedFiles` (a single page would silently truncate a large PR's changed files → under-review
- * → a false "clean" result, violating honest degradation). The behavioral weight of the other
- * methods is carried by the fake-injected `dispatch` test, not by asserting "octokit was called".
+ * Concrete `GitHubApi` over octokit. `listChangedFiles` is retained as a paginated legacy
+ * compatibility surface, but production v2 derives ranges from base/head webhook-SHA checkouts and
+ * does not call it for review correctness. The behavioral weight of the active methods is carried by
+ * the fake-injected `dispatch` test, not by asserting "octokit was called".
  */
-export function makeGitHubApi(octokit: OctokitLike): GitHubApi {
+export function makeGitHubApi(octokit: OctokitLike): RuntimeGitHubApi {
   return {
     async listChangedFiles({ owner, repo, prNumber }) {
       const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
@@ -106,6 +112,32 @@ export function makeGitHubApi(octokit: OctokitLike): GitHubApi {
         check_run_id: checkId,
         conclusion: payload.conclusion,
         output: toOutput(payload),
+      });
+    },
+
+    async createInProgressCheckRun({ owner, repo, headSha, deliveryHash, signal }) {
+      const { data } = await octokit.rest.checks.create({
+        owner,
+        repo,
+        name: "Aker Build",
+        head_sha: headSha,
+        status: "in_progress",
+        external_id: deliveryHash,
+        output: { title: "Review queued", summary: "Aker Build accepted this delivery and queued a bounded review.", annotations: [] },
+        request: { signal },
+      });
+      return { id: data.id };
+    },
+
+    async updateInProgressCheckRun({ owner, repo, checkId, deliveryHash, signal }) {
+      await octokit.rest.checks.update({
+        owner,
+        repo,
+        check_run_id: checkId,
+        status: "in_progress",
+        external_id: deliveryHash,
+        output: { title: "Review queued", summary: "Aker Build accepted this delivery and queued a bounded review.", annotations: [] },
+        request: { signal },
       });
     },
   };

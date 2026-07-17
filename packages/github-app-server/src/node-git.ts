@@ -13,10 +13,13 @@ import type { GitRunner } from "./git-workspace.js";
  */
 export function makeNodeGit(): GitRunner {
   return {
-    run(args, cwd) {
+    run(args, cwd, options) {
       const result = spawnSync("git", args, {
         cwd,
         encoding: "utf8",
+        env: options?.env ? { ...process.env, ...options.env } : process.env,
+        timeout: options?.timeoutMs,
+        killSignal: "SIGKILL",
         // Never inherit stdio — capture so nothing reaches the process's own streams unredacted.
         stdio: ["ignore", "pipe", "pipe"],
       });

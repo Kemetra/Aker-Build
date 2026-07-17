@@ -1,10 +1,14 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, it, expect } from "vitest";
-import type { Server } from "node:http";
 import type { Workspace } from "@aker-build/github-app";
 import type { GitHubApi } from "../src/github-api.js";
 import { start, MAX_BODY_BYTES } from "../src/http-server.js";
-import type { DispatchDeps } from "../src/server.js";
+import { createIntakeController, DeliveryCache, type IntakeController } from "../src/intake.js";
+import { BoundedJobQueue } from "../src/queue.js";
+import { RuntimeMetrics } from "../src/metrics.js";
+import { loadRuntimeConfig } from "../src/runtime-config.js";
+import { startRuntimeServer, type RuntimeServer, type RuntimeService } from "../src/runtime-host.js";
+import { processVerifiedEvent, type DispatchDeps } from "../src/server.js";
 
 /**
  * FORTIFICATION (advisor #5): exercise the REAL `start()` socket shell over a real ephemeral server
@@ -14,13 +18,54 @@ import type { DispatchDeps } from "../src/server.js";
 const SECRET = "webhook-secret";
 const sign = (b: string) => `sha256=${createHmac("sha256", SECRET).update(b).digest("hex")}`;
 
-const servers: Server[] = [];
-afterEach(() => {
-  for (const s of servers.splice(0)) s.close();
+const servers: RuntimeServer[] = [];
+afterEach(async () => {
+  await Promise.all(servers.splice(0).map((server) => server.shutdown()));
 });
 
 function listen(deps: DispatchDeps): Promise<string> {
-  const server = start(deps, 0); // port 0 → OS-assigned ephemeral port
+  let queue: BoundedJobQueue;
+  queue = new BoundedJobQueue({
+    concurrency: 1,
+    maxWaiting: 2,
+    execute: async (job) => {
+      await processVerifiedEvent(job.event, deps);
+    },
+  });
+  const intake = createIntakeController({
+    webhookSecret: deps.webhookSecret,
+    installationId: 1,
+    queue,
+    checks: {
+      async ensureInProgress(event) {
+        const existing = await deps.api.findCheckRun(event);
+        if (existing) return existing.id;
+        return (await deps.api.createCheckRun({
+          owner: event.owner,
+          repo: event.repo,
+          headSha: event.headSha,
+          payload: {
+            name: "Aker Build",
+            conclusion: "neutral",
+            title: "Review queued",
+            summary: "test intake marker",
+            annotations: [],
+          },
+        })).id;
+      },
+    },
+    deliveryCache: new DeliveryCache({ ttlMs: 60_000, maxEntries: 10 }),
+    checkStartTimeoutMs: 100,
+  });
+  const runtime: RuntimeService = {
+    intake,
+    queue,
+    executor: { async terminateAll() {} },
+    metrics: new RuntimeMetrics(),
+    config: loadRuntimeConfig({}),
+    cleanup: () => ({ removed: 0, failed: 0 }),
+  };
+  const server = startRuntimeServer(runtime, { port: 0, installSignalHandlers: false });
   servers.push(server);
   return new Promise((resolve) => {
     server.on("listening", () => {
@@ -44,7 +89,7 @@ const okWorkspace: Workspace = { async checkout() { return "/tmp/x"; }, async di
 
 const reviewable = JSON.stringify({
   action: "opened",
-  pull_request: { number: 7, draft: false, head: { sha: "a".repeat(40) } },
+  pull_request: { number: 7, draft: false, base: { sha: "b".repeat(40) }, head: { sha: "a".repeat(40) } },
   repository: { owner: { login: "o" }, name: "r" },
   installation: { id: 1 },
 });
@@ -82,26 +127,30 @@ describe("start() default-composition path (the chain bin.ts actually fires)", (
 describe("start() real socket shell", () => {
   it("a non-POST method → 405", async () => {
     const base = await listen({ api: okApi(), workspace: okWorkspace, webhookSecret: SECRET });
-    const res = await fetch(base, { method: "GET" });
+    const res = await fetch(`${base}/webhook`, { method: "GET" });
     expect(res.status).toBe(405);
   });
 
   it("an oversize body → 413 with a secret-free error, no processing", async () => {
     const base = await listen({ api: okApi(), workspace: okWorkspace, webhookSecret: SECRET });
     const huge = "x".repeat(MAX_BODY_BYTES + 100);
-    const res = await fetch(base, { method: "POST", body: huge, headers: { "x-hub-signature-256": sign(huge) } });
+    const res = await fetch(`${base}/webhook`, { method: "POST", body: huge, headers: { "x-hub-signature-256": sign(huge) } });
     expect(res.status).toBe(413);
     expect(await res.text()).toContain("body_too_large");
   });
 
-  it("a signed reviewable POST → 200 (full real request path)", async () => {
+  it("a signed reviewable POST → 202 before the queued processor (full real request path)", async () => {
     const base = await listen({ api: okApi(), workspace: okWorkspace, webhookSecret: SECRET });
-    const res = await fetch(base, {
+    const res = await fetch(`${base}/webhook`, {
       method: "POST",
       body: reviewable,
-      headers: { "x-hub-signature-256": sign(reviewable) },
+      headers: {
+        "x-hub-signature-256": sign(reviewable),
+        "x-github-event": "pull_request",
+        "x-github-delivery": "0b989ba4-242f-11e5-81e1-c7b6966d2516",
+      },
     });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(202);
   });
 
   it("an unexpected error inside handling → generic 500 that surfaces NO internals (secret-safe)", async () => {
@@ -110,18 +159,28 @@ describe("start() real socket shell", () => {
     // whose getter throws synchronously when dispatch touches the deps. Simplest: a webhookSecret
     // accessor that throws a secret-bearing error.
     const SECRET_INTERNAL = "INTERNAL-SECRET-DO-NOT-LEAK-zzz";
-    const deps = {
-      api: okApi(),
-      workspace: okWorkspace,
-      get webhookSecret(): string {
-        throw new Error(`boom with ${SECRET_INTERNAL}`);
-      },
-    } as unknown as DispatchDeps;
-    const base = await listen(deps);
-    const res = await fetch(base, {
+    const queue = new BoundedJobQueue({ concurrency: 1, maxWaiting: 1, execute: async () => {} });
+    const runtime: RuntimeService = {
+      intake: { async accept() { throw new Error(`boom with ${SECRET_INTERNAL}`); } } as IntakeController,
+      queue,
+      executor: { async terminateAll() {} },
+      metrics: new RuntimeMetrics(),
+      config: loadRuntimeConfig({}),
+      cleanup: () => ({ removed: 0, failed: 0 }),
+    };
+    const server = startRuntimeServer(runtime, { port: 0, installSignalHandlers: false });
+    servers.push(server);
+    await new Promise<void>((resolve) => server.once("listening", resolve));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 0;
+    const res = await fetch(`http://127.0.0.1:${port}/webhook`, {
       method: "POST",
       body: reviewable,
-      headers: { "x-hub-signature-256": sign(reviewable) },
+      headers: {
+        "x-hub-signature-256": sign(reviewable),
+        "x-github-event": "pull_request",
+        "x-github-delivery": "0b989ba4-242f-11e5-81e1-c7b6966d2516",
+      },
     });
     expect(res.status).toBe(500);
     const text = await res.text();

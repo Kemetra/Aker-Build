@@ -1,0 +1,24 @@
+services:
+  aker-build-app:
+    build:
+      context: ..
+      dockerfile: packages/github-app-server/Dockerfile
+    image: aker-build-app:local
+    read_only: true
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      AKER_BUILD_APP_ID: "${AKER_BUILD_APP_ID:?required}"
+      AKER_BUILD_APP_PRIVATE_KEY: "${AKER_BUILD_APP_PRIVATE_KEY:?required}"
+      AKER_BUILD_WEBHOOK_SECRET: "${AKER_BUILD_WEBHOOK_SECRET:?required}"
+      AKER_BUILD_INSTALLATION_ID: "${AKER_BUILD_INSTALLATION_ID:?required}"
+    volumes:
+      - aker-build-tmp:/var/lib/aker-build/tmp
+
+volumes:
+  aker-build-tmp:

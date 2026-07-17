@@ -9,7 +9,8 @@ description: "Task list for 014-github-app-report-only"
 
 **Tests**: REQUIRED — the repo follows TDD (write tests first, RED→GREEN); every package ships with Vitest tests. Test tasks precede implementation within each story.
 
-**Status**: Not started — docs-only until 014 is approved. No implementation begins before approval (constitution).
+**Status**: Implemented with seven explicitly unchecked/superseded follow-up tasks; reconciled by 016
+on 2026-07-17. See `implementation-evidence.md` before changing any checkbox.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -21,8 +22,8 @@ description: "Task list for 014-github-app-report-only"
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Verify repo state, branch, and confirm allowed/forbidden files from `specs/014-github-app-report-only/plan.md` before any edit.
-- [ ] T002 Scaffold `packages/github-app/` workspace package (package.json, tsconfig, vitest config) matching the existing `packages/report` package conventions.
+- [x] T001 Verify repo state, branch, and confirm allowed/forbidden files from `specs/014-github-app-report-only/plan.md` before any edit.
+- [x] T002 Scaffold `packages/github-app/` workspace package (package.json, tsconfig, vitest config) matching the existing `packages/report` package conventions.
 - [ ] T003 [P] Add `@aker-build/github-app` to the pnpm workspace and declare read-only deps on `@aker-build/review`, `@aker-build/report`, `@aker-build/config` (update `pnpm-lock.yaml` for the new manifest only).
 
 ---
@@ -31,9 +32,9 @@ description: "Task list for 014-github-app-report-only"
 
 **⚠️ CRITICAL**: must complete before any user-story work.
 
-- [ ] T004 Define Zod boundary schemas for `WebhookEvent` and the Checks output payload in `packages/github-app/src/types.ts`, per `data-model.md` and `contracts/webhook-and-checks.md`.
-- [ ] T005 [P] Implement the write-allowlist guard in `packages/github-app/src/safety.ts` — a single chokepoint that permits ONLY create/update check-run + annotations and throws on any other GitHub write (FR-007/FR-014).
-- [ ] T006 [P] Add the test for the write-allowlist guard in `packages/github-app/tests/safety.test.ts` (asserts commit/push/merge/label/review-request are unreachable) — write FIRST, must fail before T005 lands.
+- [x] T004 Define Zod boundary schemas for `WebhookEvent` and the Checks output payload in `packages/github-app/src/types.ts`, per `data-model.md` and `contracts/webhook-and-checks.md`.
+- [x] T005 [P] Implement the write-allowlist guard in `packages/github-app/src/safety.ts` — a single chokepoint that permits ONLY create/update check-run + annotations and throws on any other GitHub write (FR-007/FR-014).
+- [x] T006 [P] Add the test for the write-allowlist guard in `packages/github-app/tests/safety.test.ts` (asserts commit/push/merge/label/review-request are unreachable) — write FIRST, must fail before T005 lands.
 
 **Checkpoint**: boundary types + safety chokepoint exist; story work can begin.
 
@@ -47,16 +48,16 @@ description: "Task list for 014-github-app-report-only"
 
 ### Tests first (RED)
 
-- [ ] T007 [P] [US1] Webhook intake test in `packages/github-app/tests/webhook.test.ts` — signature-verify pass/fail, action filter (opened/reopened/synchronize accepted; others → no check), per `contracts` Contract A.
-- [ ] T008 [P] [US1] Review-runner test in `packages/github-app/tests/review-runner.test.ts` — given a faked PR head + diff, the existing `review-pr` chain is invoked and findings flow through (mock the engine boundary).
-- [ ] T009 [P] [US1] Checks-output test in `packages/github-app/tests/checks.test.ts` — a `confirmed` finding renders an annotation at the correct file:line and a non-success conclusion (FR-003/FR-004).
+- [x] T007 [P] [US1] Webhook intake test in `packages/github-app/tests/webhook.test.ts` — signature-verify pass/fail, action filter (opened/reopened/synchronize accepted; others → no check), per `contracts` Contract A.
+- [x] T008 [P] [US1] Review-runner test in `packages/github-app/tests/review-runner.test.ts` — given a faked PR head + diff, the existing `review-pr` chain is invoked and findings flow through (mock the engine boundary).
+- [x] T009 [P] [US1] Checks-output test in `packages/github-app/tests/checks.test.ts` — a `confirmed` finding renders an annotation at the correct file:line and a non-success conclusion (FR-003/FR-004).
 
 ### Implementation (GREEN)
 
-- [ ] T010 [US1] Implement `packages/github-app/src/webhook.ts` — HMAC verify then parse to `WebhookEvent`, drop ignored actions (R2, Contract A).
-- [ ] T011 [US1] Implement `packages/github-app/src/review-runner.ts` — resolve PR head ref, compute changed files, invoke `@aker-build/review` review-pr; per-event fetch-and-discard, no persistence (R5/FR-008).
-- [ ] T012 [US1] Implement `packages/github-app/src/checks.ts` (core path) — map findings to a check-run + annotations via the merged Checks renderer; route ALL writes through `safety.ts` (FR-007).
-- [ ] T013 [US1] Implement `packages/github-app/src/index.ts` — deployable handler wiring webhook → runner → checks, returning the Checks result.
+- [x] T010 [US1] Implement `packages/github-app/src/webhook.ts` — HMAC verify then parse to `WebhookEvent`, drop ignored actions (R2, Contract A).
+- [x] T011 [US1] Implement `packages/github-app/src/review-runner.ts` — resolve PR head ref, compute changed files, invoke `@aker-build/review` review-pr; per-event fetch-and-discard, no persistence (R5/FR-008).
+- [x] T012 [US1] Implement `packages/github-app/src/checks.ts` (core path) — map findings to a check-run + annotations via the merged Checks renderer; route ALL writes through `safety.ts` (FR-007).
+- [x] T013 [US1] Implement `packages/github-app/src/index.ts` — deployable handler wiring webhook → runner → checks, returning the Checks result.
 
 **Checkpoint**: US1 independently demoable — open PR → check with correct annotation, no other writes.
 
@@ -72,13 +73,13 @@ description: "Task list for 014-github-app-report-only"
 
 - [ ] T014 [P] [US2] Tier-presentation test in `packages/github-app/tests/checks.test.ts` — confirmed→prominent+non-success, suspected-only→neutral+collapsed (FR-005, R4).
 - [ ] T015 [P] [US2] Annotation-bound test in `packages/github-app/tests/checks.test.ts` — >50 findings → exactly ≤50 annotations, confirmed-first ordering, overflow in summary (FR-006/SC-005, R3).
-- [ ] T016 [P] [US2] Draft-PR test in `packages/github-app/tests/checks.test.ts` — `draft:true` with confirmed findings → conclusion neutral (FR-015).
+- [x] T016 [P] [US2] Draft-PR test in `packages/github-app/tests/checks.test.ts` — `draft:true` with confirmed findings → conclusion neutral (FR-015).
 
 ### Implementation (GREEN)
 
 - [ ] T017 [US2] Extend `packages/github-app/src/checks.ts` — tier-driven presentation (prominent vs collapsed) and conclusion mapping per R4.
 - [ ] T018 [US2] Add the ≤50 annotation cap + confirmed-first ordering + overflow summary in `packages/github-app/src/checks.ts` (FR-006).
-- [ ] T019 [US2] Add the draft→neutral override in `packages/github-app/src/checks.ts` driven by `WebhookEvent.isDraft` (FR-015).
+- [x] T019 [US2] Add the draft→neutral override in `packages/github-app/src/checks.ts` driven by `WebhookEvent.isDraft` (FR-015).
 
 **Checkpoint**: US2 independently demoable — readable, non-flooded, draft-safe presentation.
 
@@ -93,15 +94,15 @@ description: "Task list for 014-github-app-report-only"
 ### Tests first (RED)
 
 - [ ] T020 [P] [US3] Degraded-path tests in `packages/github-app/tests/checks.test.ts` — fork/missing-perm/timeout/unanalyzable → neutral + honest message, never success (FR-011).
-- [ ] T021 [P] [US3] Secret-safety + no-persistence test in `packages/github-app/tests/review-runner.test.ts` — secret-like content flagged not captured; nothing written to any store (FR-008/FR-009/SC-004).
-- [ ] T022 [P] [US3] Idempotency test in `packages/github-app/tests/checks.test.ts` — repeated `synchronize` for same head updates (not duplicates) the check (FR-012).
+- [x] T021 [P] [US3] Secret-safety + no-persistence test in `packages/github-app/tests/review-runner.test.ts` — secret-like content flagged not captured; nothing written to any store (FR-008/FR-009/SC-004).
+- [x] T022 [P] [US3] Idempotency test in `packages/github-app/tests/checks.test.ts` — repeated `synchronize` for same head updates (not duplicates) the check (FR-012).
 - [ ] T023 [P] [US3] Consistency test in `packages/github-app/tests/review-runner.test.ts` — App conclusion + finding set equals CLI `review-pr` for the same diff (FR-013/SC-006).
 
 ### Implementation (GREEN)
 
-- [ ] T024 [US3] Implement degraded-path handling in `packages/github-app/src/review-runner.ts` and `checks.ts` — every incomplete review concludes neutral with an honest message (FR-011).
-- [ ] T025 [US3] Implement check idempotency (find-or-update by repo+headSha) in `packages/github-app/src/checks.ts` (FR-012).
-- [ ] T026 [US3] Document the minimum permission set + write-allowlist in `packages/github-app/README.md` for installer verification (FR-010/FR-014, US3).
+- [x] T024 [US3] Implement degraded-path handling in `packages/github-app/src/review-runner.ts` and `checks.ts` — every incomplete review concludes neutral with an honest message (FR-011).
+- [x] T025 [US3] Implement check idempotency (find-or-update by repo+headSha) in `packages/github-app/src/checks.ts` (FR-012).
+- [x] T026 [US3] Document the minimum permission set + write-allowlist in `packages/github-app/README.md` for installer verification (FR-010/FR-014, US3).
 
 **Checkpoint**: US3 independently demoable — safety boundary verifiable end-to-end.
 
@@ -109,10 +110,10 @@ description: "Task list for 014-github-app-report-only"
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T027 [P] Update `README.md` and `packages/cli/README.md` to document the App surface (report-only, self-hostable) — no command behavior change.
-- [ ] T028 Run focused package tests: `pnpm --filter @aker-build/github-app test`.
-- [ ] T029 Run full suite + typecheck: `pnpm test` and `pnpm typecheck` (must be green).
-- [ ] T030 Final status: confirm no forbidden surfaces touched (no mutation code, no persistence, no P5/P6 drift) and `git status` is limited to allowed files.
+- [x] T027 [P] Update `README.md` and `packages/cli/README.md` to document the App surface (report-only, self-hostable) — no command behavior change.
+- [x] T028 Run focused package tests: `pnpm --filter @aker-build/github-app test`.
+- [x] T029 Run full suite + typecheck: `pnpm test` and `pnpm typecheck` (must be green).
+- [x] T030 Final status: confirm no forbidden surfaces touched (no mutation code, no persistence, no P5/P6 drift) and `git status` is limited to allowed files.
 
 ---
 

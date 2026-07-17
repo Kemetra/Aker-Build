@@ -69,6 +69,14 @@ export const reportSchema = z.object({
         verdict: z.enum(["ready", "not_ready", "needs_verification"]),
         changed_files: z.number().int().min(0),
         findings: z.number().int().min(0),
+        comparison: z.object({
+          complete: z.boolean(),
+          new: z.number().int().min(0),
+          existing: z.number().int().min(0),
+          resolved: z.number().int().min(0),
+          changed: z.number().int().min(0),
+          unattributed: z.number().int().min(0),
+        }).optional(),
       })
       .nullable(),
   }),

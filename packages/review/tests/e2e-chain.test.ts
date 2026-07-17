@@ -21,10 +21,14 @@ describe("e2e: scan → gates → review-pr --local-diff (T036)", () => {
     git("init", "-q");
     git("config", "user.email", "t@t.local");
     git("config", "user.name", "T");
+    git("config", "commit.gpgsign", "false");
+    git("config", "core.autocrlf", "false");
+    git("config", "core.hooksPath", ".git/aker-build-no-hooks");
+    git("config", "core.excludesFile", ".git/aker-build-no-global-ignore");
     writeFileSync(join(root, "apps/api/routes/health.ts"), "export const ok = 1;\n", "utf8");
     writeFileSync(join(root, "package.json"), '{"name":"sample"}\n', "utf8");
     git("add", ".");
-    git("-c", "commit.gpgsign=false", "commit", "-q", "-m", "base");
+    git("commit", "-q", "-m", "base");
     // the change under review: an admin route with no role guard (G4 flags it)
     writeFileSync(
       join(root, "apps/api/routes/admin.ts"),
@@ -49,7 +53,7 @@ describe("e2e: scan → gates → review-pr --local-diff (T036)", () => {
     // the rendered Markdown matches the documented quickstart shape (gate line + indented evidence)
     const md = renderReport(report);
     expect(md).toMatch(/^# Review: Not Ready/);
-    expect(md).toContain("## Contributing findings");
+    expect(md).toContain("## Introduced or worsened");
     expect(md).toMatch(/- \*\*TG-G4\*\* \(risk, high\)/);
     expect(md).toMatch(/\n {2}- `apps\/api\/routes\/admin\.ts:\d+` — /); // indented evidence sub-bullet
     expect(md).toContain("## Verdict");

@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
+import { activeScanBudget, ScanBudgetExceededError } from "./budget.js";
 
 const SKIP_DIRS = new Set([
   "node_modules",
@@ -28,7 +29,9 @@ export function listFiles(root: string): string[] {
         if (SKIP_DIRS.has(e.name)) continue;
         walk(join(dir, e.name));
       } else if (e.isFile()) {
-        out.push(relative(root, join(dir, e.name)).split(sep).join("/"));
+        const relPath = relative(root, join(dir, e.name)).split(sep).join("/");
+        activeScanBudget()?.consider(relPath);
+        out.push(relPath);
       }
     }
   };
@@ -48,8 +51,15 @@ export function fileExists(root: string, relPath: string): boolean {
 /** Read-only: read a repo-relative file; null if unreadable (caller records a note). */
 export function readFileSafe(root: string, relPath: string): string | null {
   try {
-    return readFileSync(join(root, relPath), "utf8");
-  } catch {
+    const target = join(root, relPath);
+    const tracker = activeScanBudget();
+    const size = statSync(target).size;
+    tracker?.assertReadable(size);
+    const content = readFileSync(target, "utf8");
+    tracker?.recordRead(Buffer.byteLength(content, "utf8"));
+    return content;
+  } catch (error) {
+    if (error instanceof ScanBudgetExceededError) throw error;
     return null;
   }
 }

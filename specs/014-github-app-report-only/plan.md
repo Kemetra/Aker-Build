@@ -1,6 +1,6 @@
 # Implementation Plan: 014 Report-Only GitHub App
 
-Status: Planned (docs-only; no implementation until approved)
+Status: Implemented with evidence-linked follow-up gaps (reconciled by 016 on 2026-07-17)
 Feature: `014-github-app-report-only`
 Date: 2026-06-21
 Spec: `specs/014-github-app-report-only/spec.md`

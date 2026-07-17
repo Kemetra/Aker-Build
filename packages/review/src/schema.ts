@@ -3,7 +3,7 @@ import { evidenceSchema } from "@aker-build/project-map";
 import { SEVERITIES } from "@aker-build/gates";
 
 /** Canonical review.json schema version. */
-export const REVIEW_SCHEMA_VERSION = 1;
+export const REVIEW_SCHEMA_VERSION = 2;
 
 const severitySchema = z.enum(SEVERITIES);
 const suppressionSchema = z.object({
@@ -35,6 +35,13 @@ const gateFindingSchema = z.discriminatedUnion("status", [
     evidence: z.array(evidenceSchema).min(1),
     suppression: suppressionSchema.optional(),
   }),
+  z.object({
+    gate_id: z.string(),
+    status: z.literal("not_applicable"),
+    severity: z.null(),
+    evidence: z.array(evidenceSchema),
+    suppression: suppressionSchema.optional(),
+  }),
 ]);
 
 const scopeFindingSchema = z.object({
@@ -44,7 +51,10 @@ const scopeFindingSchema = z.object({
   item_id: z.string(),
 });
 
-export const reviewFindingSchema = z.union([gateFindingSchema, scopeFindingSchema]);
+export const reviewFindingSchema = z.union([
+  gateFindingSchema,
+  scopeFindingSchema,
+]);
 
 const scopeResultSchema = z.object({
   checked: z.boolean(),
@@ -61,17 +71,71 @@ const prMetadataSchema = z.object({
   base_ref: z.string(),
 });
 
-/** The review.json document. */
-export const reviewSchema = z.object({
-  schema_version: z.number().int().min(1),
+const commonReviewFields = {
   mode: z.enum(["local-diff", "pr"]),
   verdict: z.enum(["ready", "not_ready", "needs_verification"]),
   changed_files: z.array(z.string()),
-  findings: z.array(reviewFindingSchema),
   scope: scopeResultSchema,
   github_available: z.boolean().nullable(),
   pr: prMetadataSchema.optional(),
+};
+
+export const reviewSchemaV1 = z.object({
+  schema_version: z.literal(1),
+  ...commonReviewFields,
+  findings: z.array(z.union([
+    z.discriminatedUnion("status", [
+      gateFindingSchema.options[0],
+      gateFindingSchema.options[1],
+    ]),
+    scopeFindingSchema,
+  ])),
 });
+
+const classificationSchema = z.enum(["new", "existing", "resolved", "changed", "unattributed"]);
+const comparedGateFindingSchema = gateFindingSchema.and(z.object({
+  classification: classificationSchema,
+  fingerprint: z.string().regex(/^[0-9a-f]{64}$/u),
+  source: z.enum(["base", "head"]),
+  line_changed: z.boolean(),
+  change: z.enum(["worsened", "improved", "modified"]).optional(),
+}));
+const incompleteReasonSchema = z.enum([
+  "base_unavailable",
+  "head_unavailable",
+  "diff_unavailable",
+  "unsafe_path",
+  "submodule_unsupported",
+  "lfs_unsupported",
+]);
+const comparisonRefSchema = z.object({ label: z.string().min(1), sha: z.string().regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u).nullable() });
+
+export const reviewSchemaV2 = z.object({
+  schema_version: z.literal(REVIEW_SCHEMA_VERSION),
+  ...commonReviewFields,
+  changed_ranges: z.array(z.object({
+    path: z.string().min(1),
+    ranges: z.array(z.object({ start: z.number().int().positive(), end: z.number().int().positive() })),
+    binary: z.boolean(),
+  })),
+  findings: z.array(z.union([comparedGateFindingSchema, scopeFindingSchema])),
+  comparison: z.object({
+    base: comparisonRefSchema,
+    head: comparisonRefSchema,
+    complete: z.boolean(),
+    incomplete_reasons: z.array(incompleteReasonSchema),
+    counts: z.object({
+      new: z.number().int().min(0),
+      existing: z.number().int().min(0),
+      resolved: z.number().int().min(0),
+      changed: z.number().int().min(0),
+      unattributed: z.number().int().min(0),
+    }),
+  }),
+});
+
+/** Frozen v1 consumer contract plus strict v2 producer contract. */
+export const reviewSchema = z.discriminatedUnion("schema_version", [reviewSchemaV1, reviewSchemaV2]);
 
 export interface ReviewValidationResult {
   ok: boolean;

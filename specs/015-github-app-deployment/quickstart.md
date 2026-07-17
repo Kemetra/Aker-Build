@@ -1,10 +1,12 @@
 # Quickstart: 015 GitHub App Deployment Runtime
 
-How an operator runs the report-only GitHub App against live GitHub. (Docs-only design until implemented.)
+How an operator runs the implemented report-only GitHub App runtime against live GitHub. A green
+credential-free suite proves assembly and safety; live operation remains operator-verified.
 
 ## Prerequisites
 
-- A registered GitHub App (from 014's permission set: `checks: write`, `contents: read`, `metadata: read`; webhook on `pull_request`) installed on the target repo/org.
+- A registered GitHub App with exactly `metadata: read`, `contents: read`, `pull_requests: read`, and
+  `checks: write`; subscribe only to the `pull_request` webhook and install it on the target repo/org.
 - The App's **id**, **private key**, and **webhook secret**.
 
 ## Configure (secrets via environment only)
@@ -23,7 +25,14 @@ If any required variable is missing, the service **fails fast at startup** and n
 
 ## Run
 
-Start the service (self-hosted, single-tenant). Point the GitHub App's webhook URL at the service's public endpoint.
+From the repository root, start the self-hosted, single-tenant service through a TS-aware loader:
+
+```bash
+pnpm dlx tsx packages/github-app-server/src/bin.ts
+```
+
+Point the GitHub App's webhook URL at the service's public endpoint. This source-workspace command is
+not a claim that a compiled npm binary exists; packaged distribution belongs to 020.
 
 ## What happens on a PR
 

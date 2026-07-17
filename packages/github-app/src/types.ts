@@ -13,10 +13,18 @@ export const webhookEventSchema = z.object({
     // boundary stops a crafted `head.sha` (e.g. one starting with `-`) from ever reaching `git fetch`
     // as an option rather than a ref (argument-injection defense; the runner also passes `--`).
     head: z.object({ sha: z.string().regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i) }),
+    base: z.object({ sha: z.string().regex(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i) }),
   }),
   repository: z.object({
-    owner: z.object({ login: z.string().min(1) }),
-    name: z.string().min(1),
+    owner: z.object({
+      login: z
+        .string()
+        .regex(/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/u, "invalid repository owner"),
+    }),
+    name: z
+      .string()
+      .regex(/^[A-Za-z0-9._][A-Za-z0-9._-]{0,99}$/u, "invalid repository name")
+      .refine((name) => name !== "." && name !== "..", "invalid repository name"),
   }),
   installation: z.object({ id: z.number().int() }).optional(),
 });
@@ -31,6 +39,7 @@ export interface PullRequestEvent {
   owner: string;
   repo: string;
   prNumber: number;
+  baseSha: string;
   headSha: string;
   isDraft: boolean;
   installationId: number | null;
@@ -42,7 +51,8 @@ export function toPullRequestEvent(raw: RawWebhookEvent): PullRequestEvent {
     owner: raw.repository.owner.login,
     repo: raw.repository.name,
     prNumber: raw.pull_request.number,
-    headSha: raw.pull_request.head.sha,
+    baseSha: raw.pull_request.base.sha.toLowerCase(),
+    headSha: raw.pull_request.head.sha.toLowerCase(),
     isDraft: raw.pull_request.draft ?? false,
     installationId: raw.installation?.id ?? null,
   };

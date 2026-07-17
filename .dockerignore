@@ -1,0 +1,10 @@
+.git
+.github
+.aker-build
+.env
+.env.*
+**/node_modules
+**/dist
+**/coverage
+docs
+specs

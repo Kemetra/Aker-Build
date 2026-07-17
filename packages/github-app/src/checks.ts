@@ -1,5 +1,5 @@
 import { renderChecksPayload, type ChecksPayload } from "@aker-build/review";
-import type { ReviewReport } from "@aker-build/review";
+import type { AnyReviewReport } from "@aker-build/review";
 import { assertAllowedWrite } from "./safety.js";
 import type { PullRequestEvent } from "./types.js";
 
@@ -20,7 +20,7 @@ export interface ChecksClient {
  * App adds ONLY the draft override: a draft PR always concludes `neutral`, never a blocking-looking
  * failure (FR-015). Pure data; no network.
  */
-export function buildPayload(report: ReviewReport, event: Pick<PullRequestEvent, "isDraft">): ChecksPayload {
+export function buildPayload(report: AnyReviewReport, event: Pick<PullRequestEvent, "isDraft">): ChecksPayload {
   const base = renderChecksPayload(report);
   if (event.isDraft && base.conclusion === "failure") {
     return { ...base, conclusion: "neutral" };

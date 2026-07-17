@@ -1,7 +1,7 @@
 # Live Smoke Test — Field Verification Checklist (015)
 
-The automated suite proves the App is correctly **assembled** and **secret-safe**, but it never calls
-api.github.com. This checklist closes that gap: it confirms the App can actually **mint a token**,
+The credential-free automated suite proves the App is correctly **assembled** and **secret-safe**,
+but it never calls api.github.com. This checklist closes that gap: it confirms the App can actually **mint a token**,
 **read a PR's files**, and **write a check** against a registered GitHub App. Run it once after
 deploying / before trusting "runs live."
 
@@ -26,8 +26,8 @@ checkout). Path 3 is explicitly out of this feature's scope.
 
 ## You will need
 
-- A **registered GitHub App** with the 014 permission set: `checks: write`, `contents: read`,
-  `metadata: read`; webhook subscribed to `pull_request`.
+- A **registered GitHub App** with exactly `metadata: read`, `contents: read`,
+  `pull_requests: read`, and `checks: write`; webhook subscribed only to `pull_request`.
 - The App **installed** on a target repo you control.
 - The App's **id**, **private key (.pem)**, **webhook secret**, and the **installation id** for that repo.
 - An **existing open PR** on the installed repo, and that PR's **head commit SHA**.
@@ -50,10 +50,10 @@ AKER_BUILD_APP_ID="<app id>" \
 AKER_BUILD_APP_PRIVATE_KEY="$(cat /path/to/your-app.private-key.pem)" \
 AKER_BUILD_WEBHOOK_SECRET="<webhook secret>" \
 AKER_BUILD_INSTALLATION_ID="<installation id>" \
-TG_SMOKE_OWNER="<repo owner / org login>" \
-TG_SMOKE_REPO="<repo name>" \
-TG_SMOKE_PR="<existing PR number>" \
-TG_SMOKE_HEAD_SHA="<that PR's head commit sha>" \
+AKER_BUILD_SMOKE_OWNER="<repo owner / org login>" \
+AKER_BUILD_SMOKE_REPO="<repo name>" \
+AKER_BUILD_SMOKE_PR="<existing PR number>" \
+AKER_BUILD_SMOKE_HEAD_SHA="<that PR's head commit sha>" \
 pnpm --filter @aker-build/github-app-server exec vitest run live-smoke
 ```
 
@@ -65,12 +65,12 @@ $env:AKER_BUILD_APP_ID="<app id>"
 $env:AKER_BUILD_APP_PRIVATE_KEY=(Get-Content -Raw C:\path\to\your-app.private-key.pem)
 $env:AKER_BUILD_WEBHOOK_SECRET="<webhook secret>"
 $env:AKER_BUILD_INSTALLATION_ID="<installation id>"
-$env:TG_SMOKE_OWNER="<repo owner / org login>"
-$env:TG_SMOKE_REPO="<repo name>"
-$env:TG_SMOKE_PR="<existing PR number>"
-$env:TG_SMOKE_HEAD_SHA="<that PR's head commit sha>"
+$env:AKER_BUILD_SMOKE_OWNER="<repo owner / org login>"
+$env:AKER_BUILD_SMOKE_REPO="<repo name>"
+$env:AKER_BUILD_SMOKE_PR="<existing PR number>"
+$env:AKER_BUILD_SMOKE_HEAD_SHA="<that PR's head commit sha>"
 pnpm --filter @aker-build/github-app-server exec vitest run live-smoke
-# Clear them afterwards: Remove-Item Env:AKER_BUILD_*, Env:TG_SMOKE_*
+# Clear them afterwards: Remove-Item Env:AKER_BUILD_*
 ```
 
 ---
@@ -115,14 +115,17 @@ entrypoint is `packages/github-app-server/src/bin.ts` (a thin shim that calls th
 which env-composes the runtime and binds the listener). It is registered as the package `bin`
 `aker-build-app-server`.
 
-1. Set the four `AKER_BUILD_*` credentials (no `TG_SMOKE_*` needed) — environment only, never a file.
+1. Set the four required runtime credentials — `AKER_BUILD_APP_ID`,
+   `AKER_BUILD_APP_PRIVATE_KEY`, `AKER_BUILD_WEBHOOK_SECRET`, and
+   `AKER_BUILD_INSTALLATION_ID` — environment only, never a file. The `AKER_BUILD_SMOKE_*` target
+   variables are needed only for the adapter smoke, not the full host.
 2. Launch the host. The bin uses `.js`→`.ts` import specifiers (same convention as the `aker-build`
    and `aker-build-benchmark` bins), so it needs a **TS-aware runtime**:
-   - **Built / published package:** run the installed `aker-build-app-server` command.
+   - **After 020 publishes a built package:** run the installed `aker-build-app-server` command.
    - **In-repo dev run:** invoke `src/bin.ts` through a TS runtime (a build step, or a `tsx`/loader —
      `tsx` is intentionally **not** a repo dependency, so installing one is an operator/deploy choice,
      not a committed lockfile change). Example with a locally available loader:
-     `node --import tsx packages/github-app-server/src/bin.ts`
+     `pnpm dlx tsx packages/github-app-server/src/bin.ts`
 3. Expose the port publicly (e.g. a tunnel) and point the App's **webhook URL** at it.
 4. **Open a PR** on the installed repo.
 5. Confirm a **`Aker Build`** check appears at the PR head with the expected conclusion

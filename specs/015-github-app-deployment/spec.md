@@ -2,7 +2,7 @@
 
 **Feature Branch**: `015-github-app-deployment`
 **Created**: 2026-06-21
-**Status**: Draft
+**Status**: Implemented; live field verification remains operator-owned (reconciled by 016 on 2026-07-17)
 **Input**: User description: "A deployment runtime for the report-only GitHub App built in 014. Provides a self-hostable single-tenant Node HTTP service that receives pull_request webhooks, verifies the HMAC signature, and dispatches to the existing handleEvent; a concrete octokit-backed ChecksClient; and a concrete Workspace (ephemeral checkout of the PR head, disposed after each event). Secrets (App private key, app id, installation auth, webhook secret) are read ONLY from the deployment environment and NEVER written to disk, logs, the Checks payload, error messages, or any artifact. Stays report-only (only writes checks.create/checks.update via the 014 safety allowlist), stateless, and stores no repository source. Degrades honestly: malformed/unsigned webhooks are rejected; an event it cannot fully review concludes neutral, never a false success. Does NOT change judgment logic, add P5 dashboard, or add P6 enforcing behavior."
 
 ## Clarifications

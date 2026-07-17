@@ -1,0 +1,4 @@
+[commit]
+    gpgsign = true
+[user]
+    signingkey = aker-build-ci-invalid-signing-key

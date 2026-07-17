@@ -1,7 +1,8 @@
 /**
  * LIVE FIELD-VERIFICATION SMOKE TEST — the one thing the automated suite cannot do.
  *
- * The 379-green suite proves the runtime is correctly ASSEMBLED and SECRET-SAFE, but every test
+ * The credential-free automated suite proves the runtime is correctly ASSEMBLED and SECRET-SAFE,
+ * but every test
  * injects a FAKE GitHubApi or points git at a `file://` repo. The `octokit as unknown as OctokitLike`
  * cast in composeDeps means only the fake's shape is type-checked — nothing exercises the REAL
  * appId/privateKey -> installation-token -> api.github.com path. This file closes exactly that gap.
@@ -14,8 +15,7 @@
  *
  * WHAT A GREEN RUN CERTIFIES (and nothing more):
  *   - token mint: appId/privateKey/installationId -> a real installation access token.
- *   - read pagination: pulls.listFiles through octokit.paginate against real Link headers (the
- *     truncation risk that would otherwise cause a false "clean" on a large PR).
+ *   - production metadata read: pulls.get through the real authenticated Octokit path.
  *   - check write: checks.create through the createAppAuth-authed Octokit returns a real check id
  *     (a successful create also implicitly proves the App-JWT -> installation-token exchange).
  *
@@ -28,7 +28,8 @@
  * To run:
  *   AKER_BUILD_APP_ID=... AKER_BUILD_APP_PRIVATE_KEY="$(cat key.pem)" \
  *   AKER_BUILD_WEBHOOK_SECRET=... AKER_BUILD_INSTALLATION_ID=... \
- *   TG_SMOKE_OWNER=... TG_SMOKE_REPO=... TG_SMOKE_PR=<existing PR #> TG_SMOKE_HEAD_SHA=<that PR's head sha> \
+ *   AKER_BUILD_SMOKE_OWNER=... AKER_BUILD_SMOKE_REPO=... AKER_BUILD_SMOKE_PR=<existing PR #> \
+ *   AKER_BUILD_SMOKE_HEAD_SHA=<that PR's head sha> \
  *   AKER_BUILD_SMOKE=1 pnpm --filter @aker-build/github-app-server test live-smoke
  */
 import { describe, it, expect } from "vitest";
@@ -57,26 +58,26 @@ describe.skipIf(!SMOKE)("LIVE smoke against api.github.com (real App + installat
     // Never assert on / print the token's contents — only that one was issued (Principle VII).
   });
 
-  it("lists a real PR's changed files through octokit pagination (no truncation)", async () => {
-    const owner = need("TG_SMOKE_OWNER");
-    const repo = need("TG_SMOKE_REPO");
-    const prNumber = Number(need("TG_SMOKE_PR"));
+  it("reads real PR metadata through the production Octokit path", async () => {
+    const owner = need("AKER_BUILD_SMOKE_OWNER");
+    const repo = need("AKER_BUILD_SMOKE_REPO");
+    const prNumber = Number(need("AKER_BUILD_SMOKE_PR"));
     expect(Number.isInteger(prNumber)).toBe(true);
 
     const { api } = composeDeps(process.env); // the operator's REAL composition root
-    const files = await api.listChangedFiles({ owner, repo, prNumber });
+    const metadata = await api.getPrMetadata({ owner, repo, prNumber });
 
-    // Drives the real createAppAuth -> installation-token -> paginate(pulls.listFiles) path. A broken
-    // adapter (wrong param names, single-page truncation, response-shape mismatch hidden by the cast)
-    // throws or returns a non-array here.
-    expect(Array.isArray(files)).toBe(true);
-    expect(files.every((f) => typeof f === "string")).toBe(true);
+    // Drives the real createAppAuth -> installation-token -> pulls.get path that the active runtime
+    // uses. A broken adapter (wrong parameter names or response shape hidden by the cast) throws.
+    expect(typeof metadata.title).toBe("string");
+    expect(typeof metadata.state).toBe("string");
+    expect(typeof metadata.baseRefName).toBe("string");
   });
 
   it("creates a real Aker Build check at the PR head and returns its id (check-write path)", async () => {
-    const owner = need("TG_SMOKE_OWNER");
-    const repo = need("TG_SMOKE_REPO");
-    const headSha = need("TG_SMOKE_HEAD_SHA");
+    const owner = need("AKER_BUILD_SMOKE_OWNER");
+    const repo = need("AKER_BUILD_SMOKE_REPO");
+    const headSha = need("AKER_BUILD_SMOKE_HEAD_SHA");
 
     const { api } = composeDeps(process.env);
     const { id } = await api.createCheckRun({

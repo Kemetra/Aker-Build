@@ -14,12 +14,13 @@ import {
   GitUnavailableError,
   GitHubUnavailableError,
 } from "@aker-build/review";
-import type { ReviewReport } from "@aker-build/review";
+import type { AnyReviewReport } from "@aker-build/review";
 
 export interface ReviewCmdOptions {
   localDiff?: boolean;
   item?: string;
   config?: string;
+  base?: string;
   out?: string;
   stdout?: boolean;
   format?: "json" | "yaml";
@@ -58,9 +59,13 @@ export function runReviewCommand(
     printErr("Specify --local-diff to review the working diff, or a PR number to review a GitHub PR.");
     return 2;
   }
+  if (prNumber && opts.base) {
+    printErr("--base is available only with --local-diff; PR review resolves the exact GitHub base SHA.");
+    return 2;
+  }
 
   try {
-    let report: ReviewReport;
+    let report: AnyReviewReport;
     if (prNumber) {
       report = reviewPr(Number(prNumber), { out, item: opts.item, configPath: opts.config }, { ...opts.prDeps, repoRoot: "." });
     } else {
@@ -69,7 +74,7 @@ export function runReviewCommand(
         printErr(`Not a Git repository: ${targetPath}`);
         return 2;
       }
-      report = reviewLocalDiff({ out, item: opts.item, configPath: opts.config }, { repoRoot: targetPath });
+      report = reviewLocalDiff({ out, item: opts.item, configPath: opts.config, base: opts.base }, { repoRoot: targetPath });
     }
     assertValidReport(report);
     const markdown = renderReport(report);

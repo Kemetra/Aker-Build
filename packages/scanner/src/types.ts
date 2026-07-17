@@ -1,4 +1,5 @@
 import type { Evidence, ProjectMap } from "@aker-build/project-map";
+import type { ScanBudget, ScanUsage } from "./budget.js";
 
 /** A detection signal = a 002 Evidence Object justifying a map value. */
 export type DetectionSignal = Evidence;
@@ -14,6 +15,7 @@ export interface RunNote {
 export interface ScanResult {
   map: ProjectMap;
   notes: RunNote[];
+  usage: ScanUsage;
 }
 
 export interface ScanOptions {
@@ -21,4 +23,6 @@ export interface ScanOptions {
   out?: string;
   /** Optional explicit config path. If omitted, aker-build.config.json/yaml is auto-discovered. */
   configPath?: string;
+  /** Optional filesystem budget. Omitted means explicitly unbounded for CLI compatibility. */
+  budget?: ScanBudget;
 }

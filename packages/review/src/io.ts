@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { writeOutput } from "@aker-build/scanner";
 import type { Queue, QueueItem } from "@aker-build/queue";
 import { validateReview } from "./schema.js";
-import type { ReviewReport } from "./types.js";
+import type { AnyReviewReport } from "./types.js";
 
 /** Raised when queue.json is missing (with `--item`) — CLI maps to "run queue first" (exit 1). */
 export class MissingQueueError extends Error {}
@@ -28,7 +28,7 @@ export function loadQueueItem(outDir: string, id: string): QueueItem {
 }
 
 /** Validate the report against the review.json schema; throw InvalidReviewError on failure. */
-export function assertValidReport(report: ReviewReport): void {
+export function assertValidReport(report: AnyReviewReport): void {
   const result = validateReview(report);
   if (!result.ok) {
     const detail = result.errors.map((e) => `${e.path || "(root)"}: ${e.message}`).join("; ");
@@ -37,7 +37,7 @@ export function assertValidReport(report: ReviewReport): void {
 }
 
 /** Write review.json + review.md to the out-dir (outside scanned tracked source, FR-013). */
-export function writeReview(outDir: string, report: ReviewReport, markdown: string): { jsonPath: string; mdPath: string } {
+export function writeReview(outDir: string, report: AnyReviewReport, markdown: string): { jsonPath: string; mdPath: string } {
   const jsonPath = writeOutput(outDir, "review.json", JSON.stringify(report, null, 2) + "\n");
   const mdPath = writeOutput(outDir, "review.md", markdown);
   return { jsonPath, mdPath };

@@ -5,7 +5,7 @@ import { validate as validateProjectMap, type ProjectMap } from "@aker-build/pro
 import { validateRisks, type Finding, type RiskList } from "@aker-build/gates";
 import { validateQueue, validateRouteDecision, type Queue, type RouterDecision } from "@aker-build/queue";
 import { validateReview } from "@aker-build/review";
-import type { ReviewReport } from "@aker-build/review";
+import type { AnyReviewReport } from "@aker-build/review";
 import { writeOutput } from "@aker-build/scanner";
 import { readSpecKitArtifacts } from "@aker-build/spec-kit-adapter";
 import { REPORT_SCHEMA_VERSION, validateReport } from "./schema.js";
@@ -28,7 +28,7 @@ interface LoadedArtifacts {
   risks: RiskList | null;
   queue: Queue | null;
   route: RouterDecision | null;
-  review: ReviewReport | null;
+  review: AnyReviewReport | null;
 }
 
 function readJsonIfPresent(outDir: string, name: ArtifactName): unknown | null {
@@ -85,7 +85,7 @@ function loadArtifacts(outDir: string): LoadedArtifacts {
     risks: risksRaw as RiskList | null,
     queue: queueRaw as Queue | null,
     route: routeRaw as RouterDecision | null,
-    review: reviewRaw as ReviewReport | null,
+    review: reviewRaw as AnyReviewReport | null,
   };
 }
 
@@ -191,6 +191,14 @@ function buildReportUnchecked(repoRoot: string, outDir: string): AkerBuildReport
             verdict: artifacts.review.verdict,
             changed_files: artifacts.review.changed_files.length,
             findings: artifacts.review.findings.length,
+            ...(artifacts.review.schema_version === 2
+              ? {
+                  comparison: {
+                    complete: artifacts.review.comparison.complete,
+                    ...artifacts.review.comparison.counts,
+                  },
+                }
+              : {}),
           }
         : null,
     },
@@ -242,6 +250,13 @@ export function renderReportMarkdown(report: AkerBuildReport): string {
     lines.push(`Verdict: ${report.summary.review.verdict}`);
     lines.push(`Changed files: ${report.summary.review.changed_files}`);
     lines.push(`Findings: ${report.summary.review.findings}`);
+    if (report.summary.review.comparison) {
+      const comparison = report.summary.review.comparison;
+      lines.push(`Comparison complete: ${comparison.complete ? "yes" : "no"}`);
+      lines.push(
+        `Introduced: ${comparison.new} · Existing: ${comparison.existing} · Resolved: ${comparison.resolved} · Changed: ${comparison.changed} · Unattributed: ${comparison.unattributed}`,
+      );
+    }
   } else {
     lines.push("(no review artifact)");
   }

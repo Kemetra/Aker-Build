@@ -1,14 +1,25 @@
+import { existsSync } from "node:fs";
 import { resolve, relative, isAbsolute } from "node:path";
 import { filterPaths, loadConfig } from "@aker-build/config";
-import { runGates as realRunGates } from "@aker-build/gates";
+import { MissingProjectMapError, runGates as realRunGates } from "@aker-build/gates";
 import type { RunGatesResult } from "@aker-build/gates";
 import { changedFiles as realChangedFiles } from "./git.js";
+import { GitUnavailableError } from "./git.js";
 import { diffAttributableFindings, type AttributableFinding } from "./attribute.js";
 import { checkScope, SCOPE_SKIPPED } from "./scope.js";
 import { decideVerdict } from "./verdict.js";
 import { loadQueueItem } from "./io.js";
-import { REVIEW_SCHEMA_VERSION } from "./schema.js";
-import type { ReviewReport, ReviewFinding, ReviewOptions, ScopeResult, PrMetadata } from "./types.js";
+import { compareReview, assembleIncompleteReview } from "./compare-review.js";
+import { diffTrees } from "./diff.js";
+import { createLocalSnapshots } from "./snapshot.js";
+import type {
+  AnyReviewReport,
+  ReviewReport,
+  ReviewFinding,
+  ReviewOptions,
+  ScopeResult,
+  PrMetadata,
+} from "./types.js";
 
 /**
  * Injectable dependencies (the codebase's context/deps idiom — cf. 004 GateContext, 005 RouterInputs).
@@ -25,11 +36,69 @@ export interface ReviewDeps {
 const DEFAULT_OUT = ".aker-build";
 
 /**
- * Review the current local diff and return a ReviewReport (FR-001). Read-only: runs the real
- * `changedFiles` (git) + `runGates` (004, verbatim) by default. Attributes findings to the diff,
- * runs the optional scope check, and derives the verdict off `status`.
+ * Review the current local diff. The normal v2 path archives the resolved base plus a conservative
+ * working-tree overlay, derives zero-context changed ranges locally, analyzes both snapshots, and
+ * derives a comparison verdict. Frozen injected dependencies retain the v1 test/migration seam.
  */
-export function reviewLocalDiff(opts: ReviewOptions = {}, deps: ReviewDeps = {}): ReviewReport {
+export function reviewLocalDiff(opts: ReviewOptions = {}, deps: ReviewDeps = {}): AnyReviewReport {
+  // Retain the frozen v1 injection seam for downstream tests/consumers during migration. The real
+  // production path below is the sole v2 producer and does not use filename-only attribution.
+  if (deps.changedFiles || deps.runGates) return reviewLocalDiffV1(opts, deps);
+
+  const out = opts.out ?? DEFAULT_OUT;
+  const repoRoot = deps.repoRoot ?? ".";
+  const mapPath = resolve(out, "project-map.json");
+  if (!existsSync(mapPath)) {
+    throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`aker-build scan\` first.`);
+  }
+
+  const snapshots = createLocalSnapshots(repoRoot, opts.base ?? "HEAD");
+  try {
+    if (!snapshots.complete) {
+      if (opts.base && snapshots.incompleteReasons.includes("base_unavailable")) {
+        throw new GitUnavailableError("Unable to resolve the requested base ref.");
+      }
+      const changed = safeVisibleChangedFiles(repoRoot, opts.base ?? "HEAD", out, opts.configPath);
+      const scope = scopeForChangedFiles(changed, out, opts.item);
+      return assembleIncompleteReview({
+        mode: "local-diff",
+        base: snapshots.base,
+        head: snapshots.head,
+        scope,
+        githubAvailable: null,
+        incompleteReasons: snapshots.incompleteReasons,
+        changedFiles: changed,
+      });
+    }
+
+    const rawDiff = diffTrees(snapshots.baseRoot, snapshots.headRoot);
+    const visiblePaths = new Set(applyConfigPathFilter(
+      excludeOutDir(rawDiff.changedFiles.map((file) => file.path), repoRoot, out),
+      repoRoot,
+      opts.configPath,
+    ));
+    const filteredDiff = {
+      ...rawDiff,
+      changedFiles: rawDiff.changedFiles.filter((file) => visiblePaths.has(file.path)),
+    };
+    const changed = filteredDiff.changedFiles.map((file) => file.path);
+    const scope = scopeForChangedFiles(changed, out, opts.item);
+    return compareReview({
+      mode: "local-diff",
+      baseRoot: snapshots.baseRoot,
+      headRoot: snapshots.headRoot,
+      base: snapshots.base,
+      head: snapshots.head,
+      scope,
+      githubAvailable: null,
+      configPath: opts.configPath,
+    }, { diff: () => filteredDiff });
+  } finally {
+    snapshots.dispose();
+  }
+}
+
+function reviewLocalDiffV1(opts: ReviewOptions, deps: ReviewDeps): ReviewReport {
   const out = opts.out ?? DEFAULT_OUT;
   const repoRoot = deps.repoRoot ?? ".";
   const getChanged = deps.changedFiles ?? realChangedFiles;
@@ -50,6 +119,18 @@ export function reviewLocalDiff(opts: ReviewOptions = {}, deps: ReviewDeps = {})
     : SCOPE_SKIPPED;
 
   return assemble("local-diff", changed, attributable, scope, null);
+}
+
+function scopeForChangedFiles(changed: string[], out: string, item?: string): ScopeResult {
+  return item ? checkScope(changed, loadQueueItem(out, item)) : SCOPE_SKIPPED;
+}
+
+function safeVisibleChangedFiles(repoRoot: string, base: string, out: string, configPath?: string): string[] {
+  try {
+    return applyConfigPathFilter(excludeOutDir(realChangedFiles(repoRoot, base), repoRoot, out), repoRoot, configPath);
+  } catch {
+    return [];
+  }
 }
 
 export function applyConfigPathFilter(changed: string[], repoRoot: string, configPath?: string): string[] {
@@ -107,7 +188,7 @@ export function assemble(
   const findings = [...gateFindings, ...scopeFindings];
 
   return {
-    schema_version: REVIEW_SCHEMA_VERSION,
+    schema_version: 1,
     mode,
     verdict: decideVerdict(attributable, scope),
     changed_files: [...changed],

@@ -27,6 +27,10 @@ function makeOriginRepo(): { repoDir: string; headSha: string } {
   git(repoDir, "init", "--quiet");
   git(repoDir, "config", "user.email", "t@t.test");
   git(repoDir, "config", "user.name", "t");
+  git(repoDir, "config", "commit.gpgsign", "false");
+  git(repoDir, "config", "core.autocrlf", "false");
+  git(repoDir, "config", "core.hooksPath", ".git/aker-build-no-hooks");
+  git(repoDir, "config", "core.excludesFile", ".git/aker-build-no-global-ignore");
   // Allow fetching a specific SHA from this repo (git denies arbitrary-sha fetch by default).
   git(repoDir, "config", "uploadpack.allowAnySHA1InWant", "true");
   writeFileSync(join(repoDir, "marker.txt"), "the-real-head-content\n");

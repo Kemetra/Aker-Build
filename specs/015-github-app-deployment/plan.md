@@ -1,6 +1,6 @@
 # Implementation Plan: 015 GitHub App Deployment Runtime
 
-Status: Planned (docs-only; implementation follows on this branch)
+Status: Implemented; live field verification remains operator-owned (reconciled by 016 on 2026-07-17)
 Feature: `015-github-app-deployment`
 Date: 2026-06-21
 Spec: `specs/015-github-app-deployment/spec.md`

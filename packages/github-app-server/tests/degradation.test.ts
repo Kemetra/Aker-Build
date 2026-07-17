@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { Workspace } from "@aker-build/github-app";
 import { dispatch, type DispatchDeps } from "../src/server.js";
 import type { GitHubApi } from "../src/github-api.js";
@@ -50,7 +50,7 @@ describe("honest degradation — signed non-PR / ping / malformed (FR-008/FR-009
     const api = fakeApi();
     const bad = JSON.stringify({
       action: "opened",
-      pull_request: { number: 1, draft: false, head: { sha: "--upload-pack=evil" } },
+      pull_request: { number: 1, draft: false, base: { sha: "b".repeat(40) }, head: { sha: "--upload-pack=evil" } },
       repository: { owner: { login: "o" }, name: "r" },
       installation: { id: 1 },
     });
@@ -63,21 +63,25 @@ describe("honest degradation — signed non-PR / ping / malformed (FR-008/FR-009
 describe("honest degradation — GitHub read failure → neutral check, never 500 (FR-010)", () => {
   const reviewable = JSON.stringify({
     action: "opened",
-    pull_request: { number: 7, draft: false, head: { sha: VALID_SHA } },
+    pull_request: { number: 7, draft: false, base: { sha: "b".repeat(40) }, head: { sha: VALID_SHA } },
     repository: { owner: { login: "org" }, name: "repo" },
     installation: { id: 1 },
   });
 
-  it("listChangedFiles throwing → posts a neutral check (200), not a 500", async () => {
+  it("does not call the legacy changed-files API; checkout incompleteness posts a neutral check (200), not a 500", async () => {
+    const listChangedFiles = vi.fn(async (): Promise<string[]> => {
+      throw new Error("must not be called");
+    });
     const api = fakeApi({
-      async listChangedFiles(): Promise<string[]> { throw new Error("rate limited"); },
+      listChangedFiles,
     });
     const res = await dispatch(reviewable, sign(reviewable), deps(api));
     expect(res.status).toBe(200);
     if (res.status === 200) {
       expect(res.payload.conclusion).toBe("neutral");
-      expect(res.payload.summary).not.toContain("rate limited"); // secret/internal-free reason
+      expect(res.payload.summary).not.toContain("must not be called"); // secret/internal-free reason
     }
+    expect(listChangedFiles).not.toHaveBeenCalled();
     expect(api.writes).toEqual(["createCheckRun"]); // the neutral check WAS posted
   });
 
@@ -94,7 +98,6 @@ describe("honest degradation — GitHub read failure → neutral check, never 50
 
   it("if even the neutral-check POST fails → 502 (not an uncaught throw)", async () => {
     const api = fakeApi({
-      async listChangedFiles(): Promise<string[]> { throw new Error("rate limited"); },
       async createCheckRun(): Promise<{ id: number }> { throw new Error("also down"); },
     });
     const res = await dispatch(reviewable, sign(reviewable), deps(api));

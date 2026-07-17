@@ -1,6 +1,16 @@
 import { confidenceTier } from "@aker-build/gates";
+import { isLineChanged } from "./diff.js";
 import { renderReport } from "./render.js";
-import type { ReviewReport, ReviewFinding, Verdict } from "./types.js";
+import type {
+  AnyReviewReport,
+  ComparedGateFinding,
+  ReviewFinding,
+  ReviewFindingV2,
+  ReviewReport,
+  ReviewReportV2,
+  ScopeFinding,
+  Verdict,
+} from "./types.js";
 
 export interface CheckAnnotation {
   path: string;
@@ -32,7 +42,7 @@ const CONCLUSION: Record<Verdict, ChecksPayload["conclusion"]> = {
  * violation has no `evidence`/`gate_id`, so calling confidenceTier or reading `.evidence` on it
  * would throw. Mirrors render.ts's `"kind" in f` discrimination.
  */
-function annotate(f: ReviewFinding): CheckAnnotation {
+function annotate(f: ReviewFinding | ReviewFindingV2): CheckAnnotation {
   if ("kind" in f) {
     return {
       path: f.file,
@@ -69,8 +79,23 @@ function sortKey(a: CheckAnnotation): string {
  * rule to keep in sync. Pure data — no network / @octokit. Annotations are sorted (determinism)
  * and capped at 50 per payload (GitHub's per-request limit); overflow is stated, never silent.
  */
-export function renderChecksPayload(report: ReviewReport): ChecksPayload {
-  const all = report.findings
+export function renderChecksPayload(report: ReviewReport | AnyReviewReport): ChecksPayload {
+  const annotationFindings = isV2(report)
+    ? report.findings.filter((finding): finding is ComparedGateFinding | ScopeFinding => {
+        if ("kind" in finding) return true;
+        const evidence = finding.evidence[0];
+        const contributes = finding.classification === "new"
+          || (finding.classification === "changed" && finding.change === "worsened");
+        return contributes
+          && finding.source === "head"
+          && finding.line_changed
+          && !finding.suppression
+          && evidence?.path != null
+          && evidence.line != null
+          && isLineChanged(report.changed_ranges, evidence.path, evidence.line);
+      })
+    : report.findings;
+  const all = annotationFindings
     .map(annotate)
     .sort((x, y) => (sortKey(x) < sortKey(y) ? -1 : sortKey(x) > sortKey(y) ? 1 : 0));
   const annotations = all.slice(0, MAX_ANNOTATIONS);
@@ -79,7 +104,7 @@ export function renderChecksPayload(report: ReviewReport): ChecksPayload {
   let summary = renderReport(report);
   if (overflow > 0) summary += `\n\n_+${overflow} more annotation(s) — see full report._\n`;
 
-  const confirmedRisks = report.findings.filter(
+  const confirmedRisks = annotationFindings.filter(
     (f) => !("kind" in f) && f.status === "risk" && confidenceTier(f) === "confirmed",
   ).length;
   const title =
@@ -90,4 +115,8 @@ export function renderChecksPayload(report: ReviewReport): ChecksPayload {
         : "Ready";
 
   return { name: "Aker Build", conclusion: CONCLUSION[report.verdict], title, summary, annotations };
+}
+
+function isV2(report: ReviewReport | AnyReviewReport): report is ReviewReportV2 {
+  return report.schema_version === 2 && "comparison" in report;
 }

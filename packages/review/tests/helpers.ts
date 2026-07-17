@@ -13,6 +13,13 @@ function initGitRepo(dir: string): void {
   execFileSync("git", ["init", "-q"], { cwd: dir, stdio: "ignore" });
   execFileSync("git", ["config", "user.email", "test@aker-build.local"], { cwd: dir, stdio: "ignore" });
   execFileSync("git", ["config", "user.name", "Aker Build Test"], { cwd: dir, stdio: "ignore" });
+  execFileSync("git", ["config", "commit.gpgsign", "false"], { cwd: dir, stdio: "ignore" });
+  execFileSync("git", ["config", "core.autocrlf", "false"], { cwd: dir, stdio: "ignore" });
+  execFileSync("git", ["config", "core.hooksPath", ".git/aker-build-no-hooks"], { cwd: dir, stdio: "ignore" });
+  execFileSync("git", ["config", "core.excludesFile", ".git/aker-build-no-global-ignore"], {
+    cwd: dir,
+    stdio: "ignore",
+  });
 }
 
 /**
@@ -35,9 +42,7 @@ export function makeDiffRepo(opts: {
     writeFileNested(root, rel, content);
   }
   git(root, "add", ".");
-  // -c commit.gpgsign=false: the fixture repo must be self-contained and not depend on the
-  // runner's global signing setup (mirrors how identity is set locally, not inherited).
-  git(root, "-c", "commit.gpgsign=false", "commit", "-q", "-m", "baseline");
+  git(root, "commit", "-q", "-m", "baseline");
 
   for (const [rel, content] of Object.entries(opts.changes ?? {})) {
     writeFileNested(root, rel, content);

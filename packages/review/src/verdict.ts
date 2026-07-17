@@ -1,6 +1,6 @@
 import { confidenceTier } from "@aker-build/gates";
 import type { AttributableFinding } from "./attribute.js";
-import type { Verdict, ScopeResult } from "./types.js";
+import type { ComparedGateFinding, Verdict, ScopeResult } from "./types.js";
 
 /**
  * Derive the verdict (FR-012, data-model R3 + P2 calibration). The verdict is status-driven over
@@ -28,6 +28,36 @@ export function decideVerdict(
   const hasSuspectedRisk = activeFindings.some((f) => f.status === "risk");
   const hasNeedsVerification = activeFindings.some((f) => f.status === "needs_verification");
   if (hasSuspectedRisk || hasNeedsVerification) return "needs_verification";
+
+  return "ready";
+}
+
+/**
+ * v2 verdict: existing debt and positive changes remain visible but cannot block the change.
+ * Incompleteness and unattributed head findings are always explicit uncertainty.
+ */
+export function decideComparisonVerdict(
+  findings: readonly ComparedGateFinding[],
+  scope: ScopeResult,
+  comparisonComplete: boolean,
+): Verdict {
+  if (scope.violations.length > 0) return "not_ready";
+
+  const contributing = findings.filter((finding) =>
+    finding.classification === "new"
+    || (finding.classification === "changed" && finding.change === "worsened"),
+  );
+  const active = contributing.filter((finding) => !finding.suppression);
+  const confirmedRisk = active.some(
+    (finding) => finding.status === "risk" && confidenceTier(finding) === "confirmed",
+  );
+  if (confirmedRisk) return "not_ready";
+
+  const uncertainFinding = active.some((finding) =>
+    finding.status === "risk" || finding.status === "needs_verification",
+  );
+  const unattributed = findings.some((finding) => finding.classification === "unattributed");
+  if (!comparisonComplete || unattributed || uncertainFinding) return "needs_verification";
 
   return "ready";
 }

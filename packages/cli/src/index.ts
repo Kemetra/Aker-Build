@@ -99,6 +99,7 @@ export function buildProgram(): Command {
     .description("Review a local diff (or GitHub PR) against the gates + declared scope → Ready / Not Ready / Needs Verification")
     .argument("[target]", "target repo path (with --local-diff) or a PR number", ".")
     .option("--local-diff", "review the current local working diff (no credentials)")
+    .option("--base <ref>", "local mode: compare the working tree against this commit-ish (default HEAD)")
     .option("--item <id>", "check changed files against this queue item's allowed/forbidden files")
     .option("--config <path>", "explicit aker-build.config.json/yaml path")
     .option("--out <dir>", "directory holding project-map.json (+ queue.json for --item); review.json/review.md written here", ".aker-build")
@@ -107,7 +108,7 @@ export function buildProgram(): Command {
     .action(
       (
         target: string,
-        opts: { localDiff?: boolean; item?: string; config?: string; out: string; stdout?: boolean; format: "json" | "yaml" },
+        opts: { localDiff?: boolean; base?: string; item?: string; config?: string; out: string; stdout?: boolean; format: "json" | "yaml" },
       ) => {
         process.exitCode = runReviewCommand(target, opts);
       },

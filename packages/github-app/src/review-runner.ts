@@ -1,13 +1,21 @@
-import { reviewPr, GitHubUnavailableError, type ReviewReport, type PrReviewDeps } from "@aker-build/review";
+import {
+  assembleIncompleteReview,
+  compareReview,
+  createCheckoutSnapshots,
+  reviewPr,
+  GitHubUnavailableError,
+  type AnyReviewReport,
+  type PrReviewDeps,
+} from "@aker-build/review";
 import type { PullRequestEvent } from "./types.js";
 
 /** The gates runner shape `reviewPr` accepts (injectable for the runner↔engine seam). */
 type RunGatesFn = NonNullable<PrReviewDeps["runGates"]>;
 
 /**
- * Raised when scanning the checkout (`prepareRepo`) fails. Its message is FIXED and path-free — the
- * underlying scan error embeds an absolute tmp/checkout path, which `safeRun` would otherwise forward
- * into the public Checks summary. `safeRun` maps this to a neutral conclusion like any incompleteness.
+ * Raised when the legacy v1 injection path's `prepareRepo` scan fails. Its message is FIXED and
+ * path-free — the underlying scan error embeds an absolute temporary checkout path, which `safeRun`
+ * would otherwise forward into the public Checks summary. `safeRun` maps this to neutral.
  */
 export class PrepareRepoError extends Error {
   constructor() {
@@ -16,11 +24,25 @@ export class PrepareRepoError extends Error {
   }
 }
 
+export type IncompleteReason =
+  | "github_unavailable"
+  | "github_metadata_unavailable"
+  | "review_incomplete"
+  | "scan_budget_exceeded"
+  | "worker_timeout"
+  | "worker_crashed"
+  | "shutdown";
+
+export class IncompleteReviewError extends Error {
+  constructor(public readonly reason: IncompleteReason) {
+    super(reason);
+    this.name = "IncompleteReviewError";
+  }
+}
+
 /**
- * Provides an ephemeral, per-event working tree checked out at the PR head SHA, and disposes of it
- * afterward. This is the linchpin of statelessness (FR-008): the gates read the FILESYSTEM (see
- * `reviewPr`'s contract — it runs over `repoRoot`), so the App must check out the head, run, and
- * DELETE the workdir. No source is persisted across events.
+ * Provides an ephemeral working tree at one validated commit SHA. Production v2 calls it twice per
+ * event (base then head) and disposes both. No source is persisted across events.
  */
 export interface Workspace {
   /** Check out `headSha` into a fresh dir and return its absolute path. */
@@ -29,32 +51,107 @@ export interface Workspace {
   dispose(repoRoot: string): Promise<void>;
 }
 
-/** Octokit-backed sources the App injects in place of review's default `gh`/git sources. */
+/** Runtime dependencies plus frozen v1 injection seams retained only for migration tests. */
 export interface RunnerDeps {
   workspace: Workspace;
-  prChangedFiles: (prNumber: number) => string[];
-  prMetadata: (prNumber: number) => { title: string; state: string; baseRefName: string };
+  /** Legacy v1 seam only. Production v2 derives changed lines from the two managed checkouts. */
+  prChangedFiles?: (prNumber: number) => string[];
+  prMetadata?: (prNumber: number) => { title: string; state: string; baseRefName: string };
   /** Optional gates-runner override. Defaults to review's real `runGates` over the checkout. */
   runGates?: RunGatesFn;
   /**
-   * Prepare the freshly-checked-out repo so the gates can run: the runtime SCANS the checkout and
-   * produces its project-map BEFORE `runGates` reads it, returning the ABSOLUTE out-dir holding that
-   * map. Without this the gates resolve `project-map.json` from cwd (not the checkout) and every real
-   * review degrades to neutral. Optional so fake-injected `runGates` tests need not produce a map.
+   * Legacy v1 seam: prepare the one checked-out repo so injected gates can run. Production v2 scans
+   * the archived base/head snapshots through the shared comparison engine. Optional so fake-injected
+   * `runGates` tests need not produce a project map.
    */
   prepareRepo?: (repoRoot: string) => string;
 }
 
 /**
- * Run the existing `review-pr` chain for one PR event against an ephemeral checkout, returning a
- * ReviewReport. The verdict/findings are produced entirely by the shared engine — the App does not
- * re-judge (FR-013). The workspace is always disposed (no stored source). The caller maps the
- * report to a Checks payload.
+ * Compare distinct base/head managed checkouts through the shared v2 engine. The App does not
+ * re-judge findings; both checkouts and the derived archive pair are disposed on every path.
  *
  * Throws nothing for the GitHub-unavailable case is NOT the contract here — callers that want a
  * neutral conclusion on a failed/incomplete review should use `safeRun` below.
  */
-export async function run(event: PullRequestEvent, deps: RunnerDeps): Promise<ReviewReport> {
+export async function run(event: PullRequestEvent, deps: RunnerDeps): Promise<AnyReviewReport> {
+  if (deps.runGates || deps.prChangedFiles) return runLegacy(event, deps);
+
+  let baseRepoRoot: string | null = null;
+  let headRepoRoot: string | null = null;
+  let snapshots: ReturnType<typeof createCheckoutSnapshots> | null = null;
+  try {
+    baseRepoRoot = await deps.workspace.checkout({
+      owner: event.owner,
+      repo: event.repo,
+      headSha: event.baseSha,
+    });
+    headRepoRoot = await deps.workspace.checkout({
+      owner: event.owner,
+      repo: event.repo,
+      headSha: event.headSha,
+    });
+    snapshots = createCheckoutSnapshots(baseRepoRoot, headRepoRoot, event.baseSha, event.headSha);
+    const metadata = deps.prMetadata?.(event.prNumber) ?? {
+      title: `Pull request #${event.prNumber}`,
+      state: "unknown",
+      baseRefName: event.baseSha,
+    };
+    const pr = {
+      number: event.prNumber,
+      title: metadata.title,
+      state: metadata.state,
+      base_ref: metadata.baseRefName,
+    };
+    const scope = { checked: false as const, violations: [] };
+    if (!snapshots.complete) {
+      return assembleIncompleteReview({
+        mode: "pr",
+        base: snapshots.base,
+        head: snapshots.head,
+        scope,
+        githubAvailable: true,
+        incompleteReasons: snapshots.incompleteReasons,
+        pr,
+      });
+    }
+    return compareReview({
+      mode: "pr",
+      baseRoot: snapshots.baseRoot,
+      headRoot: snapshots.headRoot,
+      base: snapshots.base,
+      head: snapshots.head,
+      scope,
+      githubAvailable: true,
+      pr,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "ScanBudgetExceededError") {
+      throw new IncompleteReviewError("scan_budget_exceeded");
+    }
+    throw error;
+  } finally {
+    let cleanupFailed = false;
+    if (snapshots) {
+      try {
+        snapshots.dispose();
+      } catch {
+        cleanupFailed = true;
+      }
+    }
+    for (const repoRoot of [headRepoRoot, baseRepoRoot]) {
+      if (!repoRoot) continue;
+      try {
+        await deps.workspace.dispose(repoRoot);
+      } catch {
+        cleanupFailed = true;
+      }
+    }
+    if (cleanupFailed) throw new IncompleteReviewError("review_incomplete");
+  }
+}
+
+async function runLegacy(event: PullRequestEvent, deps: RunnerDeps): Promise<AnyReviewReport> {
   const repoRoot = await deps.workspace.checkout({
     owner: event.owner,
     repo: event.repo,
@@ -70,7 +167,10 @@ export async function run(event: PullRequestEvent, deps: RunnerDeps): Promise<Re
     if (deps.prepareRepo) {
       try {
         out = deps.prepareRepo(repoRoot);
-      } catch {
+      } catch (error) {
+        if (error instanceof Error && error.name === "ScanBudgetExceededError") {
+          throw new IncompleteReviewError("scan_budget_exceeded");
+        }
         throw new PrepareRepoError();
       }
     }
@@ -79,8 +179,8 @@ export async function run(event: PullRequestEvent, deps: RunnerDeps): Promise<Re
       out ? { out } : {},
       {
         repoRoot,
-        prChangedFiles: deps.prChangedFiles,
-        prMetadata: deps.prMetadata,
+        ...(deps.prChangedFiles ? { prChangedFiles: deps.prChangedFiles } : {}),
+        ...(deps.prMetadata ? { prMetadata: deps.prMetadata } : {}),
         ...(deps.runGates ? { runGates: deps.runGates } : {}),
       } satisfies PrReviewDeps,
     );
@@ -91,8 +191,8 @@ export async function run(event: PullRequestEvent, deps: RunnerDeps): Promise<Re
 
 /** Outcome of a guarded run: either a real report, or an incomplete signal that maps to neutral. */
 export type RunOutcome =
-  | { ok: true; report: ReviewReport }
-  | { ok: false; reason: string };
+  | { ok: true; report: AnyReviewReport }
+  | { ok: false; reason: IncompleteReason };
 
 /**
  * Run, but convert any incompleteness (GitHub unavailable, reduced fork perms, checkout/timeout
@@ -105,8 +205,9 @@ export async function safeRun(event: PullRequestEvent, deps: RunnerDeps): Promis
     return { ok: true, report };
   } catch (err) {
     if (err instanceof GitHubUnavailableError) {
-      return { ok: false, reason: `GitHub access unavailable: ${err.message}` };
+      return { ok: false, reason: "github_unavailable" };
     }
-    return { ok: false, reason: err instanceof Error ? err.message : "review could not complete" };
+    if (err instanceof IncompleteReviewError) return { ok: false, reason: err.reason };
+    return { ok: false, reason: "review_incomplete" };
   }
 }

@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it, expect, afterEach } from "vitest";
-import { makeGitWorkspace, type GitRunner } from "../src/git-workspace.js";
+import { makeGitWorkspace, type GitRunOptions, type GitRunner } from "../src/git-workspace.js";
 
 const TOKEN_SENTINEL = "ghs_SECRET_TOKEN_SENTINEL_0000";
 
@@ -11,12 +11,15 @@ const TOKEN_SENTINEL = "ghs_SECRET_TOKEN_SENTINEL_0000";
  * token-bearing remote URL into stderr — it simulates a real git that succeeds. We assert on what
  * the workspace asks git to do (the leak vector is HOW the token is passed), per the advisor.
  */
-function recordingGit(): GitRunner & { calls: string[][] } {
+function recordingGit(): GitRunner & { calls: string[][]; options: Array<GitRunOptions | undefined> } {
   const calls: string[][] = [];
+  const options: Array<GitRunOptions | undefined> = [];
   return {
     calls,
-    run(args) {
+    options,
+    run(args, _cwd, runOptions) {
       calls.push(args);
+      options.push(runOptions);
       return { stdout: "", stderr: "", code: 0 };
     },
   };
@@ -29,7 +32,7 @@ afterEach(() => {
 });
 
 describe("git-workspace secret safety (FR-006, advisor #1)", () => {
-  it("passes the token via -c http.extraheader, NEVER as a token@host remote URL", async () => {
+  it("passes the token through the Git child environment, NEVER argv or token@host URL", async () => {
     const git = recordingGit();
     const tmpRoot = mkdtempSync(join(tmpdir(), "tg-test-root-"));
     created.push(tmpRoot);
@@ -43,9 +46,12 @@ describe("git-workspace secret safety (FR-006, advisor #1)", () => {
     const fetchCall = flat.find((c) => c.includes("fetch"));
     expect(fetchCall).toContain("https://github.com/org/repo.git");
     expect(fetchCall).not.toContain(TOKEN_SENTINEL); // token is NOT in the URL
-    // The token only ever appears inside an extraheader arg (base64), never as token@host.
+    // The token never appears in argv or as token@host.
     expect(flat.join("\n")).not.toContain(`${TOKEN_SENTINEL}@github.com`);
-    expect(flat.some((c) => c.includes("http.extraheader"))).toBe(true);
+    expect(flat.some((c) => c.includes("http.extraheader"))).toBe(false);
+    const childEnv = git.options.find((options) => options?.env?.GIT_CONFIG_KEY_0 === "http.extraheader")?.env;
+    expect(childEnv?.GIT_CONFIG_VALUE_0).toContain("AUTHORIZATION: basic ");
+    expect(childEnv?.GIT_CONFIG_VALUE_0).not.toContain(TOKEN_SENTINEL);
   });
 
   it("WorkspaceError messages never contain the token (FR-006)", async () => {

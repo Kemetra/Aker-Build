@@ -30,13 +30,17 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with report output contract hardening active.
+Post-MVP production-trust hardening. `016-source-truth-ci-baseline` is locally complete; hosted CI
+and repository-protection evidence remain owner-operated. `017-github-app-runtime-fortification` is
+locally implemented, verified, and externally reviewed after approved spec, plan, and tasks.
+Credentialed public-host, hosted CI, TLS deployment, and container smoke evidence remain operator-owned.
 
 The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`).
 
 Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
 
-A report-only GitHub Action dogfood workflow exists (Aker Build runs against its own repo and reports; it does not auto-fix or auto-merge).
+A report-only GitHub Action dogfood workflow and a self-hostable, single-tenant GitHub App runtime
+exist. Both report only; neither auto-fixes, commits, merges, or executes agents.
 
 The "Fortify, then Expand" roadmap is approved (2026-06-21) and FORTIFY (P1–P3) is shipped. Per constitution v1.1.0, a **report-only GitHub App (P4)** is now an approved post-MVP surface — see `specs/014-github-app-report-only/`. It must stay report-only (Checks run + annotations only; no mutation), stateless, and secret-safe. The hosted dashboard / org view (P5) and any enforcing/blocking-merge check (P6) remain deferred and unapproved.
 
@@ -50,8 +54,8 @@ The "Fortify, then Expand" roadmap is approved (2026-06-21) and FORTIFY (P1–P3
 - Tests: Vitest
 - Schema validation: Zod
 - CLI first
-- GitHub Action later
-- GitHub App later
+- Report-only GitHub Action dogfood workflow
+- Self-hostable report-only GitHub App
 - Hosted dashboard later
 
 ---
@@ -213,5 +217,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/015-github-app-deployment/plan.md` (active feature: 015-github-app-deployment).
+`specs/017-github-app-runtime-fortification/plan.md` (last locally completed feature; 018 is next).
 <!-- SPECKIT END -->

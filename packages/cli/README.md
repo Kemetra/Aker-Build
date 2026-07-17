@@ -60,6 +60,13 @@ The CLI is local-first and read-only on scanned/reviewed source. It does not exe
 
 Outputs are validated by their owning packages where schemas exist, and findings carry file/line/missing-artifact evidence. Secret-like content is flagged without copying the value into reports.
 
+## Report-only GitHub App
+
+`@aker-build/github-app-server` is the self-hostable report-only GitHub App transport over this same
+review engine. It receives pull-request webhooks and writes only Checks runs/annotations; it is not a
+CLI subcommand and does not change CLI judgment. See
+[`packages/github-app-server/README.md`](../github-app-server/README.md).
+
 ## Develop
 
 ```bash

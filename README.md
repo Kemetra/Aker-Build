@@ -19,10 +19,16 @@ Aker Build is not a SaaS boilerplate. It does not generate a full app. It contro
 
 ## Status
 
-Aker Build's MVP CLI chain is implemented and in release-readiness hardening. The current focus is a reliable first-run demo, documented command surface, and launch prerequisites.
+Aker Build's MVP CLI chain and self-hostable report-only GitHub App are implemented. The current
+focus is production-trust hardening: accurate source truth, complete CI, bounded runtime behavior,
+diff-aware review, broader measured detection coverage, and then distribution.
 
 - Aker Build runs against its own repo via a report-only GitHub Action dogfooding workflow.
-- GitHub App, hosted dashboard, auto-fix, auto-commit, and auto-merge remain deferred.
+- The self-hostable GitHub App receives `pull_request` webhooks and writes only Checks runs and
+  annotations. Its bounded worker runtime, non-root container, health/readiness probes, fixed
+  metrics, and deployment boundary are documented in `docs/operations/github-app-runtime.md`.
+- Hosted dashboard/org aggregation, merge enforcement, auto-fix, auto-commit, auto-merge, and agent
+  execution remain deferred.
 
 ## Benchmark scorecard
 
@@ -76,7 +82,7 @@ pnpm dlx tsx packages/cli/src/bin.ts gates <repo> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts queue <repo> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts route <repo> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts prompt Q-001 --agent claude --out <out-dir>
-pnpm dlx tsx packages/cli/src/bin.ts review-pr <repo> --local-diff --out <out-dir>
+pnpm dlx tsx packages/cli/src/bin.ts review-pr <repo> --local-diff --base <ref> --out <out-dir>
 pnpm dlx tsx packages/cli/src/bin.ts report <repo> --out <out-dir>
 ```
 
@@ -101,10 +107,21 @@ aker-build gates [path]
 aker-build queue [path]
 aker-build route [path]
 aker-build prompt <id> --agent claude|codex|generic
-aker-build review-pr [path] --local-diff
+aker-build review-pr [path] --local-diff [--base <ref>]
 aker-build review-pr <number>
 aker-build report [path]
 ```
+
+## Diff-aware review
+
+`review-pr --local-diff` compares a snapshot of `HEAD` to the current working tree by default;
+use `--base <ref>` to select another resolved Git ref. PR and Action runs compare the exact base
+and head commit IDs, with the Action fetching full history. Only introduced or worsened confirmed
+findings can block readiness. Existing debt and resolved findings remain visible for context, while
+missing snapshots, diffs, or attribution produce an honest `needs_verification` result.
+
+New review output uses schema v2. Consumers continue to validate and render frozen schema-v1
+reports during migration. `--base` is local-only: PR mode always uses the GitHub PR base SHA.
 
 The npm-published `aker-build` binary is a follow-up release task. Until then, local and CI usage runs the TypeScript CLI through `tsx`.
 
@@ -113,3 +130,6 @@ The npm-published `aker-build` binary is a follow-up release task. Until then, l
 - First-run demo: `docs/demo/first-run.md`
 - Post-foundation plan: `docs/roadmap/post-foundation-technical-plan.md`
 - Contributor guide: `CONTRIBUTING.md`
+- GitHub App runtime: `packages/github-app-server/README.md`
+- GitHub App operations: `docs/operations/github-app-runtime.md`
+- Security policy: `SECURITY.md`

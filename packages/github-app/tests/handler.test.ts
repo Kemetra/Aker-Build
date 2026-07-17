@@ -47,6 +47,7 @@ const EVENT: PullRequestEvent = {
   owner: "org",
   repo: "repo",
   prNumber: 42,
+  baseSha: "b1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
   headSha: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
   isDraft: false,
   installationId: 99,
@@ -183,9 +184,22 @@ describe("handleEvent end-to-end (US1/US3)", () => {
     deps.workspace.checkout = async () => {
       throw new Error("checkout timed out");
     };
-    const { payload } = await handleEvent(EVENT, deps);
+    const { payload, incompleteReason } = await handleEvent(EVENT, deps);
     expect(payload.conclusion).toBe("neutral");
     expect(payload.title).toMatch(/could not complete/i);
+    expect(incompleteReason).toBe("review_incomplete");
+  });
+
+  it("never forwards an arbitrary exception message into the public check", async () => {
+    const c = fakeClient();
+    const deps = baseDeps(c);
+    const sentinel = "PRIVATE_EXCEPTION_SENTINEL";
+    deps.workspace.checkout = async () => {
+      throw new Error(sentinel);
+    };
+    const { payload } = await handleEvent(EVENT, deps);
+    expect(JSON.stringify(payload)).not.toContain(sentinel);
+    expect(payload.summary).toContain("review_incomplete");
   });
 
   it("disposes the ephemeral workspace even when the review throws (no stored source, FR-008)", async () => {

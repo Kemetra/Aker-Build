@@ -97,6 +97,35 @@ function seedReview(outDir: string): void {
   });
 }
 
+function seedReviewV2(outDir: string): void {
+  writeJson(outDir, "review.json", {
+    schema_version: 2,
+    mode: "local-diff",
+    verdict: "not_ready",
+    changed_files: ["apps/api/routes/admin.ts"],
+    changed_ranges: [{ path: "apps/api/routes/admin.ts", ranges: [{ start: 4, end: 4 }], binary: false }],
+    findings: [{
+      gate_id: "TG-G4",
+      status: "risk",
+      severity: "high",
+      evidence: [{ type: "line", path: "apps/api/routes/admin.ts", line: 4, signal: "unguarded route", confidence: "high" }],
+      classification: "new",
+      fingerprint: "a".repeat(64),
+      source: "head",
+      line_changed: true,
+    }],
+    scope: { checked: false, violations: [] },
+    github_available: null,
+    comparison: {
+      base: { label: "HEAD", sha: "1".repeat(40) },
+      head: { label: "working-tree", sha: null },
+      complete: true,
+      incomplete_reasons: [],
+      counts: { new: 1, existing: 0, resolved: 0, changed: 0, unattributed: 0 },
+    },
+  });
+}
+
 describe("Aker Build report", () => {
   it("summarizes a full artifact set into valid JSON and Markdown", () => {
     const { repoRoot, outDir } = tempRepo();
@@ -131,6 +160,19 @@ describe("Aker Build report", () => {
     expect(report.artifacts.missing).toEqual(["risks.json", "queue.json", "route.json", "review.json"]);
     expect(report.summary.findings.total).toBe(0);
     expect(renderReportMarkdown(report)).toContain("Missing artifacts");
+  });
+
+  it("accepts v2 review artifacts and summarizes comparison classifications", () => {
+    const { repoRoot, outDir } = tempRepo();
+    seedProjectMap(outDir);
+    seedReviewV2(outDir);
+
+    const report = buildReport(repoRoot, { out: outDir });
+    expect(report.summary.review).toMatchObject({
+      verdict: "not_ready",
+      comparison: { complete: true, new: 1, existing: 0, resolved: 0, changed: 0, unattributed: 0 },
+    });
+    expect(renderReportMarkdown(report)).toContain("Introduced: 1");
   });
 
   it("keeps suppressions visible and never copies secret-looking values", () => {

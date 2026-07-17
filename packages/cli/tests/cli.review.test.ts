@@ -15,6 +15,13 @@ function reviewRepo(opts: { withMap?: boolean; git?: boolean } = {}): { root: st
     execFileSync("git", ["init", "-q"], { cwd: root, stdio: "ignore" });
     execFileSync("git", ["config", "user.email", "t@t.local"], { cwd: root, stdio: "ignore" });
     execFileSync("git", ["config", "user.name", "T"], { cwd: root, stdio: "ignore" });
+    execFileSync("git", ["config", "commit.gpgsign", "false"], { cwd: root, stdio: "ignore" });
+    execFileSync("git", ["config", "core.autocrlf", "false"], { cwd: root, stdio: "ignore" });
+    execFileSync("git", ["config", "core.hooksPath", ".git/aker-build-no-hooks"], { cwd: root, stdio: "ignore" });
+    execFileSync("git", ["config", "core.excludesFile", ".git/aker-build-no-global-ignore"], {
+      cwd: root,
+      stdio: "ignore",
+    });
   }
   writeFileSync(join(root, "index.ts"), "export const x = 1;\n", "utf8");
   if (opts.git !== false) {
@@ -45,7 +52,33 @@ describe("T017 `aker-build review-pr --local-diff`", () => {
     expect(existsSync(join(outDir, "review.json"))).toBe(true);
     expect(existsSync(join(outDir, "review.md"))).toBe(true);
     const review = JSON.parse(readFileSync(join(outDir, "review.json"), "utf8"));
+    expect(review.schema_version).toBe(2);
+    expect(review.comparison).toBeDefined();
     expect(["ready", "not_ready", "needs_verification"]).toContain(review.verdict);
+  });
+
+  it("accepts an explicit --base ref and rejects an invalid one as bad input", () => {
+    const { root, outDir } = reviewRepo();
+    created.push(resolve(root, ".."));
+    const baseSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+
+    const valid = runReviewCommand(root, {
+      localDiff: true,
+      base: baseSha,
+      out: outDir,
+      errSink: () => {},
+    });
+    expect(valid).toBe(0);
+    const review = JSON.parse(readFileSync(join(outDir, "review.json"), "utf8"));
+    expect(review.comparison.base).toEqual({ label: baseSha, sha: baseSha });
+
+    const invalid = runReviewCommand(root, {
+      localDiff: true,
+      base: "definitely-not-a-ref",
+      out: outDir,
+      errSink: () => {},
+    });
+    expect(invalid).toBe(2);
   });
 
   it("exits 1 with 'run scan first' when project-map.json is missing", () => {
@@ -128,5 +161,14 @@ describe("T017 `aker-build review-pr --local-diff`", () => {
     });
     expect(code).toBe(2);
     expect(err.join("\n")).toMatch(/github|gh/i);
+  });
+
+  it("rejects --base with a PR number instead of silently ignoring it", () => {
+    const { root, outDir } = reviewRepo();
+    created.push(resolve(root, ".."));
+    const err: string[] = [];
+    const code = runReviewCommand("42", { base: "HEAD", out: outDir, errSink: (s) => err.push(s) });
+    expect(code).toBe(2);
+    expect(err.join("\n")).toMatch(/--base.*local-diff/i);
   });
 });

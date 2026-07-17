@@ -4,6 +4,12 @@ import type { ScanResult, ScanOptions } from "./types.js";
 import { listFiles, isGitRepo, writeOutput } from "./io.js";
 import { assemble } from "./assemble.js";
 import { detectSecrets } from "./detect/secrets.js";
+import {
+  activeScanBudget,
+  runWithScanBudget,
+  ScanBudgetTracker,
+  UNBOUNDED_SCAN_BUDGET,
+} from "./budget.js";
 
 /**
  * Read-only scan of a local Git repo → a 002-conforming ProjectMap + run notes.
@@ -12,6 +18,14 @@ import { detectSecrets } from "./detect/secrets.js";
  * - No network, no credentials (FR-011).
  */
 export function scan(targetPath: string, opts: ScanOptions = {}): ScanResult {
+  const inherited = activeScanBudget();
+  if (inherited) return scanWithTracker(targetPath, opts, inherited);
+
+  const tracker = new ScanBudgetTracker(opts.budget ?? UNBOUNDED_SCAN_BUDGET);
+  return runWithScanBudget(tracker, () => scanWithTracker(targetPath, opts, tracker));
+}
+
+function scanWithTracker(targetPath: string, opts: ScanOptions, tracker: ScanBudgetTracker): ScanResult {
   if (!isGitRepo(targetPath)) {
     throw new Error(
       `Not a Git repository: ${targetPath} (scanning non-Git directories is out of MVP scope)`,
@@ -33,7 +47,7 @@ export function scan(targetPath: string, opts: ScanOptions = {}): ScanResult {
     throw new Error(`Internal error: assembled map failed 002 validation: ${detail}`);
   }
 
-  return { map, notes };
+  return { map, notes, usage: tracker.snapshot() };
 }
 
 /** Scan and write the map (+ implied notes) to a designated output dir outside the scanned repo. */
