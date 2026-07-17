@@ -13,6 +13,7 @@ import {
   cleanupStaleWorkspaces,
   makeGitWorkspace,
   WORKSPACE_MARKER,
+  type GitCommand,
   type GitRunOptions,
   type GitRunner,
 } from "../src/git-workspace.js";
@@ -26,12 +27,12 @@ function tempRoot(): string {
   return root;
 }
 
-function recordingGit(): GitRunner & { calls: Array<{ args: string[]; options?: GitRunOptions }> } {
-  const calls: Array<{ args: string[]; options?: GitRunOptions }> = [];
+function recordingGit(): GitRunner & { calls: Array<{ command: GitCommand; options?: GitRunOptions }> } {
+  const calls: Array<{ command: GitCommand; options?: GitRunOptions }> = [];
   return {
     calls,
-    run(args, _cwd, options) {
-      calls.push({ args, options });
+    run(command, _cwd, options) {
+      calls.push({ command, options });
       return { stdout: "", stderr: "", code: 0 };
     },
   };
@@ -49,11 +50,11 @@ describe("managed Git workspace", () => {
     const workspace = makeGitWorkspace({ git, authToken: async () => TOKEN, tmpRoot: tempRoot(), gitTimeoutMs: 3210 });
     await workspace.checkout({ owner: "org", repo: "repo", headSha: "a".repeat(40) });
 
-    const argv = git.calls.flatMap((call) => call.args).join(" ");
+    const argv = git.calls.map((call) => commandText(call.command)).join(" ");
     expect(argv).not.toContain(TOKEN);
     expect(argv).not.toContain("http.extraheader");
     expect(argv).toContain("https://github.com/org/repo.git");
-    const fetch = git.calls.find((call) => call.args.includes("fetch"));
+    const fetch = git.calls.find((call) => call.command.kind === "fetch");
     expect(fetch?.options?.timeoutMs).toBe(3210);
     expect(fetch?.options?.env?.GIT_CONFIG_COUNT).toBe("1");
     expect(fetch?.options?.env?.GIT_CONFIG_KEY_0).toBe("http.extraheader");
@@ -113,3 +114,9 @@ describe("managed Git workspace", () => {
     expect(existsSync(unrelated)).toBe(true);
   });
 });
+
+function commandText(command: GitCommand): string {
+  if (command.kind === "init") return `init ${command.repositoryPath}`;
+  if (command.kind === "fetch") return `fetch ${command.remoteUrl} ${command.ref}`;
+  return "checkout FETCH_HEAD";
+}

@@ -120,51 +120,71 @@ function createSnapshots(
     label: overlayWorkingTree ? "working-tree" : headRef,
     sha: null,
   };
-
-  const baseSha = resolveCommit(repoRoot, baseRef);
-  if (!baseSha) return failure(root, dispose, unresolvedBase, unresolvedHead, "base_unavailable");
-  const base: ComparisonRef = { label: baseRef, sha: baseSha };
-  const headSha = resolveCommit(repoRoot, headRef);
-  if (!headSha) return failure(root, dispose, base, unresolvedHead, "head_unavailable");
-  const head: ComparisonRef = overlayWorkingTree
-    ? { label: "working-tree", sha: null }
-    : { label: headRef, sha: headSha };
-
-  const treeIssue = inspectTree(repoRoot, baseSha, "base_unavailable")
-    ?? inspectTree(repoRoot, headSha, "head_unavailable");
-  if (treeIssue) return failure(root, dispose, base, head, treeIssue);
-
-  const baseRoot = join(root, "base");
-  const headRoot = join(root, "head");
-  mkdirSync(baseRoot);
-  mkdirSync(headRoot);
-  if (!archiveCommit(repoRoot, baseSha, baseRoot, root, "base.tar")) {
-    return failure(root, dispose, base, head, "base_unavailable");
-  }
-  if (!archiveCommit(repoRoot, headSha, headRoot, root, "head.tar")) {
-    return failure(root, dispose, base, head, "head_unavailable");
-  }
-
-  const extractedIssue = inspectExtractedTree(baseRoot) ?? inspectExtractedTree(headRoot);
-  if (extractedIssue) return failure(root, dispose, base, head, extractedIssue);
+  const refs = resolveSnapshotRefs(repoRoot, baseRef, headRef, overlayWorkingTree, unresolvedBase, unresolvedHead);
+  if (refs.reason) return failure(root, dispose, refs.base, refs.head, refs.reason);
+  const extracted = materializeSnapshots(repoRoot, refs, root);
+  if (extracted.reason) return failure(root, dispose, refs.base, refs.head, extracted.reason);
 
   if (overlayWorkingTree) {
-    const overlayIssue = overlayWorkingChanges(repoRoot, headRoot);
-    if (overlayIssue) return failure(root, dispose, base, head, overlayIssue);
-    const finalIssue = inspectExtractedTree(headRoot);
-    if (finalIssue) return failure(root, dispose, base, head, finalIssue);
+    const overlayIssue = overlayWorkingChanges(repoRoot, extracted.headRoot);
+    if (overlayIssue) return failure(root, dispose, refs.base, refs.head, overlayIssue);
+    const finalIssue = inspectExtractedTree(extracted.headRoot);
+    if (finalIssue) return failure(root, dispose, refs.base, refs.head, finalIssue);
   }
 
   return {
     complete: true,
     root,
-    baseRoot,
-    headRoot,
-    base,
-    head,
+    baseRoot: extracted.baseRoot,
+    headRoot: extracted.headRoot,
+    base: refs.base,
+    head: refs.head,
     incompleteReasons: [],
     dispose,
   };
+}
+
+interface SnapshotRefs {
+  base: ComparisonRef;
+  head: ComparisonRef;
+  baseSha: string | null;
+  headSha: string | null;
+  reason?: ComparisonIncompleteReason;
+}
+
+function resolveSnapshotRefs(
+  repoRoot: string,
+  baseRef: string,
+  headRef: string,
+  overlayWorkingTree: boolean,
+  unresolvedBase: ComparisonRef,
+  unresolvedHead: ComparisonRef,
+): SnapshotRefs {
+  const baseSha = resolveCommit(repoRoot, baseRef);
+  if (!baseSha) return { base: unresolvedBase, head: unresolvedHead, baseSha: null, headSha: null, reason: "base_unavailable" };
+  const base: ComparisonRef = { label: baseRef, sha: baseSha };
+  const headSha = resolveCommit(repoRoot, headRef);
+  if (!headSha) return { base, head: unresolvedHead, baseSha, headSha: null, reason: "head_unavailable" };
+  const head: ComparisonRef = overlayWorkingTree ? { label: "working-tree", sha: null } : { label: headRef, sha: headSha };
+  const treeIssue = inspectTree(repoRoot, baseSha, "base_unavailable")
+    ?? inspectTree(repoRoot, headSha, "head_unavailable");
+  return { base, head, baseSha, headSha, ...(treeIssue ? { reason: treeIssue } : {}) };
+}
+
+type MaterializedSnapshots =
+  | { baseRoot: string; headRoot: string; reason?: never }
+  | { baseRoot?: never; headRoot?: never; reason: ComparisonIncompleteReason };
+
+function materializeSnapshots(repoRoot: string, refs: SnapshotRefs, root: string): MaterializedSnapshots {
+  if (!refs.baseSha || !refs.headSha) return { reason: "diff_unavailable" };
+  const baseRoot = join(root, "base");
+  const headRoot = join(root, "head");
+  mkdirSync(baseRoot);
+  mkdirSync(headRoot);
+  if (!archiveCommit(repoRoot, refs.baseSha, baseRoot, root, "base.tar")) return { reason: "base_unavailable" };
+  if (!archiveCommit(repoRoot, refs.headSha, headRoot, root, "head.tar")) return { reason: "head_unavailable" };
+  const extractedIssue = inspectExtractedTree(baseRoot) ?? inspectExtractedTree(headRoot);
+  return extractedIssue ? { reason: extractedIssue } : { baseRoot, headRoot };
 }
 
 function resolveCommit(repoRoot: string, ref: string): string | null {
@@ -225,31 +245,40 @@ function archiveCommit(
 }
 
 function overlayWorkingChanges(repoRoot: string, headRoot: string): ComparisonIncompleteReason | null {
-  let tracked: string[];
-  let untracked: string[];
-  try {
-    tracked = nulPaths(gitOutput(repoRoot, ["diff", "--name-only", "-z", "--no-renames", "HEAD", "--"]));
-    untracked = nulPaths(gitOutput(repoRoot, ["ls-files", "--others", "--exclude-standard", "-z", "--"]));
-  } catch {
-    return "head_unavailable";
-  }
-
-  const paths = [...new Set([...tracked, ...untracked])].sort(compareText);
+  const paths = workingChangePaths(repoRoot);
+  if (!paths) return "head_unavailable";
   for (const relativePath of paths) {
-    if (!safeRelativePath(relativePath)) return "unsafe_path";
-    const source = containedPath(repoRoot, relativePath);
-    const destination = containedPath(headRoot, relativePath);
-    if (!source || !destination) return "unsafe_path";
-
-    if (!existsSync(source)) {
-      if (existsSync(destination)) rmOwnedEntry(headRoot, destination);
-      continue;
-    }
-    const stat = lstatSync(source);
-    if (!stat.isFile() || stat.isSymbolicLink()) return "unsafe_path";
-    mkdirSync(dirname(destination), { recursive: true });
-    copyFileSync(source, destination);
+    const issue = overlayPath(repoRoot, headRoot, relativePath);
+    if (issue) return issue;
   }
+  return null;
+}
+
+function workingChangePaths(repoRoot: string): string[] | null {
+  try {
+    const tracked = nulPaths(gitOutput(repoRoot, ["diff", "--name-only", "-z", "--no-renames", "HEAD", "--"]));
+    const untracked = nulPaths(gitOutput(repoRoot, ["ls-files", "--others", "--exclude-standard", "-z", "--"]));
+    return [...new Set([...tracked, ...untracked])].sort(compareText);
+  } catch {
+    return null;
+  }
+}
+
+function overlayPath(repoRoot: string, headRoot: string, relativePath: string): ComparisonIncompleteReason | null {
+  if (!safeRelativePath(relativePath)) return "unsafe_path";
+  const source = containedPath(repoRoot, relativePath);
+  const destination = containedPath(headRoot, relativePath);
+  if (!source || !destination) return "unsafe_path";
+  if (!existsSync(source)) return removeDeletedSnapshotPath(headRoot, destination);
+  const stat = lstatSync(source);
+  if (!stat.isFile() || stat.isSymbolicLink()) return "unsafe_path";
+  mkdirSync(dirname(destination), { recursive: true });
+  copyFileSync(source, destination);
+  return null;
+}
+
+function removeDeletedSnapshotPath(headRoot: string, destination: string): ComparisonIncompleteReason | null {
+  if (existsSync(destination)) rmOwnedEntry(headRoot, destination);
   return null;
 }
 

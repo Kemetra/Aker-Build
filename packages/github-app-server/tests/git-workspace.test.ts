@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it, expect, afterEach } from "vitest";
-import { makeGitWorkspace, type GitRunOptions, type GitRunner } from "../src/git-workspace.js";
+import { makeGitWorkspace, type GitCommand, type GitRunOptions, type GitRunner } from "../src/git-workspace.js";
 
 const TOKEN_SENTINEL = "ghs_SECRET_TOKEN_SENTINEL_0000";
 
@@ -11,14 +11,14 @@ const TOKEN_SENTINEL = "ghs_SECRET_TOKEN_SENTINEL_0000";
  * token-bearing remote URL into stderr — it simulates a real git that succeeds. We assert on what
  * the workspace asks git to do (the leak vector is HOW the token is passed), per the advisor.
  */
-function recordingGit(): GitRunner & { calls: string[][]; options: Array<GitRunOptions | undefined> } {
-  const calls: string[][] = [];
+function recordingGit(): GitRunner & { calls: GitCommand[]; options: Array<GitRunOptions | undefined> } {
+  const calls: GitCommand[] = [];
   const options: Array<GitRunOptions | undefined> = [];
   return {
     calls,
     options,
-    run(args, _cwd, runOptions) {
-      calls.push(args);
+    run(command, _cwd, runOptions) {
+      calls.push(command);
       options.push(runOptions);
       return { stdout: "", stderr: "", code: 0 };
     },
@@ -41,7 +41,7 @@ describe("git-workspace secret safety (FR-006, advisor #1)", () => {
     const dir = await ws.checkout({ owner: "org", repo: "repo", headSha: "abc123" });
     created.push(dir);
 
-    const flat = git.calls.map((c) => c.join(" "));
+    const flat = git.calls.map(commandText);
     // The remote URL passed to fetch must be plain https — no token embedded in it.
     const fetchCall = flat.find((c) => c.includes("fetch"));
     expect(fetchCall).toContain("https://github.com/org/repo.git");
@@ -56,7 +56,7 @@ describe("git-workspace secret safety (FR-006, advisor #1)", () => {
 
   it("WorkspaceError messages never contain the token (FR-006)", async () => {
     const failingGit: GitRunner = {
-      run(args) {
+      run() {
         return { stdout: "", stderr: `fatal: could not read from https://x:${TOKEN_SENTINEL}@github.com`, code: 128 };
       },
     };
@@ -100,3 +100,9 @@ describe("git-workspace secret safety (FR-006, advisor #1)", () => {
     expect(existsSync(dir)).toBe(false);
   });
 });
+
+function commandText(command: GitCommand): string {
+  if (command.kind === "init") return `init ${command.repositoryPath}`;
+  if (command.kind === "fetch") return `fetch ${command.remoteUrl} ${command.ref}`;
+  return "checkout FETCH_HEAD";
+}

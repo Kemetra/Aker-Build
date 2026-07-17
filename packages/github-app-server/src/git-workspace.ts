@@ -20,8 +20,14 @@ export interface GitRunOptions {
   timeoutMs?: number;
 }
 
+/** The only Git operations the managed workspace is allowed to invoke. */
+export type GitCommand =
+  | { kind: "init"; repositoryPath: string }
+  | { kind: "fetch"; remoteUrl: string; ref: string }
+  | { kind: "checkout_fetch_head" };
+
 export interface GitRunner {
-  run(args: string[], cwd: string, options?: GitRunOptions): { stdout: string; stderr: string; code: number };
+  run(command: GitCommand, cwd: string, options?: GitRunOptions): { stdout: string; stderr: string; code: number };
 }
 
 export interface GitWorkspaceDeps {
@@ -80,7 +86,7 @@ export function makeGitWorkspace(deps: GitWorkspaceDeps): ManagedWorkspace {
       tracked.set(repoResolved, { repoRoot: repoResolved, wrapper: wrapperResolved, nonce });
 
       try {
-        const init = deps.git.run(["init", "--quiet", repoResolved], resolvedRoot, { timeoutMs });
+        const init = deps.git.run({ kind: "init", repositoryPath: repoResolved }, resolvedRoot, { timeoutMs });
         if (init.code !== 0) throw new WorkspaceError("git init failed");
 
         const token = await deps.authToken();
@@ -91,12 +97,12 @@ export function makeGitWorkspace(deps: GitWorkspaceDeps): ManagedWorkspace {
           GIT_CONFIG_VALUE_0: authValue,
         };
         const url = deps.remoteUrl ? deps.remoteUrl(owner, repo) : `https://github.com/${owner}/${repo}.git`;
-        const fetch = deps.git.run(["fetch", "--depth", "1", "--", url, headSha], repoResolved, {
+        const fetch = deps.git.run({ kind: "fetch", remoteUrl: url, ref: headSha }, repoResolved, {
           env: gitEnv,
           timeoutMs,
         });
         if (fetch.code !== 0) throw new WorkspaceError("git fetch failed for the PR head ref");
-        const checkout = deps.git.run(["checkout", "--quiet", "FETCH_HEAD"], repoResolved, { timeoutMs });
+        const checkout = deps.git.run({ kind: "checkout_fetch_head" }, repoResolved, { timeoutMs });
         if (checkout.code !== 0) throw new WorkspaceError("git checkout failed");
         return repoResolved;
       } catch (error) {

@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import type { GitRunner } from "./git-workspace.js";
+import { isAbsolute } from "node:path";
+import type { GitCommand, GitRunner } from "./git-workspace.js";
 
 /**
  * Concrete `GitRunner` over `node:child_process`. Synchronous `spawnSync` matches the `GitRunner`
@@ -7,13 +8,16 @@ import type { GitRunner } from "./git-workspace.js";
  * and ordered.
  *
  * Secret safety (FR-006): the caller (`git-workspace.ts`) passes the auth token only via an in-memory
- * `-c http.extraheader=...` arg — never persisted to `.git/config`. This runner just executes argv;
- * it does not log. `git-workspace.ts` never echoes the returned `stderr` for the same reason a
+ * `GIT_CONFIG_*` child environment — never persisted to `.git/config`. The runner translates a
+ * closed command union into argv; it never accepts arbitrary Git options or logs. `git-workspace.ts`
+ * never echoes the returned `stderr` for the same reason a
  * token-bearing remote URL would: stderr can contain auth material on a failed fetch.
  */
 export function makeNodeGit(): GitRunner {
   return {
-    run(args, cwd, options) {
+    run(command, cwd, options) {
+      const args = argsFor(command);
+      if (!args) return { stdout: "", stderr: "", code: 1 };
       const result = spawnSync("git", args, {
         cwd,
         encoding: "utf8",
@@ -32,4 +36,40 @@ export function makeNodeGit(): GitRunner {
       };
     },
   };
+}
+
+/** Build argv only for the three managed-workspace operations; reject option injection by design. */
+function argsFor(command: GitCommand): string[] | null {
+  switch (command.kind) {
+    case "init":
+      return isSafeAbsolutePath(command.repositoryPath)
+        ? ["init", "--quiet", command.repositoryPath]
+        : null;
+    case "fetch":
+      return isSafeRemoteUrl(command.remoteUrl) && isCommitSha(command.ref)
+        ? ["fetch", "--depth", "1", "--", command.remoteUrl, command.ref]
+        : null;
+    case "checkout_fetch_head":
+      return ["checkout", "--quiet", "FETCH_HEAD"];
+  }
+}
+
+function isSafeAbsolutePath(value: string): boolean {
+  return isAbsolute(value) && !/[\u0000-\u001f\u007f]/u.test(value);
+}
+
+function isSafeRemoteUrl(value: string): boolean {
+  if (/[\u0000-\u001f\u007f]/u.test(value)) return false;
+  try {
+    const url = new URL(value);
+    if (url.username || url.password) return false;
+    return (url.protocol === "https:" && url.hostname === "github.com" && url.pathname.endsWith(".git"))
+      || (url.protocol === "file:" && isAbsolute(decodeURIComponent(url.pathname)));
+  } catch {
+    return false;
+  }
+}
+
+function isCommitSha(value: string): boolean {
+  return /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/u.test(value);
 }

@@ -33,6 +33,10 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
+      # Node 22.13 ships an older Corepack keyring that cannot verify current pnpm releases.
+      - name: Install verified Corepack
+        run: npm install --global corepack@0.31.0
+
       - name: Enable Corepack
         run: corepack enable
 
@@ -108,6 +112,10 @@ jobs:
           node-version: ${{ matrix.node }}
           package-manager-cache: false
 
+      # Node 22.13 ships an older Corepack keyring that cannot verify current pnpm releases.
+      - name: Install verified Corepack
+        run: npm install --global corepack@0.31.0
+
       - name: Enable Corepack
         run: corepack enable
 
@@ -138,6 +146,10 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
+
+      # Node 22.13 ships an older Corepack keyring that cannot verify current pnpm releases.
+      - name: Install verified Corepack
+        run: npm install --global corepack@0.31.0
 
       - name: Enable Corepack
         run: corepack enable

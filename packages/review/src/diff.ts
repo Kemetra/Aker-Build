@@ -59,70 +59,101 @@ export function parseNoIndexDiff(
   baseLabel: string,
   headLabel: string,
 ): ChangedFileRanges[] | null {
-  const files = new Map<string, ChangedFileRanges>();
-  const baseMarker = `a/${normalizePath(baseLabel)}/`;
-  const headMarker = `b/${normalizePath(headLabel)}/`;
-  let currentPath: string | null = null;
-  let oldHeaderPath: string | null = null;
-  let sawDiff = false;
-
-  for (const line of patch.replace(/\r\n?/gu, "\n").split("\n")) {
-    if (line.startsWith("diff --git ")) {
-      sawDiff = true;
-      oldHeaderPath = null;
-      const parsed = pathFromDiffHeader(line, baseMarker, headMarker);
-      if (parsed === false) return null;
-      currentPath = parsed;
-      if (currentPath) ensureFile(files, currentPath);
-      continue;
-    }
-
-    if (line.startsWith("--- ")) {
-      const raw = line.slice(4);
-      if (raw === "/dev/null") oldHeaderPath = null;
-      else {
-        const parsed = pathFromMarker(raw, baseMarker);
-        if (!parsed) return null;
-        oldHeaderPath = parsed;
-      }
-      continue;
-    }
-
-    if (line.startsWith("+++ ")) {
-      const raw = line.slice(4);
-      if (raw === "/dev/null") {
-        if (!oldHeaderPath) return null;
-        currentPath = oldHeaderPath;
-      } else {
-        const parsed = pathFromMarker(raw, headMarker);
-        if (!parsed) return null;
-        currentPath = parsed;
-      }
-      ensureFile(files, currentPath);
-      continue;
-    }
-
-    if (line.startsWith("Binary files ") && line.endsWith(" differ")) {
-      if (!currentPath) return null;
-      ensureFile(files, currentPath).binary = true;
-      continue;
-    }
-
-    if (line.startsWith("@@")) {
-      if (!currentPath) return null;
-      const match = /\+(\d+)(?:,(\d+))?\s/u.exec(line);
-      if (!match) return null;
-      const start = Number(match[1]);
-      const count = match[2] == null ? 1 : Number(match[2]);
-      if (!Number.isSafeInteger(start) || !Number.isSafeInteger(count) || count < 0) return null;
-      if (count > 0) ensureFile(files, currentPath).ranges.push({ start, end: start + count - 1 });
-    }
+  const state = createParserState(baseLabel, headLabel);
+  for (const line of normalizedLines(patch)) {
+    if (!consumeLine(state, line)) return null;
   }
-
-  if (!sawDiff) return null;
-  return [...files.values()]
+  if (!state.sawDiff) return null;
+  return [...state.files.values()]
     .map((file) => ({ ...file, ranges: mergeRanges(file.ranges) }))
     .sort((left, right) => compareText(left.path, right.path));
+}
+
+interface ParserState {
+  files: Map<string, ChangedFileRanges>;
+  baseMarker: string;
+  headMarker: string;
+  currentPath: string | null;
+  oldHeaderPath: string | null;
+  sawDiff: boolean;
+}
+
+function createParserState(baseLabel: string, headLabel: string): ParserState {
+  return {
+    files: new Map<string, ChangedFileRanges>(),
+    baseMarker: `a/${normalizePath(baseLabel)}/`,
+    headMarker: `b/${normalizePath(headLabel)}/`,
+    currentPath: null,
+    oldHeaderPath: null,
+    sawDiff: false,
+  };
+}
+
+function normalizedLines(patch: string): string[] {
+  return patch.replace(/\r\n?/gu, "\n").split("\n");
+}
+
+function consumeLine(state: ParserState, line: string): boolean {
+  if (line.startsWith("diff --git ")) return consumeDiffHeader(state, line);
+  if (line.startsWith("--- ")) return consumeOldFileHeader(state, line);
+  if (line.startsWith("+++ ")) return consumeNewFileHeader(state, line);
+  if (line.startsWith("Binary files ") && line.endsWith(" differ")) return consumeBinaryLine(state);
+  if (line.startsWith("@@")) return consumeHunkHeader(state, line);
+  return true;
+}
+
+function consumeDiffHeader(state: ParserState, line: string): boolean {
+  state.sawDiff = true;
+  state.oldHeaderPath = null;
+  const parsed = pathFromDiffHeader(line, state.baseMarker, state.headMarker);
+  if (parsed === false) return false;
+  state.currentPath = parsed;
+  if (parsed) ensureFile(state.files, parsed);
+  return true;
+}
+
+function consumeOldFileHeader(state: ParserState, line: string): boolean {
+  const raw = line.slice(4);
+  if (raw === "/dev/null") {
+    state.oldHeaderPath = null;
+    return true;
+  }
+  const parsed = pathFromMarker(raw, state.baseMarker);
+  if (!parsed) return false;
+  state.oldHeaderPath = parsed;
+  return true;
+}
+
+function consumeNewFileHeader(state: ParserState, line: string): boolean {
+  const raw = line.slice(4);
+  const path = raw === "/dev/null" ? state.oldHeaderPath : pathFromMarker(raw, state.headMarker);
+  if (!path) return false;
+  state.currentPath = path;
+  ensureFile(state.files, path);
+  return true;
+}
+
+function consumeBinaryLine(state: ParserState): boolean {
+  if (!state.currentPath) return false;
+  ensureFile(state.files, state.currentPath).binary = true;
+  return true;
+}
+
+function consumeHunkHeader(state: ParserState, line: string): boolean {
+  if (!state.currentPath) return false;
+  const range = headRange(line);
+  if (range === false) return false;
+  if (range) ensureFile(state.files, state.currentPath).ranges.push(range);
+  return true;
+}
+
+function headRange(line: string): ChangedLineRange | null | false {
+  const match = /\+(\d+)(?:,(\d+))?\s/u.exec(line);
+  if (!match) return false;
+  const start = Number(match[1]);
+  const count = match[2] == null ? 1 : Number(match[2]);
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(count) || count < 0) return false;
+  return count > 0 ? { start, end: start + count - 1 } : null;
 }
 
 /** Changed-line lookup shared by classification and annotation eligibility. */

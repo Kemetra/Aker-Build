@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, it, expect } from "vitest";
@@ -16,37 +16,27 @@ afterEach(() => {
 });
 
 describe("makeNodeGit — concrete GitRunner over child_process", () => {
-  it("runs a successful git command and returns code 0 with stdout", () => {
+  it("runs the constrained init operation and returns code 0", () => {
     const git = makeNodeGit();
     const dir = tempDir();
 
-    const init = git.run(["init", "--quiet", "."], dir);
+    const init = git.run({ kind: "init", repositoryPath: dir }, dir);
     expect(init.code).toBe(0);
-
-    const version = git.run(["--version"], dir);
-    expect(version.code).toBe(0);
-    expect(version.stdout).toMatch(/git version/);
   });
 
-  it("reports a non-zero code for a failing git command (no throw)", () => {
+  it("rejects an option-injection-shaped remote without spawning a generic Git command", () => {
     const git = makeNodeGit();
     const dir = tempDir();
 
-    // Not a git repo + a bogus subcommand → git exits non-zero. The runner must NOT throw;
-    // git-workspace.ts checks `.code` and decides. (Honest, inspectable failure.)
-    const res = git.run(["rev-parse", "--verify", "HEAD"], dir);
-    expect(res.code).not.toBe(0);
+    const res = git.run({ kind: "fetch", remoteUrl: "--upload-pack=evil", ref: "a".repeat(40) }, dir);
+    expect(res).toEqual({ stdout: "", stderr: "", code: 1 });
   });
 
-  it("captures real command output (git config round-trip in a fresh repo)", () => {
+  it("returns a non-zero result when checkout cannot use FETCH_HEAD", () => {
     const git = makeNodeGit();
     const dir = tempDir();
-    git.run(["init", "--quiet", "."], dir);
-    git.run(["config", "user.name", "tester"], dir);
-    writeFileSync(join(dir, "a.txt"), "hello");
-
-    const status = git.run(["status", "--porcelain"], dir);
-    expect(status.code).toBe(0);
-    expect(status.stdout).toContain("a.txt");
+    git.run({ kind: "init", repositoryPath: dir }, dir);
+    const status = git.run({ kind: "checkout_fetch_head" }, dir);
+    expect(status.code).not.toBe(0);
   });
 });
