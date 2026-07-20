@@ -2,7 +2,7 @@
 
 **Feature Branch**: `020-reusable-github-ci`
 **Created**: 2026-07-20
-**Status**: Approved for implementation
+**Status**: Implemented and locally verified
 **Input**: Turn the proven report-only GitHub Action contract and verified npm
 artifact into a minimal reusable workflow for consumer repositories.
 
