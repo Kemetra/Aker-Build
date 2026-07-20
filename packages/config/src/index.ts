@@ -5,6 +5,7 @@ import { z } from "zod";
 
 export const CONFIG_FILENAMES = ["aker-build.config.json", "aker-build.config.yaml"] as const;
 export const CONFIG_VERSION = 1;
+export type ConfigFormat = "yaml" | "json";
 
 const severitySchema = z.enum(["low", "medium", "high", "critical"]);
 const suppressionSchema = z
@@ -102,6 +103,25 @@ export class ConfigNotFoundError extends ConfigError {
 }
 
 const DEFAULT_CONFIG: AkerBuildConfig = { version: CONFIG_VERSION };
+const STARTER_YAML = [
+  "# Aker Build configuration. All settings below version are optional.",
+  "version: 1",
+  "",
+  "# paths:",
+  "#   include:",
+  "#     - apps/**",
+  "#   exclude:",
+  "#     - dist/**",
+  "# specs:",
+  "#   adapter: auto",
+  "",
+].join("\n");
+
+export function renderStarterConfig(format: ConfigFormat): string {
+  if (format === "yaml") return STARTER_YAML;
+  if (format === "json") return `${JSON.stringify(DEFAULT_CONFIG, null, 2)}\n`;
+  throw new ConfigError(`unsupported config format: ${String(format)}`);
+}
 
 const SECRET_PATTERNS: RegExp[] = [
   /AKIA[0-9A-Z]{16}/,
