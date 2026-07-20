@@ -7,7 +7,7 @@ import {
   rmSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { runScan, type ScanCmdOptions } from "./scan.js";
 import { runGatesCommand, type GatesCmdOptions } from "./gates.js";
 import { runQueueCommand, type QueueCmdOptions } from "./queue.js";
@@ -48,47 +48,76 @@ const DEFAULT_DEPS: CheckDeps = {
   report: runReportCommand,
 };
 
-function promote(staged: string, output: string): void {
+type CheckArtifact = (typeof CHECK_ARTIFACTS)[number];
+
+function assertCompleteArtifactSet(staged: string): void {
   for (const file of CHECK_ARTIFACTS) {
     if (!existsSync(join(staged, file))) throw new Error(`check stage output missing: ${file}`);
   }
+}
+
+function removeFiles(paths: Iterable<string>): void {
+  for (const path of paths) rmSync(path, { force: true });
+}
+
+function prepareNextArtifacts(staged: string, output: string, transaction: string): Map<CheckArtifact, string> {
+  const nextPaths = new Map<CheckArtifact, string>();
+  for (const file of CHECK_ARTIFACTS) {
+    const next = join(output, `.${basename(file)}.${transaction}.next`);
+    copyFileSync(join(staged, file), next);
+    nextPaths.set(file, next);
+  }
+  return nextPaths;
+}
+
+function backupExistingArtifacts(output: string, transaction: string): Map<CheckArtifact, string> {
+  const previousPaths = new Map<CheckArtifact, string>();
+  for (const file of CHECK_ARTIFACTS) {
+    const destination = join(output, file);
+    if (!existsSync(destination)) continue;
+    const previous = join(output, `.${basename(file)}.${transaction}.previous`);
+    renameSync(destination, previous);
+    previousPaths.set(file, previous);
+  }
+  return previousPaths;
+}
+
+function installNextArtifacts(nextPaths: ReadonlyMap<CheckArtifact, string>, output: string): CheckArtifact[] {
+  const promoted: CheckArtifact[] = [];
+  for (const file of CHECK_ARTIFACTS) {
+    renameSync(nextPaths.get(file)!, join(output, file));
+    promoted.push(file);
+  }
+  return promoted;
+}
+
+function restorePreviousArtifacts(previousPaths: ReadonlyMap<CheckArtifact, string>, output: string): void {
+  for (const [file, previous] of previousPaths) {
+    if (existsSync(previous)) renameSync(previous, join(output, file));
+  }
+}
+
+function promote(staged: string, output: string): void {
+  assertCompleteArtifactSet(staged);
 
   mkdirSync(output, { recursive: true });
   const transaction = `${process.pid}-${Date.now()}`;
-  const nextPaths = new Map<string, string>();
-  const previousPaths = new Map<string, string>();
-  const promoted = new Set<string>();
+  let nextPaths = new Map<CheckArtifact, string>();
+  let previousPaths = new Map<CheckArtifact, string>();
+  let promoted: CheckArtifact[] = [];
 
   try {
-    for (const file of CHECK_ARTIFACTS) {
-      const next = join(output, `.${basename(file)}.${transaction}.next`);
-      copyFileSync(join(staged, file), next);
-      nextPaths.set(file, next);
-    }
-
-    for (const file of CHECK_ARTIFACTS) {
-      const destination = join(output, file);
-      if (!existsSync(destination)) continue;
-      const previous = join(output, `.${basename(file)}.${transaction}.previous`);
-      renameSync(destination, previous);
-      previousPaths.set(file, previous);
-    }
-
-    for (const file of CHECK_ARTIFACTS) {
-      renameSync(nextPaths.get(file)!, join(output, file));
-      promoted.add(file);
-    }
-
-    for (const previous of previousPaths.values()) rmSync(previous, { force: true });
+    nextPaths = prepareNextArtifacts(staged, output, transaction);
+    previousPaths = backupExistingArtifacts(output, transaction);
+    promoted = installNextArtifacts(nextPaths, output);
+    removeFiles(previousPaths.values());
   } catch (error) {
-    for (const file of promoted) rmSync(join(output, file), { force: true });
-    for (const [file, previous] of previousPaths) {
-      if (existsSync(previous)) renameSync(previous, join(output, file));
-    }
+    removeFiles(promoted.map((file) => join(output, file)));
+    restorePreviousArtifacts(previousPaths, output);
     throw error;
   } finally {
-    for (const next of nextPaths.values()) rmSync(next, { force: true });
-    for (const previous of previousPaths.values()) rmSync(previous, { force: true });
+    removeFiles(nextPaths.values());
+    removeFiles(previousPaths.values());
   }
 }
 

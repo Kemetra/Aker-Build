@@ -116,11 +116,17 @@ const STARTER_YAML = [
   "#   adapter: auto",
   "",
 ].join("\n");
+const STARTER_CONFIGS = new Map<ConfigFormat, string>([
+  ["yaml", STARTER_YAML],
+  ["json", `${JSON.stringify(DEFAULT_CONFIG, null, 2)}\n`],
+]);
+
+function unsupportedConfigFormat(format: unknown): never {
+  throw new ConfigError(`unsupported config format: ${String(format)}`);
+}
 
 export function renderStarterConfig(format: ConfigFormat): string {
-  if (format === "yaml") return STARTER_YAML;
-  if (format === "json") return `${JSON.stringify(DEFAULT_CONFIG, null, 2)}\n`;
-  throw new ConfigError(`unsupported config format: ${String(format)}`);
+  return STARTER_CONFIGS.get(format) ?? unsupportedConfigFormat(format);
 }
 
 const SECRET_PATTERNS: RegExp[] = [

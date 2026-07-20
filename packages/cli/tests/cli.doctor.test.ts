@@ -31,8 +31,40 @@ interface Scenario {
   token?: boolean;
 }
 
+type ScenarioState = Required<Scenario>;
+type ProbeResult = { ok: boolean; stdout: string };
+
+function failedProbe(): ProbeResult {
+  return { ok: false, stdout: "" };
+}
+
+function repositoryProbe(state: ScenarioState): ProbeResult {
+  if (!state.git) return failedProbe();
+  if (!state.repository) return failedProbe();
+  return { ok: true, stdout: "true" };
+}
+
+function outputIgnoreProbe(state: ScenarioState): ProbeResult {
+  if (!state.git) return failedProbe();
+  if (!state.repository) return failedProbe();
+  return { ok: state.ignored, stdout: "" };
+}
+
+function gitProbe(state: ScenarioState, operation: string | undefined): ProbeResult {
+  if (operation === "--version") return { ok: state.git, stdout: "git version test" };
+  if (operation === "rev-parse") return repositoryProbe(state);
+  if (operation === "check-ignore") return outputIgnoreProbe(state);
+  return failedProbe();
+}
+
+function scenarioProbe(state: ScenarioState, command: string, args: readonly string[]): ProbeResult {
+  if (command === "git") return gitProbe(state, args[0]);
+  if (command === "gh") return { ok: state.gh, stdout: "gh version test" };
+  return failedProbe();
+}
+
 function scenarioDeps(scenario: Scenario = {}): DoctorDeps {
-  const state = {
+  const state: ScenarioState = {
     nodeVersion: "v22.14.0",
     git: true,
     repository: true,
@@ -43,13 +75,7 @@ function scenarioDeps(scenario: Scenario = {}): DoctorDeps {
   };
   return {
     nodeVersion: state.nodeVersion,
-    probe(command, args) {
-      if (command === "git" && args[0] === "--version") return { ok: state.git, stdout: "git version test" };
-      if (command === "git" && args[0] === "rev-parse") return { ok: state.git && state.repository, stdout: state.repository ? "true" : "" };
-      if (command === "git" && args[0] === "check-ignore") return { ok: state.git && state.repository && state.ignored, stdout: "" };
-      if (command === "gh") return { ok: state.gh, stdout: "gh version test" };
-      return { ok: false, stdout: "" };
-    },
+    probe: (command, args) => scenarioProbe(state, command, args),
     hasEnvironmentVariable: () => state.token,
   };
 }

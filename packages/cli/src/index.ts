@@ -37,14 +37,7 @@ export {
 } from "./commands/doctor.js";
 export { CLI_VERSION } from "./version.js";
 
-/** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
-export function buildProgram(): Command {
-  const program = new Command();
-  program
-    .name("aker-build")
-    .description("Aker Build — CLI-first SaaS Build Kernel")
-    .version(CLI_VERSION);
-
+function registerInitCommand(program: Command): void {
   program
     .command("init")
     .description("Create a minimal Aker Build config without overwriting files")
@@ -54,7 +47,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { format: "yaml" | "json"; stdout?: boolean }) => {
       process.exitCode = runInit(path, opts);
     });
+}
 
+function registerDoctorCommand(program: Command): void {
   program
     .command("doctor")
     .description("Check local or GitHub PR-mode readiness without writing files")
@@ -64,7 +59,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { github?: boolean; format: "text" | "json" }) => {
       process.exitCode = runDoctor(path, opts);
     });
+}
 
+function registerCheckCommand(program: Command): void {
   program
     .command("check")
     .description("Run scan, gates, queue, route, and report in one read-only pass")
@@ -74,7 +71,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { config?: string; out: string }) => {
       process.exitCode = runCheck(path, opts);
     });
+}
 
+function registerScanCommand(program: Command): void {
   program
     .command("scan")
     .description("Scan a local repo (read-only) and produce a Project Map")
@@ -86,7 +85,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; config?: string; stdout?: boolean; format: "json" | "yaml" }) => {
       process.exitCode = runScan(path, opts);
     });
+}
 
+function registerMapCommand(program: Command): void {
   program
     .command("map")
     .description("Show / re-emit the produced Project Map")
@@ -95,7 +96,9 @@ export function buildProgram(): Command {
     .action((opts: { out: string; format: "json" | "yaml" }) => {
       process.exitCode = runMap(opts);
     });
+}
 
+function registerGatesCommand(program: Command): void {
   program
     .command("gates")
     .description("Run the SaaS gate set (or a subset) over the scanned repo, produce risks.json")
@@ -110,7 +113,9 @@ export function buildProgram(): Command {
         process.exitCode = runGatesCommand(path, opts);
       },
     );
+}
 
+function registerQueueCommand(program: Command): void {
   program
     .command("queue")
     .description("Derive queue.json from the project map + gate findings")
@@ -121,7 +126,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" }) => {
       process.exitCode = runQueueCommand(path, opts);
     });
+}
 
+function registerRouteCommand(program: Command): void {
   program
     .command("route")
     .description("Select one next-safest task (with reason) + list blocked items")
@@ -132,7 +139,9 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" }) => {
       process.exitCode = runRouteCommand(path, opts);
     });
+}
 
+function registerPromptCommand(program: Command): void {
   program
     .command("prompt")
     .description("Compile a safe, scoped agent prompt for a queue item")
@@ -143,7 +152,9 @@ export function buildProgram(): Command {
     .action((id: string, opts: { agent?: string; out: string; stdout?: boolean }) => {
       process.exitCode = runPromptCommand(id, opts);
     });
+}
 
+function registerReviewCommand(program: Command): void {
   program
     .command("review-pr")
     .description("Review a local diff (or GitHub PR) against the gates + declared scope → Ready / Not Ready / Needs Verification")
@@ -162,7 +173,9 @@ export function buildProgram(): Command {
         process.exitCode = runReviewCommand(target, opts);
       },
     );
+}
 
+function registerReportCommand(program: Command): void {
   program
     .command("report")
     .description("Summarize produced Aker Build artifacts into aker-build-report.json and Markdown")
@@ -173,6 +186,27 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" | "md" }) => {
       process.exitCode = runReportCommand(path, opts);
     });
+}
+
+/** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
+export function buildProgram(): Command {
+  const program = new Command();
+  program
+    .name("aker-build")
+    .description("Aker Build — CLI-first SaaS Build Kernel")
+    .version(CLI_VERSION);
+
+  registerInitCommand(program);
+  registerDoctorCommand(program);
+  registerCheckCommand(program);
+  registerScanCommand(program);
+  registerMapCommand(program);
+  registerGatesCommand(program);
+  registerQueueCommand(program);
+  registerRouteCommand(program);
+  registerPromptCommand(program);
+  registerReviewCommand(program);
+  registerReportCommand(program);
 
   return program;
 }
