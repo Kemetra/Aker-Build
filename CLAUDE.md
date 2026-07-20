@@ -30,7 +30,7 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with reusable consumer GitHub CI implemented locally and release activation pending.
+MVP implementation / dogfooding, with immutable GitHub Action pinning active after reusable consumer CI.
 
 The MVP CLI is implemented (`init`, `doctor`, `check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). `init` creates at most one optional config and never overwrites; `doctor` is read-only. The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
 
@@ -216,5 +216,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 
 <!-- SPECKIT START -->
 For the active feature requirements and implementation boundary, read:
-`specs/020-reusable-github-ci/plan.md` (active feature: 020-reusable-github-ci).
+`specs/021-immutable-action-pins/plan.md` (active feature: 021-immutable-action-pins).
 <!-- SPECKIT END -->
