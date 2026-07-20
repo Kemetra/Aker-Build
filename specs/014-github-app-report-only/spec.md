@@ -2,7 +2,7 @@
 
 **Feature Branch**: `014-github-app-report-only`
 **Created**: 2026-06-21
-**Status**: Draft
+**Status**: Implemented — report-only transport; deployment runtime delivered by 015
 **Input**: User description: "Report-only GitHub App for Aker Build (roadmap P4, EXPAND phase). Installs on a repo and, on each pull request, runs the existing review-pr chain and posts findings back to the PR as a GitHub Checks run plus inline annotations using the file:line evidence spans from the P2 confidence model. Confidence tiers drive presentation: confirmed findings render as a failed/neutral check with detail; suspected findings render as collapsed advisory notes so the PR is not flooded. Constitution-safe and report-only: no commits, no pushes, no auto-merge, no auto-fix, no agent execution. Stateless by default: computes from source truth per-PR with no database and stores no source code or secrets. Productizes the existing report-only dogfood GitHub Action behavior as an installable App, and consumes the already-merged report-only GitHub Checks renderer."
 
 ## Clarifications

@@ -2,7 +2,7 @@
 
 **Feature Branch**: `015-github-app-deployment`
 **Created**: 2026-06-21
-**Status**: Draft
+**Status**: Implemented — self-hostable runtime; credentialed live smoke remains operator-owned
 **Input**: User description: "A deployment runtime for the report-only GitHub App built in 014. Provides a self-hostable single-tenant Node HTTP service that receives pull_request webhooks, verifies the HMAC signature, and dispatches to the existing handleEvent; a concrete octokit-backed ChecksClient; and a concrete Workspace (ephemeral checkout of the PR head, disposed after each event). Secrets (App private key, app id, installation auth, webhook secret) are read ONLY from the deployment environment and NEVER written to disk, logs, the Checks payload, error messages, or any artifact. Stays report-only (only writes checks.create/checks.update via the 014 safety allowlist), stateless, and stores no repository source. Degrades honestly: malformed/unsigned webhooks are rejected; an event it cannot fully review concludes neutral, never a false success. Does NOT change judgment logic, add P5 dashboard, or add P6 enforcing behavior."
 
 ## Clarifications
@@ -75,7 +75,7 @@ The public webhook endpoint will receive malformed, unsigned, replayed, and unre
 
 ## Requirements *(mandatory)*
 
-> **Delivery scope note (2026-06-21):** This feature is delivered in two layers. The **runtime core** — webhook dispatch, signature/action gating, the sync-closure seam to `handleEvent`, secret-safe config, the Checks-client adapter shape, and the ephemeral-workspace logic — is built and tested (against ports/fakes + a recording git runner). The **live-GitHub edge** — a bound HTTP listener, a concrete octokit `GitHubApi`, a real `git` `GitRunner`, and the installation-token mint — is defined as injectable **ports** but the concrete adapters are **deferred** (they require adding an octokit/HTTP dependency, an explicit decision left to the owner). Until those adapters exist, the App does NOT yet run against live GitHub. FRs below are tagged **[core: built]** or **[edge: port defined, adapter deferred]** accordingly.
+> **Delivery scope note (reconciled 2026-07-20):** The runtime core and live edge are implemented: webhook dispatch, signature/action gating, secret-safe config, Checks adapter, ephemeral checkout, bound HTTP listener, concrete Octokit and Git adapters, installation-token minting, and the thin host entrypoint. Local fake-backed and real-component tests cover the full composition without production credentials. The credentialed api.github.com smoke and full public-webhook field run remain explicit operator verification; serverless/multi-tenant hosting remains out of scope.
 
 ### Functional Requirements
 

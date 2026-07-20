@@ -50,10 +50,10 @@ AKER_BUILD_APP_ID="<app id>" \
 AKER_BUILD_APP_PRIVATE_KEY="$(cat /path/to/your-app.private-key.pem)" \
 AKER_BUILD_WEBHOOK_SECRET="<webhook secret>" \
 AKER_BUILD_INSTALLATION_ID="<installation id>" \
-TG_SMOKE_OWNER="<repo owner / org login>" \
-TG_SMOKE_REPO="<repo name>" \
-TG_SMOKE_PR="<existing PR number>" \
-TG_SMOKE_HEAD_SHA="<that PR's head commit sha>" \
+AKER_BUILD_SMOKE_OWNER="<repo owner / org login>" \
+AKER_BUILD_SMOKE_REPO="<repo name>" \
+AKER_BUILD_SMOKE_PR="<existing PR number>" \
+AKER_BUILD_SMOKE_HEAD_SHA="<that PR's head commit sha>" \
 pnpm --filter @aker-build/github-app-server exec vitest run live-smoke
 ```
 
@@ -65,12 +65,12 @@ $env:AKER_BUILD_APP_ID="<app id>"
 $env:AKER_BUILD_APP_PRIVATE_KEY=(Get-Content -Raw C:\path\to\your-app.private-key.pem)
 $env:AKER_BUILD_WEBHOOK_SECRET="<webhook secret>"
 $env:AKER_BUILD_INSTALLATION_ID="<installation id>"
-$env:TG_SMOKE_OWNER="<repo owner / org login>"
-$env:TG_SMOKE_REPO="<repo name>"
-$env:TG_SMOKE_PR="<existing PR number>"
-$env:TG_SMOKE_HEAD_SHA="<that PR's head commit sha>"
+$env:AKER_BUILD_SMOKE_OWNER="<repo owner / org login>"
+$env:AKER_BUILD_SMOKE_REPO="<repo name>"
+$env:AKER_BUILD_SMOKE_PR="<existing PR number>"
+$env:AKER_BUILD_SMOKE_HEAD_SHA="<that PR's head commit sha>"
 pnpm --filter @aker-build/github-app-server exec vitest run live-smoke
-# Clear them afterwards: Remove-Item Env:AKER_BUILD_*, Env:TG_SMOKE_*
+# Clear them afterwards: Remove-Item Env:AKER_BUILD_*
 ```
 
 ---
@@ -115,7 +115,7 @@ entrypoint is `packages/github-app-server/src/bin.ts` (a thin shim that calls th
 which env-composes the runtime and binds the listener). It is registered as the package `bin`
 `aker-build-app-server`.
 
-1. Set the four `AKER_BUILD_*` credentials (no `TG_SMOKE_*` needed) — environment only, never a file.
+1. Set the four `AKER_BUILD_*` credentials (no smoke-target variables needed) — environment only, never a file.
 2. Launch the host. The bin uses `.js`→`.ts` import specifiers (same convention as the `aker-build`
    and `aker-build-benchmark` bins), so it needs a **TS-aware runtime**:
    - **Built / published package:** run the installed `aker-build-app-server` command.

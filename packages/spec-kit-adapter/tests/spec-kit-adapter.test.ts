@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { readSpecKitArtifacts } from "../src/index.js";
 
 function repo(): string {
-  return mkdtempSync(join(tmpdir(), "tg-speckit-"));
+  return mkdtempSync(join(tmpdir(), "aker-build-speckit-"));
 }
 
 describe("Spec Kit adapter", () => {

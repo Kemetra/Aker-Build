@@ -13,7 +13,7 @@ const vulnSrc = resolve(here, "../../gates/tests/fixtures/vuln");
 
 /** Prepare a vuln repo (git init + produced project-map.json) in a temp dir. */
 function prepRepoWithMap(): { repoRoot: string; outDir: string } {
-  const repoRoot = join(mkdtempSync(join(tmpdir(), "tg-cli-gates-")), "vuln");
+  const repoRoot = join(mkdtempSync(join(tmpdir(), "aker-build-cli-gates-")), "vuln");
   cpSync(vulnSrc, repoRoot, { recursive: true });
   const git = (...a: string[]) => execFileSync("git", a, { cwd: repoRoot, stdio: "ignore" });
   git("init", "-q");
@@ -26,7 +26,7 @@ function prepRepoWithMap(): { repoRoot: string; outDir: string } {
 
 /** Prepare a repo with NO produced map (git init only). */
 function prepRepoNoMap(): { repoRoot: string; outDir: string } {
-  const repoRoot = join(mkdtempSync(join(tmpdir(), "tg-cli-gates-nomap-")), "vuln");
+  const repoRoot = join(mkdtempSync(join(tmpdir(), "aker-build-cli-gates-nomap-")), "vuln");
   cpSync(vulnSrc, repoRoot, { recursive: true });
   const git = (...a: string[]) => execFileSync("git", a, { cwd: repoRoot, stdio: "ignore" });
   git("init", "-q");

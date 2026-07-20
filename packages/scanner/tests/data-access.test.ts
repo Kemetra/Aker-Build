@@ -8,7 +8,7 @@ import { assemble } from "../src/assemble.js";
 import { listFiles } from "../src/index.js";
 
 function fixture(files: Record<string, string>): string {
-  const root = mkdtempSync(join(tmpdir(), "tg-da-"));
+  const root = mkdtempSync(join(tmpdir(), "aker-build-da-"));
   for (const [rel, content] of Object.entries(files)) {
     const abs = join(root, rel);
     mkdirSync(join(abs, ".."), { recursive: true });

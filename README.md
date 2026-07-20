@@ -27,10 +27,11 @@ Aker Build is not a SaaS boilerplate. It does not generate a full app. It contro
 
 ## Status
 
-Aker Build's MVP CLI chain is implemented and in release-readiness hardening. The current focus is a reliable first-run demo, documented command surface, and launch prerequisites.
+Aker Build's MVP CLI chain and FORTIFY phases are implemented. The current focus is release integrity: reproducible tests, type-checking, benchmark evidence, first-run smoke, and documentation truth before public CLI distribution.
 
-- Aker Build runs against its own repo via a report-only GitHub Action dogfooding workflow.
-- GitHub App, hosted dashboard, auto-fix, auto-commit, and auto-merge remain deferred.
+- Aker Build runs against its own repo through a report-only GitHub Action.
+- A self-hostable, single-tenant report-only GitHub App runtime is implemented and tested locally; credentialed field verification remains an operator-run smoke step.
+- The npm-published CLI, hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
 
 ## Benchmark scorecard
 
@@ -131,4 +132,6 @@ or change the project's published evidence and safety boundaries.
 
 - First-run demo: `docs/demo/first-run.md`
 - Post-foundation plan: `docs/roadmap/post-foundation-technical-plan.md`
+- Release integrity: `specs/016-release-integrity/spec.md`
+- GitHub App server: `packages/github-app-server/README.md`
 - Contributor guide: `CONTRIBUTING.md`

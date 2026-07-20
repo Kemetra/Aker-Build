@@ -12,6 +12,7 @@ On each `pull_request` webhook: verify the HMAC signature → check out the PR h
 AKER_BUILD_APP_ID=<app id>
 AKER_BUILD_APP_PRIVATE_KEY=<private key>     # never logged or written to disk
 AKER_BUILD_WEBHOOK_SECRET=<webhook secret>   # never logged or written to disk
+AKER_BUILD_INSTALLATION_ID=<installation id>
 PORT=<optional>
 ```
 
@@ -24,11 +25,17 @@ Missing any required variable → the service **fails fast** at startup, naming 
 - **Stateless**: no database; each event's checkout is a unique temp dir, removed on dispose (and cleaned up even if checkout fails partway) — zero repository source remains on disk.
 - **Honest**: unsigned/forged webhooks → 401, no processing; non-reviewable events → 202, no check; an incomplete review → a `neutral` check, never a false success; a Checks-API failure → 502 at the boundary, never an uncaught throw or a leak.
 
-## Architecture (what's built vs. supplied)
+## Runtime status
 
-This package depends on a narrow `GitHubApi` **port** (read changed files / PR metadata; create/update/find check-run) and a `GitRunner` port — both injectable, so the runtime is fully tested without a network or live git. The concrete **octokit adapter** (`GitHubApi`) and a real `GitRunner` (shelling to `git`) are the thin deployment wiring an operator supplies; the install/token-minting flow (`authToken`) uses the standard GitHub App installation-token exchange.
+The HTTP listener, installation-authenticated Octokit adapter, real Git runner, ephemeral workspace, installation-token minting, composition root, and thin host entrypoint are implemented. Start the source-first development runtime with:
 
-> Status: the host logic, dispatch, Checks-client adapter shape, and ephemeral workspace are implemented and tested against fakes + a recording git runner. A production entrypoint that binds an HTTP listener and a live octokit `GitHubApi` is the remaining wiring (kept thin and out of the tested core deliberately).
+```bash
+pnpm dlx tsx packages/github-app-server/src/bin.ts
+```
+
+The required environment is `AKER_BUILD_APP_ID`, `AKER_BUILD_APP_PRIVATE_KEY`, `AKER_BUILD_WEBHOOK_SECRET`, and `AKER_BUILD_INSTALLATION_ID`; `PORT` defaults to `3000`. The server accepts signed webhook POST requests. Packaging a container/service definition is outside 015. Credentialed verification against api.github.com remains the explicit operator smoke in `specs/015-github-app-deployment/live-smoke-checklist.md`.
+
+The runtime keeps narrow `GitHubApi` and `GitRunner` ports so its host composition can be tested locally without network access. Real-component tests cover Octokit request mapping, Git fetch/checkout, HTTP handling, secret safety, and review verdict wiring.
 
 ## Not in this feature
 

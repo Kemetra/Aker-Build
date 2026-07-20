@@ -9,7 +9,9 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "test": "pnpm -r test",
+    "test": "pnpm test:namespace && pnpm -r test",
+    "test:namespace": "node --test scripts/check-namespace.test.mjs",
+    "check:namespace": "node scripts/check-namespace.mjs",
     "typecheck": "pnpm -r typecheck"
   }
 }

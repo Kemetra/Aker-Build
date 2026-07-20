@@ -24,7 +24,7 @@ const RISKS = {
 
 /** Fresh temp git repo with map + risks; optionally omit one to test "run X first". */
 function repo(opts: { withMap?: boolean; withRisks?: boolean } = {}): { repoRoot: string; outDir: string } {
-  const repoRoot = join(mkdtempSync(join(tmpdir(), "tg-cli-qr-")), "repo");
+  const repoRoot = join(mkdtempSync(join(tmpdir(), "aker-build-cli-qr-")), "repo");
   mkdirSync(repoRoot, { recursive: true });
   const git = (...a: string[]) => execFileSync("git", a, { cwd: repoRoot, stdio: "ignore" });
   git("init", "-q");

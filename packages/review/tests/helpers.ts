@@ -27,7 +27,7 @@ export function makeDiffRepo(opts: {
   changes?: Record<string, string>;
   untracked?: Record<string, string>;
 }): string {
-  const root = join(mkdtempSync(join(tmpdir(), "tg-review-")), "repo");
+  const root = join(mkdtempSync(join(tmpdir(), "aker-build-review-")), "repo");
   mkdirSync(root, { recursive: true });
   initGitRepo(root);
 

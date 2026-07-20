@@ -46,7 +46,7 @@ export function riskList(findings: Finding[]): RiskList {
  * Lets context.buildContext() load real artifacts for end-to-end derive/route tests.
  */
 export function fixtureRepo(map: ProjectMap, risks: RiskList): { repoRoot: string; outDir: string } {
-  const repoRoot = join(mkdtempSync(join(tmpdir(), "tg-queue-")), "repo");
+  const repoRoot = join(mkdtempSync(join(tmpdir(), "aker-build-queue-")), "repo");
   mkdirSync(repoRoot, { recursive: true });
   const git = (...a: string[]) => execFileSync("git", a, { cwd: repoRoot, stdio: "ignore" });
   git("init", "-q");

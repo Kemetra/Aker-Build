@@ -5,16 +5,15 @@ Aker Build is built with its own spec-first workflow. Keep changes scoped, evide
 ## Setup
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
+pnpm check:namespace
 pnpm test
 pnpm typecheck
+pnpm dlx tsx packages/eval/src/bin.ts
+pwsh -File scripts/smoke-first-run.ps1 -RemoveTemp
 ```
 
-For the first-run path:
-
-```bash
-pwsh -File scripts/smoke-first-run.ps1
-```
+These commands are the local release-integrity gate. The credentialed GitHub App smoke is optional and operator-run; see `specs/015-github-app-deployment/live-smoke-checklist.md`.
 
 ## Workflow
 
@@ -30,7 +29,7 @@ pwsh -File scripts/smoke-first-run.ps1
 - Include paths for changed public contracts or docs.
 - Keep PRs focused on one spec/task slice.
 - Do not include secrets, credentials, `.env` files, private domain logic, or generated lockfile churn.
-- Do not add GitHub App, hosted dashboard, auto-fix, auto-commit, or auto-merge behavior unless a later reviewed spec explicitly approves it.
+- Do not expand the approved report-only GitHub App boundary or add hosted dashboard, enforcement, auto-fix, auto-commit, or auto-merge behavior without a separately reviewed spec.
 
 ## Good First Issues
 
