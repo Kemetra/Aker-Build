@@ -1,9 +1,26 @@
 {
   "name": "@aker-build/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "private": true,
   "description": "Aker Build CLI — scan, gates, queue, route, prompt, and review PRs safely",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kemetra/Aker-Build.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/Kemetra/Aker-Build#readme",
+  "bugs": {
+    "url": "https://github.com/Kemetra/Aker-Build/issues"
+  },
+  "keywords": [
+    "cli",
+    "saas",
+    "architecture",
+    "code-review",
+    "static-analysis"
+  ],
   "bin": {
     "aker-build": "./src/bin.ts"
   },
