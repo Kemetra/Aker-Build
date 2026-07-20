@@ -163,17 +163,17 @@ Expected: FAIL because `runInit` does not exist.
 Implement the command around these exact rules:
 
 ```ts
+if (!isDirectory(repoRoot)) return fail(2, `Repository path is not a directory: ${repoRoot}`);
+if (!isGitRepository(repoRoot)) return fail(1, `Not a Git repository: ${repoRoot}`);
+if (stdout) {
+  sink(renderStarterConfig(format));
+  return 0;
+}
 const filename = format === "json" ? "aker-build.config.json" : "aker-build.config.yaml";
 const existing = CONFIG_FILENAMES
   .map((name) => resolve(repoRoot, name))
   .filter((candidate) => existsSync(candidate));
 
-if (stdout) {
-  sink(renderStarterConfig(format));
-  return 0;
-}
-if (!isDirectory(repoRoot)) return fail(2, `Repository path is not a directory: ${repoRoot}`);
-if (!isGitRepository(repoRoot)) return fail(1, `Not a Git repository: ${repoRoot}`);
 if (existing.length > 1) return fail(2, "Multiple Aker Build config files found; keep exactly one.");
 if (existing.length === 1) {
   loadConfig(repoRoot, { configPath: existing[0] });
