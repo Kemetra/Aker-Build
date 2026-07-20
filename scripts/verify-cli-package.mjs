@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -69,9 +70,12 @@ try {
 
   const consumer = join(work, "consumer");
   const fixture = join(work, "fixture");
+  const onboardingFixture = join(work, "onboarding-fixture");
   mkdirSync(consumer);
+  mkdirSync(onboardingFixture);
   writeFileSync(join(consumer, "package.json"), "{\"private\":true}\n");
   run(npm, ["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], consumer);
+  run(git, ["init"], onboardingFixture);
 
   cpSync(join(repo, "examples", "multi-tenant-saas-basic"), fixture, { recursive: true });
   run(git, ["init"], fixture);
@@ -87,6 +91,24 @@ try {
   run(bin, ["--help"], consumer);
   const installedVersion = run(bin, ["--version"], consumer);
   validateVersion({ packageVersion: manifest.version, cliVersion: installedVersion });
+
+  run(bin, ["init", onboardingFixture], consumer);
+  const initialized = readFileSync(join(onboardingFixture, "aker-build.config.yaml"), "utf8");
+  run(bin, ["init", onboardingFixture], consumer);
+  assert.equal(readFileSync(join(onboardingFixture, "aker-build.config.yaml"), "utf8"), initialized);
+  const preview = JSON.parse(run(
+    bin,
+    ["init", onboardingFixture, "--stdout", "--format", "json"],
+    consumer,
+  ));
+  assert.deepEqual(preview, { version: 1 });
+  const diagnosis = JSON.parse(run(
+    bin,
+    ["doctor", onboardingFixture, "--format", "json"],
+    consumer,
+  ));
+  assert.equal(diagnosis.status, "ready");
+  assert.equal(run(git, ["status", "--short"], onboardingFixture), "?? aker-build.config.yaml");
 
   const output = join(work, "output");
   run(bin, ["check", fixture, "--out", output], consumer);

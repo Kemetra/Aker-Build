@@ -27,7 +27,7 @@ Aker Build is not a SaaS boilerplate. It does not generate a full app. It contro
 
 ## Status
 
-Aker Build's MVP CLI chain and FORTIFY phases are implemented. The repository now builds and verifies a single-package `aker-build@0.1.0` tarball, provides an approval-protected release workflow, and reports which framework signature packs its scanner actually recognized. The first npm publication remains an explicit owner operation.
+Aker Build's MVP CLI chain, safe `init`/`doctor` onboarding, and FORTIFY phases are implemented. The repository now builds and verifies a single-package `aker-build@0.1.0` tarball, provides an approval-protected release workflow, and reports which framework signature packs its scanner actually recognized. The first npm publication remains an explicit owner operation.
 
 - Aker Build runs against its own repo through a report-only GitHub Action.
 - A self-hostable, single-tenant report-only GitHub App runtime is implemented and tested locally; credentialed field verification remains an operator-run smoke step.
@@ -76,11 +76,19 @@ pwsh -File scripts/smoke-first-run.ps1
 
 The smoke script copies `examples/multi-tenant-saas-basic` into a temporary git repo, runs the MVP CLI chain, creates a controlled local diff, and verifies the expected outputs.
 
-Run the complete read-only advisory chain from source:
+Initialize a target repository explicitly, diagnose it without writes, then run
+the complete read-only advisory chain from source:
 
 ```bash
+pnpm dlx tsx packages/cli/src/bin.ts init <repo>
+pnpm dlx tsx packages/cli/src/bin.ts doctor <repo>
 pnpm dlx tsx packages/cli/src/bin.ts check <repo> --out <out-dir>
 ```
+
+Config is optional. `init` creates only one config (`aker-build.config.yaml` by
+default, or JSON when requested), never overwrites a recognized config, and never edits `.gitignore`; `doctor` reports
+readiness and safe remediation without changing the repository. Use
+`init --stdout --format json|yaml` to preview with zero writes.
 
 To build and smoke the exact package that is ready for publication:
 
@@ -92,6 +100,8 @@ node scripts/verify-cli-package.mjs --tarball-dir release
 After the owner completes the first public release, the canonical activation path is:
 
 ```bash
+npx aker-build init .
+npx aker-build doctor .
 npx aker-build check .
 ```
 
@@ -122,6 +132,8 @@ scan sources
 ## MVP Commands
 
 ```bash
+aker-build init [path] [--format yaml|json] [--stdout]
+aker-build doctor [path] [--github] [--format text|json]
 aker-build check [path]
 aker-build scan [path]
 aker-build map
@@ -154,5 +166,6 @@ or change the project's published evidence and safety boundaries.
 - Post-foundation plan: `docs/roadmap/post-foundation-technical-plan.md`
 - One-command distribution: `specs/017-one-command-distribution/spec.md`
 - Framework coverage honesty: `specs/018-framework-coverage-honesty/spec.md`
+- Safe repository onboarding: `specs/019-safe-onboarding/spec.md`
 - GitHub App server: `packages/github-app-server/README.md`
 - Contributor guide: `CONTRIBUTING.md`

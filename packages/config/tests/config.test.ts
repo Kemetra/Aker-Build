@@ -3,12 +3,14 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
+  ConfigError,
   ConfigNotFoundError,
   ConfigSecretError,
   filterPaths,
   findConfigPath,
   isPathAllowed,
   loadConfig,
+  renderStarterConfig,
   validateConfig,
 } from "../src/index.js";
 
@@ -17,6 +19,26 @@ function tempRepo(): string {
 }
 
 describe("aker-build config schema and reader", () => {
+  it.each([
+    ["yaml", "aker-build.config.yaml"],
+    ["json", "aker-build.config.json"],
+  ] as const)("renders a behavior-neutral %s starter config that round-trips", (format, filename) => {
+    const repo = tempRepo();
+    const rendered = renderStarterConfig(format);
+
+    expect(rendered.endsWith("\n")).toBe(true);
+    expect(rendered.endsWith("\n\n")).toBe(false);
+    if (format === "yaml") expect(rendered).toContain("# paths:");
+    else expect(JSON.parse(rendered)).toEqual({ version: 1 });
+
+    writeFileSync(join(repo, filename), rendered, "utf8");
+    expect(loadConfig(repo).config).toEqual({ version: 1 });
+  });
+
+  it("rejects an unsupported starter config format", () => {
+    expect(() => renderStarterConfig("toml" as "yaml")).toThrow(ConfigError);
+  });
+
   it("accepts valid JSON config with auditable suppressions", () => {
     const result = validateConfig({
       version: 1,

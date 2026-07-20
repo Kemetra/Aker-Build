@@ -1,6 +1,6 @@
 # Aker Build Future Phases — Fortify, then Expand
 
-Status: Approved 2026-06-21 (owner approval). FORTIFY (P1–P3), the report-only GitHub App (P4, specs 014–015), release integrity (016), one-command distribution (017), and framework coverage honesty (018) are implemented.
+Status: Approved 2026-06-21 (owner approval). FORTIFY (P1–P3), the report-only GitHub App (P4, specs 014–015), release integrity (016), one-command distribution (017), framework coverage honesty (018), and safe repository onboarding (019) are implemented.
 Date: 2026-06-19
 Scope: The roadmap layer **after** public launch. The near-term waves A–F
 (`docs/roadmap/post-foundation-technical-plan.md`: contracts → config → npm →
@@ -259,4 +259,4 @@ No broad rewrites.
 
 ## The single next action
 
-FORTIFY (P1–P3), the report-only GitHub App (P4), its self-hostable single-tenant runtime, release integrity (016), the verified one-command distribution path (017), and **018 — Framework Coverage Honesty** are implemented. Reports now name recognized route/auth/data-access signature packs and close the model-first ORM blind spot without claiming semantic completeness. P5 and P6 remain deferred.
+FORTIFY (P1–P3), the report-only GitHub App (P4), its self-hostable single-tenant runtime, release integrity (016), one-command distribution (017), framework coverage honesty (018), and **019 — Safe Repository Onboarding** are implemented. The CLI now closes its declared MVP command gap with exclusive/no-overwrite `init` and read-only `doctor`, both verified in the packed artifact. The next bounded adoption-polish candidate is a reusable consumer GitHub CI integration over the published CLI. P5 and P6 remain deferred.

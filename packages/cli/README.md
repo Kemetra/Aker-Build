@@ -1,6 +1,6 @@
 # @aker-build/cli
 
-The `aker-build` command-line interface (Commander). Current commands are `check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, and `report`.
+The `aker-build` command-line interface (Commander). Current commands are `init`, `doctor`, `check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, and `report`.
 
 Scanner spec: [`specs/003-cli-scanner`](../../specs/003-cli-scanner/spec.md) ·
 Gates spec: [`specs/004-saas-gates-v0`](../../specs/004-saas-gates-v0/spec.md) ·
@@ -26,6 +26,12 @@ The executable is generated at `packages/cli/dist/npm/dist/aker-build.js`. Publi
 ## Commands
 
 ```bash
+# Create one behavior-neutral config without overwriting either recognized format
+aker-build init [path] [--format yaml|json] [--stdout]
+
+# Diagnose local readiness; optionally include GitHub PR-mode prerequisites
+aker-build doctor [path] [--github] [--format text|json]
+
 # Run scan → gates → queue → route → report atomically
 aker-build check [path] [--config <path>] [--out <dir>]
 
@@ -70,6 +76,8 @@ The files are staged separately and promoted as one complete transaction. A fail
 
 ## Exit codes
 
+- `init`: `0` created/previewed/already valid · `1` not a Git repo · `2` bad path/format/config conflict or invalid config · `3` create failure.
+- `doctor`: `0` ready (warnings allowed) · `1` required prerequisite needs attention · `2` bad format · `3` unexpected diagnostic failure.
 - `check`: `0` complete artifact set produced · `1` missing prerequisite/not a Git repo · `2` bad input/config · `3` internal or artifact-integrity error. Findings alone do not make `check` fail.
 - `scan`: `0` map produced & valid · `1` not a Git repo · `2` internal error (assembled map invalid).
 - `map`: `0` map shown · `1` no produced map (run `scan` first).
@@ -82,7 +90,12 @@ The files are staged separately and promoted as one complete transaction. A fail
 
 ## Guarantees
 
-The CLI is local-first and read-only on scanned/reviewed source. It does not execute AI agents, commit, push, open PRs, auto-fix, auto-merge, or require GitHub credentials for `--local-diff`.
+The CLI is local-first and read-only on scanned/reviewed source. `init` is the
+sole onboarding write: one optional config created only when neither recognized
+format exists. `doctor` is read-only. Neither command runs `git init`, edits
+`.gitignore`, installs dependencies, or makes network requests. The CLI does not
+execute AI agents, commit, push, open PRs, auto-fix, auto-merge, or require
+GitHub credentials for `--local-diff`.
 
 Outputs are validated by their owning packages where schemas exist, and findings carry file/line/missing-artifact evidence. Secret-like content is flagged without copying the value into reports.
 
