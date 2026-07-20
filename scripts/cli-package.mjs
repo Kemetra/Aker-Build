@@ -6,54 +6,74 @@ export const REQUIRED_PACKAGE_FILES = [
 ];
 
 function hasEntries(value) {
-  return value && typeof value === "object" && Object.keys(value).length > 0;
+  if (!value || typeof value !== "object") return false;
+  return Object.keys(value).length > 0;
 }
 
-export function validateReleaseManifest(manifest) {
-  if (!manifest || typeof manifest !== "object") throw new Error("release manifest must be an object");
-  if (manifest.name !== "aker-build" || manifest.version !== "0.1.0") {
-    throw new Error("release identity must be aker-build@0.1.0");
-  }
-  if (manifest.description !== "Aker Build — CLI-first SaaS Build Kernel" || manifest.type !== "module") {
-    throw new Error("release package description/type mismatch");
-  }
-  if (manifest.bin?.["aker-build"] !== "dist/aker-build.js") {
-    throw new Error("aker-build bin must target dist/aker-build.js");
-  }
-  if (manifest.engines?.node !== ">=22.13") throw new Error("Node engine must be >=22.13");
-  if (manifest.private === true) throw new Error("generated release manifest cannot be private");
+function assertThat(condition, message) {
+  if (!condition) throw new Error(message);
+}
 
+function validateReleaseIdentity(manifest) {
+  const message = "release identity must be aker-build@0.1.0";
+  assertThat(manifest.name === "aker-build", message);
+  assertThat(manifest.version === "0.1.0", message);
+}
+
+function validateReleaseShape(manifest) {
+  const message = "release package description/type mismatch";
+  assertThat(manifest.description === "Aker Build — CLI-first SaaS Build Kernel", message);
+  assertThat(manifest.type === "module", message);
+  assertThat(manifest.bin?.["aker-build"] === "dist/aker-build.js", "aker-build bin must target dist/aker-build.js");
+  assertThat(manifest.engines?.node === ">=22.13", "Node engine must be >=22.13");
+  assertThat(manifest.private !== true, "generated release manifest cannot be private");
+}
+
+function validateDependencyBoundary(manifest) {
   for (const field of ["dependencies", "optionalDependencies", "peerDependencies", "bundledDependencies"]) {
     if (hasEntries(manifest[field])) throw new Error(`release package must have zero ${field}`);
   }
-  if (JSON.stringify(manifest).includes("workspace:")) {
-    throw new Error("release package cannot contain workspace protocol references");
-  }
+  assertThat(
+    !JSON.stringify(manifest).includes("workspace:"),
+    "release package cannot contain workspace protocol references",
+  );
+}
 
+function validateLifecycleBoundary(manifest) {
   const scripts = manifest.scripts ?? {};
   for (const name of ["preinstall", "install", "postinstall"]) {
     if (scripts[name]) throw new Error(`release package cannot define ${name}`);
   }
-  if (JSON.stringify(manifest.files) !== JSON.stringify(REQUIRED_PACKAGE_FILES)) {
-    throw new Error("release files allowlist mismatch");
-  }
-  if (
-    manifest.license !== "MIT"
-    || manifest.publishConfig?.access !== "public"
-    || manifest.publishConfig?.registry !== "https://registry.npmjs.org/"
-  ) {
-    throw new Error("release license/publish metadata mismatch");
-  }
-  if (
-    manifest.repository?.type !== "git"
-    || !manifest.repository?.url
-    || !manifest.homepage
-    || !manifest.bugs?.url
-    || !Array.isArray(manifest.keywords)
-    || manifest.keywords.length === 0
-  ) {
-    throw new Error("release discovery metadata missing");
-  }
+}
+
+function validatePublishMetadata(manifest) {
+  const files = JSON.stringify(manifest.files);
+  assertThat(files === JSON.stringify(REQUIRED_PACKAGE_FILES), "release files allowlist mismatch");
+  const message = "release license/publish metadata mismatch";
+  assertThat(manifest.license === "MIT", message);
+  assertThat(manifest.publishConfig?.access === "public", message);
+  assertThat(manifest.publishConfig?.registry === "https://registry.npmjs.org/", message);
+}
+
+function validateDiscoveryMetadata(manifest) {
+  const message = "release discovery metadata missing";
+  assertThat(manifest.repository?.type === "git", message);
+  assertThat(Boolean(manifest.repository?.url), message);
+  assertThat(Boolean(manifest.homepage), message);
+  assertThat(Boolean(manifest.bugs?.url), message);
+  assertThat(Array.isArray(manifest.keywords), message);
+  assertThat(manifest.keywords.length > 0, message);
+}
+
+export function validateReleaseManifest(manifest) {
+  assertThat(Boolean(manifest), "release manifest must be an object");
+  assertThat(typeof manifest === "object", "release manifest must be an object");
+  validateReleaseIdentity(manifest);
+  validateReleaseShape(manifest);
+  validateDependencyBoundary(manifest);
+  validateLifecycleBoundary(manifest);
+  validatePublishMetadata(manifest);
+  validateDiscoveryMetadata(manifest);
 }
 
 export function validateVersion({ packageVersion, cliVersion }) {
