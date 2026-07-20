@@ -2,7 +2,7 @@
 
 **Feature Branch**: `017-one-command-distribution`
 **Created**: 2026-07-20
-**Status**: Implementation in progress — Spec 016 integrated and preflight verified 2026-07-20
+**Status**: Implemented — release-ready; first npm publish remains operator-owned (verified 2026-07-20)
 **Input**: User direction: continue with the recommended improvement after release integrity, choose recommended defaults, and prioritize a polished public activation path.
 
 ## Clarifications
