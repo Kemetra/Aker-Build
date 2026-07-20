@@ -1,6 +1,6 @@
 # Aker Build Future Phases — Fortify, then Expand
 
-Status: Approved 2026-06-21 (owner approval). FORTIFY (P1–P3), the report-only GitHub App (P4, specs 014–015), release integrity (016), one-command distribution (017), framework coverage honesty (018), safe repository onboarding (019), and reusable consumer CI (020) are implemented locally.
+Status: Approved 2026-06-21 (owner approval). FORTIFY (P1–P3), the report-only GitHub App (P4, specs 014–015), release integrity (016), one-command distribution (017), framework coverage honesty (018), safe repository onboarding (019), reusable consumer CI (020), and immutable Action pins (021) are implemented locally.
 Date: 2026-06-19
 Scope: The roadmap layer **after** public launch. The near-term waves A–F
 (`docs/roadmap/post-foundation-technical-plan.md`: contracts → config → npm →
@@ -262,8 +262,9 @@ No broad rewrites.
 FORTIFY (P1–P3), the report-only GitHub App (P4), its self-hostable
 single-tenant runtime, release integrity (016), one-command distribution (017),
 framework coverage honesty (018), safe repository onboarding (019), and **020 —
-Reusable GitHub CI Integration** are implemented locally. The next milestone is
-the operator-owned first npm publication, matching reviewed repository tag, and
+Reusable GitHub CI Integration** plus **021 — Immutable GitHub Action Pins** are
+implemented locally. The next milestone is the operator-owned first npm
+publication, matching reviewed repository tag, and
 live cross-repository workflow smoke. P5 and the broader P6 enforcement product
 remain deferred; Spec 020's default-off critical predicate preserves the older,
 narrow Spec 008 behavior and is not a P6 launch.

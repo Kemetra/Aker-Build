@@ -48,6 +48,9 @@ enforcement/override product.
 - The called workflow requests only `contents: read` and
   `pull-requests: read`; caller permissions can restrict but cannot elevate it.
 - Checkout targets the caller PR head and does not persist credentials.
+- `actions/checkout` v6.0.2 and `actions/setup-node` v6.4.0 are pinned to their
+  full reviewed commit SHAs, so repositories that require immutable action pins
+  can accept the called workflow.
 - The exact self-contained package is invoked with
   `npx --yes aker-build@0.1.0`. No consumer dependency install, build, test, or
   package script runs.
@@ -78,3 +81,11 @@ step logs.
 Publishing npm `0.1.0`, creating/pushing the reviewed `v0.1.0` tag, validating a
 live cross-repository run, and enabling the caller workflow are operator-owned
 actions. Local repository verification does not perform any of them.
+
+## Updating action pins
+
+Action pins do not update automatically. For each proposed update, inspect the
+official action release, resolve its tag to a full 40-character SHA directly
+from the official GitHub remote, update the SHA and version comment together,
+and run the workflow contract plus full repository verification. Do not replace
+the SHA with a major tag, branch, abbreviated hash, or unreviewed automation.

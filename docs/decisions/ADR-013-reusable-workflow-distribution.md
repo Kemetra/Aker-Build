@@ -29,6 +29,9 @@ Aker Build reads source directly and does not need to execute those scripts.
 - Request only `contents: read` and `pull-requests: read`, checkout the caller PR
   head with `persist-credentials: false`, and scope `github.token` to only the
   CLI steps that need `GH_TOKEN`.
+- Pin every executed GitHub Action to a reviewed full commit SHA. Spec 021 pins
+  checkout v6.0.2 and setup-node v6.4.0 across consumer, dogfood, and release
+  workflows and requires explicit official-remote verification for updates.
 - Run `doctor --github`, `scan`, and PR-number `review-pr` into the fixed
   `.aker-build` directory. Never use `--local-diff` in PR CI.
 - Publish the existing Markdown review under `if: always()`. Findings remain
@@ -42,6 +45,8 @@ Aker Build reads source directly and does not need to execute those scripts.
 - One callable workflow eliminates copy/paste command and permission drift.
 - The bundled npm CLI removes all need to trust or install consumer dependencies.
 - Two explicit pins make the workflow logic and executable auditable inputs.
+- Full action SHAs make the workflow's own executable dependencies immutable and
+  compatible with GitHub policies that reject tag-based action references.
 - Callable-only delivery preserves consumer opt-in and causes no CI activation in
   this repository merely by adding the workflow file.
 - The existing report contract remains the single review engine and output truth.
