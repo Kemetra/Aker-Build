@@ -4,7 +4,13 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { join } from "node:path";
 import { buildCliPackage } from "./build-cli-package.mjs";
-import { validatePackedPaths, validateReleaseManifest, validateVersion } from "./cli-package.mjs";
+import {
+  parseVerifierArgs,
+  validatePackedPaths,
+  validateReleaseManifest,
+  validateVersion,
+} from "./cli-package.mjs";
+import { validateReleasePreflight } from "./release-preflight.mjs";
 
 const valid = {
   name: "aker-build",
@@ -78,6 +84,13 @@ test("rejects an injected test path with exact evidence", () => {
   );
 });
 
+test("parses and validates --tarball-dir", () => {
+  assert.deepEqual(parseVerifierArgs([]), {});
+  assert.deepEqual(parseVerifierArgs(["--tarball-dir", "release"]), { tarballDir: "release" });
+  assert.throws(() => parseVerifierArgs(["--tarball-dir"]), /requires a path/);
+  assert.throws(() => parseVerifierArgs(["--unknown"]), /unknown verifier argument/);
+});
+
 test("builds a self-contained executable package with required license notices", async () => {
   const packageDir = await buildCliPackage();
   const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
@@ -92,4 +105,44 @@ test("builds a self-contained executable package with required license notices",
   const version = spawnSync(process.execPath, [executablePath, "--version"], { encoding: "utf8" });
   assert.equal(version.status, 0, version.stderr);
   assert.equal(version.stdout.trim(), "0.1.0");
+});
+
+const release = {
+  requestedVersion: "0.1.1",
+  packageVersion: "0.1.1",
+  gitRef: "refs/tags/v0.1.1",
+  packageExists: true,
+  versionExists: false,
+};
+
+test("accepts an unpublished tagged version after package bootstrap", () => {
+  assert.doesNotThrow(() => validateReleasePreflight(release));
+});
+
+test("rejects a branch ref", () => {
+  assert.throws(
+    () => validateReleasePreflight({ ...release, gitRef: "refs/heads/main" }),
+    /release ref/,
+  );
+});
+
+test("rejects a manifest/input mismatch", () => {
+  assert.throws(
+    () => validateReleasePreflight({ ...release, packageVersion: "0.1.2" }),
+    /version mismatch/,
+  );
+});
+
+test("rejects a missing bootstrap package", () => {
+  assert.throws(
+    () => validateReleasePreflight({ ...release, packageExists: false }),
+    /bootstrap/,
+  );
+});
+
+test("rejects an already-published version", () => {
+  assert.throws(
+    () => validateReleasePreflight({ ...release, versionExists: true }),
+    /already exists/,
+  );
 });

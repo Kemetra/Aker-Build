@@ -125,3 +125,26 @@ jobs:
       - name: Run documented first-run smoke
         shell: pwsh
         run: pwsh -File scripts/smoke-first-run.ps1 -RemoveTemp
+
+  package-acceptance:
+    name: Package acceptance (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.14"
+
+      - run: corepack enable
+
+      - name: Install workspace dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Build, pack, install, and smoke the CLI tarball
+        run: corepack pnpm test:cli-package

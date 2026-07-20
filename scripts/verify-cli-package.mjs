@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -9,14 +10,21 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildCliPackage } from "./build-cli-package.mjs";
-import { validatePackedPaths, validateReleaseManifest, validateVersion } from "./cli-package.mjs";
+import {
+  parseVerifierArgs,
+  validatePackedPaths,
+  validateReleaseManifest,
+  validateVersion,
+} from "./cli-package.mjs";
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const git = process.platform === "win32" ? "git.exe" : "git";
+const { tarballDir: tarballArg } = parseVerifierArgs(process.argv.slice(2));
+const tarballDir = tarballArg ? resolve(tarballArg) : undefined;
 const work = mkdtempSync(join(tmpdir(), "aker-build-package-smoke-"));
 
 function run(command, args, cwd) {
@@ -94,6 +102,11 @@ try {
   }
   const fixtureStatus = run(git, ["status", "--short"], fixture);
   if (fixtureStatus) throw new Error(`packed check mutated fixture source:\n${fixtureStatus}`);
+
+  if (tarballDir) {
+    mkdirSync(tarballDir, { recursive: true });
+    copyFileSync(tarball, join(tarballDir, packed.filename));
+  }
 
   process.stdout.write(
     `Packed CLI smoke passed: ${packed.filename} (${packed.entryCount} files), installed ${installedVersion}\n`,
