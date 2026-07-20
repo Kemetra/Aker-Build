@@ -37,7 +37,7 @@ export {
 } from "./commands/doctor.js";
 export { CLI_VERSION } from "./version.js";
 
-function registerCheckCommand(program: Command): void {
+function registerInitCommand(program: Command): void {
   program
     .command("init")
     .description("Create a minimal Aker Build config without overwriting files")
@@ -47,7 +47,9 @@ function registerCheckCommand(program: Command): void {
     .action((path: string, opts: { format: "yaml" | "json"; stdout?: boolean }) => {
       process.exitCode = runInit(path, opts);
     });
+}
 
+function registerDoctorCommand(program: Command): void {
   program
     .command("doctor")
     .description("Check local or GitHub PR-mode readiness without writing files")
@@ -57,7 +59,9 @@ function registerCheckCommand(program: Command): void {
     .action((path: string, opts: { github?: boolean; format: "text" | "json" }) => {
       process.exitCode = runDoctor(path, opts);
     });
+}
 
+function registerCheckCommand(program: Command): void {
   program
     .command("check")
     .description("Run scan, gates, queue, route, and report in one read-only pass")
@@ -192,6 +196,8 @@ export function buildProgram(): Command {
     .description("Aker Build — CLI-first SaaS Build Kernel")
     .version(CLI_VERSION);
 
+  registerInitCommand(program);
+  registerDoctorCommand(program);
   registerCheckCommand(program);
   registerScanCommand(program);
   registerMapCommand(program);
