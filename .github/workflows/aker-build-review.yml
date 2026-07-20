@@ -1,0 +1,57 @@
+name: Aker Build reusable review
+
+on:
+  workflow_call:
+    inputs:
+      fail-on-critical:
+        description: Fail when the review contains at least one critical finding
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out caller PR head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.14"
+          package-manager-cache: false
+
+      - name: Verify Aker Build readiness
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npx --yes aker-build@0.1.0 doctor . --github --format json
+
+      - name: Review caller PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          npx --yes aker-build@0.1.0 scan . --out .aker-build
+          npx --yes aker-build@0.1.0 review-pr "$PR_NUMBER" --out .aker-build
+
+      - name: Publish review summary
+        if: always()
+        run: |
+          if [ -f .aker-build/review.md ]; then
+            cat .aker-build/review.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Aker Build did not produce a review; inspect earlier step logs." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Enforce critical findings
+        if: ${{ inputs.fail-on-critical }}
+        run: >-
+          node -e "const fs=require('node:fs');const report=JSON.parse(fs.readFileSync('.aker-build/review.json','utf8'));const count=report.findings.filter((finding)=>finding.severity==='critical').length;console.log('critical findings: '+count);if(count>0)process.exit(1)"

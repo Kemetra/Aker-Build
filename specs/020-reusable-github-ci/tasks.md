@@ -5,16 +5,16 @@
 
 ## Phase 1: Contract Test
 
-- [ ] T001 Add YAML contract tests for workflow, documented caller, security,
+- [x] T001 Add YAML contract tests for workflow, documented caller, security,
   commands, summary, and forbidden behavior.
-- [ ] T002 Add exact inline predicate execution tests for empty, non-critical,
+- [x] T002 Add exact inline predicate execution tests for empty, non-critical,
   and critical fixtures.
-- [ ] T003 Run and retain the expected missing-surface RED result.
+- [x] T003 Run and retain the expected missing-surface RED result.
 
 ## Phase 2: Reusable Workflow
 
-- [ ] T004 Add the `workflow_call`-only, read-only workflow.
-- [ ] T005 Run focused GREEN tests and CLI typecheck.
+- [x] T004 Add the `workflow_call`-only, read-only workflow.
+- [x] T005 Run focused GREEN tests and CLI typecheck.
 - [ ] T006 Commit test and workflow with exact named-file staging.
 
 ## Phase 3: Consumer Truth
