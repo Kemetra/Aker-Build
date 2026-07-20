@@ -2,7 +2,7 @@
 
 **Feature Branch:** `021-immutable-action-pins`
 **Created:** 2026-07-20
-**Status:** Approved for implementation
+**Status:** Implemented and locally verified
 **Input:** Remove mutable action-tag execution and persisted checkout
 credentials from every repository workflow.
 
