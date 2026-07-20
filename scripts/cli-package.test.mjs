@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { join } from "node:path";
 import { buildCliPackage } from "./build-cli-package.mjs";
-import { validatePackedPaths, validateReleaseManifest } from "./cli-package.mjs";
+import { validatePackedPaths, validateReleaseManifest, validateVersion } from "./cli-package.mjs";
 
 const valid = {
   name: "aker-build",
@@ -60,6 +60,21 @@ test("rejects a missing required packed file", () => {
   assert.throws(
     () => validatePackedPaths(packed.filter((path) => path !== "LICENSE")),
     /packed file missing: LICENSE/,
+  );
+});
+
+test("release and CLI versions must match", () => {
+  assert.doesNotThrow(() => validateVersion({ packageVersion: "0.1.0", cliVersion: "0.1.0" }));
+  assert.throws(
+    () => validateVersion({ packageVersion: "0.1.0", cliVersion: "0.1.1" }),
+    /version mismatch/,
+  );
+});
+
+test("rejects an injected test path with exact evidence", () => {
+  assert.throws(
+    () => validatePackedPaths([...packed, "tests/forbidden.test.js"]),
+    /tests\/forbidden\.test\.js/,
   );
 });
 

@@ -56,6 +56,12 @@ export function validateReleaseManifest(manifest) {
   }
 }
 
+export function validateVersion({ packageVersion, cliVersion }) {
+  if (packageVersion !== cliVersion) {
+    throw new Error(`release/CLI version mismatch: ${packageVersion} !== ${cliVersion}`);
+  }
+}
+
 export function validatePackedPaths(paths) {
   if (!Array.isArray(paths)) throw new Error("packed paths must be an array");
   const allowed = new Set(["package.json", ...REQUIRED_PACKAGE_FILES]);
