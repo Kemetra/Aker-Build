@@ -30,9 +30,9 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with framework coverage honesty and detector fortification active.
+MVP implementation / dogfooding, with safe repository onboarding active.
 
-The MVP CLI is implemented (`check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
+The MVP analysis chain is implemented (`check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). Spec 019 closes the remaining declared onboarding gap with explicit `init` and read-only `doctor` commands. The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
 
 Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
 
@@ -214,7 +214,6 @@ Then:
 Do not implement CLI scanner before the Project Map schema exists.
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan:
-`specs/018-framework-coverage-honesty/plan.md` (active feature: 018-framework-coverage-honesty).
+For the active feature requirements and current planning boundary, read:
+`specs/019-safe-onboarding/spec.md` (active feature: 019-safe-onboarding).
 <!-- SPECKIT END -->
