@@ -15,15 +15,15 @@
 
 - [x] T004 Add the `workflow_call`-only, read-only workflow.
 - [x] T005 Run focused GREEN tests and CLI typecheck.
-- [ ] T006 Commit test and workflow with exact named-file staging.
+- [x] T006 Commit test and workflow with exact named-file staging.
 
 ## Phase 3: Consumer Truth
 
-- [ ] T007 Add the canonical consumer guide and ADR-013.
-- [ ] T008 Mark ADR-007 and Spec 008 external guidance superseded.
-- [ ] T009 Reconcile README, release prerequisites, roadmap/status, and active
+- [x] T007 Add the canonical consumer guide and ADR-013.
+- [x] T008 Mark ADR-007 and Spec 008 external guidance superseded.
+- [x] T009 Reconcile README, release prerequisites, roadmap/status, and active
   feature truth while keeping P5/P6 deferred.
-- [ ] T010 Rerun focused tests, namespace check, and diff check; commit docs.
+- [x] T010 Rerun focused tests, namespace check, and diff check; commit docs.
 
 ## Phase 4: Verification and Integration
 

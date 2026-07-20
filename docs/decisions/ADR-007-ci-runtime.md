@@ -1,9 +1,17 @@
 # ADR-007: CI runtime — run the TypeScript CLI via pnpm + tsx; no live workflow, no published binary
 
-**Status**: Accepted
+**Status**: Superseded for external consumers by ADR-013; retained for Aker Build dogfood history
 **Date**: 2026-06-18
 **Context feature**: `008-github-action`
 **Relates**: ADR-001 (tech stack), ADR-002 (CLI framework), ADR-006 (diff source)
+
+## Supersession note
+
+Spec 017 now builds a self-contained npm executable, and Spec 020 provides a
+callable reusable workflow over that artifact. External consumers must follow
+`docs/ci/github-actions.md` and ADR-013 instead of checking out Aker Build source
+or installing this workspace. The source-plus-`tsx` decision below remains the
+historical explanation for Aker Build's repository-specific dogfood workflow.
 
 ## Context
 

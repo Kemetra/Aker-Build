@@ -30,7 +30,7 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with reusable consumer GitHub CI integration active.
+MVP implementation / dogfooding, with reusable consumer GitHub CI implemented locally and release activation pending.
 
 The MVP CLI is implemented (`init`, `doctor`, `check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). `init` creates at most one optional config and never overwrites; `doctor` is read-only. The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
 

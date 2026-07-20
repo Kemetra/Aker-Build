@@ -1,10 +1,10 @@
 # Aker Build Post-Foundation Reconciliation
 
-Status: Historical snapshot — superseded by specs 011–019
+Status: Historical snapshot — superseded by specs 011–020
 Date: 2026-06-19
 Purpose: Record the evidence-backed state after foundation + nine specs, identify stale docs, and define the next safe boundary.
 
-This file preserves the reconciliation state as of spec 010; its “current” classifications and next action are historical. For current product status, use the root `README.md`, `docs/roadmap/2026-06-19-future-phases-fortify-and-expand.md`, and `specs/019-safe-onboarding/`.
+This file preserves the reconciliation state as of spec 010; its “current” classifications and next action are historical. For current product status, use the root `README.md`, `docs/roadmap/2026-06-19-future-phases-fortify-and-expand.md`, and `specs/020-reusable-github-ci/`.
 
 ## Evidence snapshot
 

@@ -27,9 +27,12 @@ Aker Build is not a SaaS boilerplate. It does not generate a full app. It contro
 
 ## Status
 
-Aker Build's MVP CLI chain, safe `init`/`doctor` onboarding, and FORTIFY phases are implemented. The repository now builds and verifies a single-package `aker-build@0.1.0` tarball, provides an approval-protected release workflow, and reports which framework signature packs its scanner actually recognized. The first npm publication remains an explicit owner operation.
+Aker Build's MVP CLI chain, safe `init`/`doctor` onboarding, and FORTIFY phases are implemented. The repository now builds and verifies a single-package `aker-build@0.1.0` tarball, provides an approval-protected release workflow and a read-only reusable consumer workflow, and reports which framework signature packs its scanner actually recognized. The first npm publication and matching reviewed repository tag remain explicit owner operations.
 
 - Aker Build runs against its own repo through a report-only GitHub Action.
+- Consumer repositories can opt into the callable-only workflow after npm
+  `0.1.0` and the matching reviewed workflow ref are public; local contract tests
+  already pin its permissions, command chain, and critical-only opt-in.
 - A self-hostable, single-tenant report-only GitHub App runtime is implemented and tested locally; credentialed field verification remains an operator-run smoke step.
 - Public npm availability is pending the owner-run first publish; the hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
 
@@ -105,6 +108,10 @@ npx aker-build doctor .
 npx aker-build check .
 ```
 
+For report-only pull-request review, use the pinned reusable workflow described
+in [`docs/ci/github-actions.md`](docs/ci/github-actions.md). It never installs or
+runs the consumer repository's dependencies.
+
 The standalone source commands remain available when a specific stage is needed:
 
 ```bash
@@ -163,9 +170,11 @@ or change the project's published evidence and safety boundaries.
 
 - First-run demo: `docs/demo/first-run.md`
 - npm release runbook: `docs/release/npm.md`
+- Reusable GitHub Actions integration: `docs/ci/github-actions.md`
 - Post-foundation plan: `docs/roadmap/post-foundation-technical-plan.md`
 - One-command distribution: `specs/017-one-command-distribution/spec.md`
 - Framework coverage honesty: `specs/018-framework-coverage-honesty/spec.md`
 - Safe repository onboarding: `specs/019-safe-onboarding/spec.md`
+- Reusable consumer GitHub CI: `specs/020-reusable-github-ci/spec.md`
 - GitHub App server: `packages/github-app-server/README.md`
 - Contributor guide: `CONTRIBUTING.md`
