@@ -27,11 +27,11 @@ Aker Build is not a SaaS boilerplate. It does not generate a full app. It contro
 
 ## Status
 
-Aker Build's MVP CLI chain and FORTIFY phases are implemented. The current focus is release integrity: reproducible tests, type-checking, benchmark evidence, first-run smoke, and documentation truth before public CLI distribution.
+Aker Build's MVP CLI chain and FORTIFY phases are implemented. The repository now builds and verifies a single-package `aker-build@0.1.0` tarball and provides an approval-protected release workflow. The first npm publication remains an explicit owner operation.
 
 - Aker Build runs against its own repo through a report-only GitHub Action.
 - A self-hostable, single-tenant report-only GitHub App runtime is implemented and tested locally; credentialed field verification remains an operator-run smoke step.
-- The npm-published CLI, hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
+- Public npm availability is pending the owner-run first publish; the hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
 
 ## Benchmark scorecard
 
@@ -77,7 +77,26 @@ pwsh -File scripts/smoke-first-run.ps1
 
 The smoke script copies `examples/multi-tenant-saas-basic` into a temporary git repo, runs the MVP CLI chain, creates a controlled local diff, and verifies the expected outputs.
 
-Manual command shape while the CLI is still TypeScript-source-first:
+Run the complete read-only advisory chain from source:
+
+```bash
+pnpm dlx tsx packages/cli/src/bin.ts check <repo> --out <out-dir>
+```
+
+To build and smoke the exact package that is ready for publication:
+
+```bash
+pnpm test:cli-package
+node scripts/verify-cli-package.mjs --tarball-dir release
+```
+
+After the owner completes the first public release, the canonical activation path is:
+
+```bash
+npx aker-build check .
+```
+
+The standalone source commands remain available when a specific stage is needed:
 
 ```bash
 pnpm dlx tsx packages/cli/src/bin.ts scan <repo> --out <out-dir>
@@ -104,6 +123,7 @@ scan sources
 ## MVP Commands
 
 ```bash
+aker-build check [path]
 aker-build scan [path]
 aker-build map
 aker-build gates [path]
@@ -115,7 +135,7 @@ aker-build review-pr <number>
 aker-build report [path]
 ```
 
-The npm-published `aker-build` binary is a follow-up release task. Until then, local and CI usage runs the TypeScript CLI through `tsx`.
+`check` composes `scan → gates → queue → route → report` and promotes its six-file output only after every stage succeeds. It does not generate prompts, review diffs, execute agents, or mutate the analyzed source.
 
 ## Support Aker Build
 
@@ -131,7 +151,8 @@ or change the project's published evidence and safety boundaries.
 ## Documentation
 
 - First-run demo: `docs/demo/first-run.md`
+- npm release runbook: `docs/release/npm.md`
 - Post-foundation plan: `docs/roadmap/post-foundation-technical-plan.md`
-- Release integrity: `specs/016-release-integrity/spec.md`
+- One-command distribution: `specs/017-one-command-distribution/spec.md`
 - GitHub App server: `packages/github-app-server/README.md`
 - Contributor guide: `CONTRIBUTING.md`
