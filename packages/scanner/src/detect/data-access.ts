@@ -1,16 +1,6 @@
 import { readFileSafe } from "../io.js";
 import type { Evidence } from "@aker-build/project-map";
-
-// Only inspect source files that plausibly contain query code.
-const SOURCE_EXT = /\.(ts|js|tsx|jsx|py|go|rb)$/;
-
-// A db-ish receiver chain followed by a query/builder method. Receiver gating (W3a): bare
-// `items.find(` / `map.delete(` are array/Map calls, not queries — the chain must START with a
-// word that names a database handle. Raw SQL counts regardless of receiver.
-const ORM_QUERY =
-  /\b(db|prisma|knex|sequelize|orm|repo|repository|client|conn|connection|pool|tx|trx|store|datastore|typeorm|drizzle)\b[\w.]*\.\s*(find|findMany|findFirst|findUnique|findOne|select|update|delete|insert|create)\s*\(/i;
-const RAW_SQL =
-  /\b(SELECT|UPDATE|DELETE|INSERT)\b[\s\S]{0,80}\bFROM\b|\bUPDATE\b\s+\w+\s+\bSET\b/i;
+import { matchingSignaturePacks, SOURCE_FILE, stripComments } from "./signature-packs.js";
 
 // A tenant-id token scoping the statement.
 const TENANT_TOKEN = /\btenant_?id\b|\borg_?id\b|\baccount_?id\b/i;
@@ -30,13 +20,15 @@ const WINDOW_LINES = 5;
 export function detectDataAccess(root: string, files: string[]): Evidence[] {
   const out: Evidence[] = [];
   for (const rel of files) {
-    if (!SOURCE_EXT.test(rel)) continue;
-    const content = readFileSafe(root, rel);
-    if (content === null) continue;
+    if (!SOURCE_FILE.test(rel)) continue;
+    const rawContent = readFileSafe(root, rel);
+    if (rawContent === null) continue;
+    const content = stripComments(rawContent);
+    const dataPacks = matchingSignaturePacks(rel, content).filter((pack) => pack.dataAccess);
     const lines = content.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
       const text = lines[i] ?? "";
-      if (!ORM_QUERY.test(text) && !RAW_SQL.test(text)) continue;
+      if (!dataPacks.some((pack) => pack.dataAccess?.query.test(text))) continue;
       if (TENANT_TOKEN.test(text)) {
         out.push({ type: "line", path: rel, line: i + 1, signal: "tenant_scoped", confidence: "high" });
         continue;

@@ -33,10 +33,13 @@ if (!result.ok) {
   downstream specs. `line`/`path` nullable; `confidence` on the evidence object. No secret-bearing
   field; unknown keys (e.g. a stray `secret`) are stripped.
 - **Tolerant read** — unknown fields are ignored (forward compatibility), never a hard failure.
+- **Coverage honesty (v2)** — optional `coverage` records how many source files were examined and
+  which named signature packs matched for `auth`, `data_access`, and `routes`. It is evidence of
+  recognized signatures, never a claim of complete framework or repository coverage.
 
 ## Versioning & compatibility policy
 
-`SCHEMA_VERSION` starts at `1`. Document `version` is an integer.
+`SCHEMA_VERSION` is `2`. Document `version` is an integer; v1 maps remain valid.
 
 - **Additive** changes (new optional fields, new enum values) are **backward compatible** — older
   conforming maps stay valid; no consumer breakage.

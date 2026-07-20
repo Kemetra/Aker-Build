@@ -27,11 +27,11 @@ Aker Build is not a SaaS boilerplate. It does not generate a full app. It contro
 
 ## Status
 
-Aker Build's MVP CLI chain and FORTIFY phases are implemented. The current focus is release integrity: reproducible tests, type-checking, benchmark evidence, first-run smoke, and documentation truth before public CLI distribution.
+Aker Build's MVP CLI chain and FORTIFY phases are implemented. The repository now builds and verifies a single-package `aker-build@0.1.0` tarball, provides an approval-protected release workflow, and reports which framework signature packs its scanner actually recognized. The first npm publication remains an explicit owner operation.
 
 - Aker Build runs against its own repo through a report-only GitHub Action.
 - A self-hostable, single-tenant report-only GitHub App runtime is implemented and tested locally; credentialed field verification remains an operator-run smoke step.
-- The npm-published CLI, hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
+- Public npm availability is pending the owner-run first publish; the hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
 
 ## Benchmark scorecard
 
@@ -39,7 +39,7 @@ Aker Build's MVP CLI chain and FORTIFY phases are implemented. The current focus
 ![benchmark](https://img.shields.io/badge/G4_confirmed_recall-100%25-brightgreen)
 
 Aker Build's detection quality is measured, not asserted. A labeled corpus of
-synthetic multi-tenant failure cases (`benchmark/cases/`, 15 cases) runs through
+synthetic multi-tenant failure cases (`benchmark/cases/`, 19 cases) runs through
 the real `scan → gates` pipeline; precision/recall are computed per gate ×
 confidence tier, and CI fails if they drop below `benchmark/thresholds.json`.
 
@@ -52,17 +52,16 @@ confidence tier, and CI fails if they drop below `benchmark/thresholds.json`.
 | TG-G5 Idempotency | suspected | 100% | 100% |
 
 The `suspected` tier is the honest-uncertainty channel: it carries findings the
-engine cannot yet structurally prove (they advise, never block). The
-multi-line ORM false positive documented in earlier scorecards is fixed by
-W3a's windowed, receiver-gated detector; the corpus pins both behaviors
-(`multiline-tenant-scope`, `bare-array-method`) so they cannot regress silently.
+engine cannot yet structurally prove (they advise, never block). The corpus pins
+multi-line tenant scoping, bare collection methods, model-first Mongoose calls,
+and NestJS decorator guards so those behaviors cannot regress silently.
 
-Known limitations (deliberate v0 tradeoffs, W3b scope): data-access detection is
-receiver-gated to common DB handle names plus raw SQL, so model-first ORM calls
-(e.g. Mongoose-style `User.findOne(`) and unlisted receivers are not yet
-covered; and the 5-line statement window can classify an unscoped query as
-scoped when a neighboring statement's tenant token falls inside the window.
-Framework signature packs and a coverage-honesty field close these in W3b.
+Project Map v2 records coverage evidence for Express, Fastify, Next.js App
+Router, NestJS, Prisma, Mongoose, Django, SQLAlchemy, generic JavaScript DB
+receivers, and raw SQL. Reports name the exact matched packs and capabilities—or
+warn when none matched. These are deterministic signature recognizers, not an
+AST or a claim of complete framework/repository coverage. The bounded five-line
+tenant window and cross-file middleware remain deliberate heuristic limits.
 
 Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.aker-build/benchmark-report.{json,md}`).
 
@@ -77,7 +76,26 @@ pwsh -File scripts/smoke-first-run.ps1
 
 The smoke script copies `examples/multi-tenant-saas-basic` into a temporary git repo, runs the MVP CLI chain, creates a controlled local diff, and verifies the expected outputs.
 
-Manual command shape while the CLI is still TypeScript-source-first:
+Run the complete read-only advisory chain from source:
+
+```bash
+pnpm dlx tsx packages/cli/src/bin.ts check <repo> --out <out-dir>
+```
+
+To build and smoke the exact package that is ready for publication:
+
+```bash
+pnpm test:cli-package
+node scripts/verify-cli-package.mjs --tarball-dir release
+```
+
+After the owner completes the first public release, the canonical activation path is:
+
+```bash
+npx aker-build check .
+```
+
+The standalone source commands remain available when a specific stage is needed:
 
 ```bash
 pnpm dlx tsx packages/cli/src/bin.ts scan <repo> --out <out-dir>
@@ -104,6 +122,7 @@ scan sources
 ## MVP Commands
 
 ```bash
+aker-build check [path]
 aker-build scan [path]
 aker-build map
 aker-build gates [path]
@@ -115,7 +134,7 @@ aker-build review-pr <number>
 aker-build report [path]
 ```
 
-The npm-published `aker-build` binary is a follow-up release task. Until then, local and CI usage runs the TypeScript CLI through `tsx`.
+`check` composes `scan → gates → queue → route → report` and promotes its six-file output only after every stage succeeds. It does not generate prompts, review diffs, execute agents, or mutate the analyzed source.
 
 ## Support Aker Build
 
@@ -131,7 +150,9 @@ or change the project's published evidence and safety boundaries.
 ## Documentation
 
 - First-run demo: `docs/demo/first-run.md`
+- npm release runbook: `docs/release/npm.md`
 - Post-foundation plan: `docs/roadmap/post-foundation-technical-plan.md`
-- Release integrity: `specs/016-release-integrity/spec.md`
+- One-command distribution: `specs/017-one-command-distribution/spec.md`
+- Framework coverage honesty: `specs/018-framework-coverage-honesty/spec.md`
 - GitHub App server: `packages/github-app-server/README.md`
 - Contributor guide: `CONTRIBUTING.md`

@@ -30,9 +30,9 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with report output contract hardening active.
+MVP implementation / dogfooding, with framework coverage honesty and detector fortification active.
 
-The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`).
+The MVP CLI is implemented (`check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
 
 Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
 
@@ -78,6 +78,7 @@ MVP commands:
 
 ```bash
 aker-build init
+aker-build check
 aker-build scan
 aker-build map
 aker-build gates
@@ -215,5 +216,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/016-release-integrity/plan.md` (active feature: 016-release-integrity).
+`specs/018-framework-coverage-honesty/plan.md` (active feature: 018-framework-coverage-honesty).
 <!-- SPECKIT END -->

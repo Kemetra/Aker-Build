@@ -11,6 +11,8 @@ pnpm test
 pnpm typecheck
 pnpm dlx tsx packages/eval/src/bin.ts
 pwsh -File scripts/smoke-first-run.ps1 -RemoveTemp
+pnpm build:cli-package
+pnpm test:cli-package
 ```
 
 These commands are the local release-integrity gate. The credentialed GitHub App smoke is optional and operator-run; see `specs/015-github-app-deployment/live-smoke-checklist.md`.

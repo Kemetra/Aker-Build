@@ -1,0 +1,5 @@
+{
+  "name": "nestjs-guarded-admin-clean-case",
+  "private": true,
+  "dependencies": { "@nestjs/common": "^10.0.0" }
+}

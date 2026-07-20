@@ -153,6 +153,46 @@ function summarizeFindings(risks: RiskList | null): AkerBuildReport["summary"]["
   };
 }
 
+function summarizeQueue(queue: Queue | null): AkerBuildReport["summary"]["queue"] {
+  const items = queue?.items ?? [];
+  return {
+    total: items.length,
+    ready: items.filter((item) => item.status === "ready").length,
+    blocked: items.filter((item) => item.status === "blocked").length,
+    done: items.filter((item) => item.status === "done").length,
+  };
+}
+
+function summarizeRoute(route: RouterDecision | null): AkerBuildReport["summary"]["route"] {
+  return {
+    next_id: route?.next?.id ?? null,
+    blocked: route?.blocked.length ?? 0,
+    no_safe_task_reasons: route?.no_safe_task_reasons ?? [],
+  };
+}
+
+function summarizeReview(review: ReviewReport | null): AkerBuildReport["summary"]["review"] {
+  if (!review) return null;
+  return {
+    verdict: review.verdict,
+    changed_files: review.changed_files.length,
+    findings: review.findings.length,
+  };
+}
+
+function summarizeReport(artifacts: LoadedArtifacts): AkerBuildReport["summary"] {
+  return {
+    project_name: artifacts.projectMap?.project.name ?? null,
+    repo_count: artifacts.projectMap?.repos.length ?? 0,
+    tenant_status: artifacts.projectMap?.tenant_model.status ?? null,
+    coverage: artifacts.projectMap?.coverage ?? null,
+    findings: summarizeFindings(artifacts.risks),
+    queue: summarizeQueue(artifacts.queue),
+    route: summarizeRoute(artifacts.route),
+    review: summarizeReview(artifacts.review),
+  };
+}
+
 function buildReportUnchecked(repoRoot: string, outDir: string): AkerBuildReport {
   const artifacts = loadArtifacts(outDir);
   const specKit = readSpecKitArtifacts(repoRoot);
@@ -170,30 +210,7 @@ function buildReportUnchecked(repoRoot: string, outDir: string): AkerBuildReport
       evidence_count: specKit.evidence.length,
       secret_like_count: specKit.artifacts.filter((artifact) => artifact.secretLike).length,
     },
-    summary: {
-      project_name: artifacts.projectMap?.project.name ?? null,
-      repo_count: artifacts.projectMap?.repos.length ?? 0,
-      tenant_status: artifacts.projectMap?.tenant_model.status ?? null,
-      findings: summarizeFindings(artifacts.risks),
-      queue: {
-        total: artifacts.queue?.items.length ?? 0,
-        ready: artifacts.queue?.items.filter((item) => item.status === "ready").length ?? 0,
-        blocked: artifacts.queue?.items.filter((item) => item.status === "blocked").length ?? 0,
-        done: artifacts.queue?.items.filter((item) => item.status === "done").length ?? 0,
-      },
-      route: {
-        next_id: artifacts.route?.next?.id ?? null,
-        blocked: artifacts.route?.blocked.length ?? 0,
-        no_safe_task_reasons: artifacts.route?.no_safe_task_reasons ?? [],
-      },
-      review: artifacts.review
-        ? {
-            verdict: artifacts.review.verdict,
-            changed_files: artifacts.review.changed_files.length,
-            findings: artifacts.review.findings.length,
-          }
-        : null,
-    },
+    summary: summarizeReport(artifacts),
     suppressions: summarizeSuppressions(artifacts.risks),
   };
 }
@@ -210,54 +227,95 @@ export function buildReport(targetPath: string, opts: ReportOptions = {}): AkerB
   return report;
 }
 
-export function renderReportMarkdown(report: AkerBuildReport): string {
-  const lines: string[] = [];
-  lines.push("# Aker Build Report");
+function reportHeader(report: AkerBuildReport): string[] {
+  return [
+    "# Aker Build Report",
+    "",
+    `Project: ${report.summary.project_name ?? "(unknown)"}`,
+    `Tenant model: ${report.summary.tenant_status ?? "(unknown)"}`,
+    `Repos: ${report.summary.repo_count}`,
+    "",
+  ];
+}
+
+function coverageSection(report: AkerBuildReport): string[] {
+  const lines = ["## Framework Coverage"];
+  const coverage = report.summary.coverage;
+  if (coverage === null) {
+    return [...lines, "Coverage evidence is unavailable in this legacy Project Map; a clean finding set does not establish framework coverage.", ""];
+  }
+  lines.push(`Source files examined: ${coverage.source_files_examined}`);
+  if (coverage.packs.length === 0) {
+    return [...lines, "No framework signature pack matched; a clean finding set does not establish framework coverage.", ""];
+  }
+  lines.push("Recognized signature packs:");
+  for (const pack of coverage.packs) {
+    lines.push(`- ${pack.id} (${pack.capabilities.join(", ")}; ${pack.matched_files} matched files)`);
+  }
+  lines.push("Signature recognition is not proof of complete framework or repository coverage.", "");
+  return lines;
+}
+
+function formatList(values: readonly string[]): string {
+  return values.length > 0 ? values.join(", ") : "(none)";
+}
+
+function artifactsSection(report: AkerBuildReport): string[] {
+  return [
+    "## Artifacts",
+    `Present: ${formatList(report.artifacts.present)}`,
+    `Missing artifacts: ${formatList(report.artifacts.missing)}`,
+    "",
+  ];
+}
+
+function findingsSection(report: AkerBuildReport): string[] {
+  const findings = report.summary.findings;
+  return [
+    "## Findings",
+    `Total: ${findings.total} · Risk: ${findings.risk} · Needs verification: ${findings.needs_verification} · Suppressed: ${findings.suppressed}`,
+    `Severity: critical ${findings.by_severity.critical}, high ${findings.by_severity.high}, medium ${findings.by_severity.medium}, low ${findings.by_severity.low}`,
+    "",
+  ];
+}
+
+function queueSection(report: AkerBuildReport): string[] {
+  const queue = report.summary.queue;
+  const lines = [
+    "## Queue And Route",
+    `Queue: ${queue.total} total, ${queue.ready} ready, ${queue.blocked} blocked, ${queue.done} done`,
+    `Next: ${report.summary.route.next_id ?? "(none)"}`,
+  ];
+  for (const reason of report.summary.route.no_safe_task_reasons) lines.push(`- ${reason}`);
   lines.push("");
-  lines.push(`Project: ${report.summary.project_name ?? "(unknown)"}`);
-  lines.push(`Tenant model: ${report.summary.tenant_status ?? "(unknown)"}`);
-  lines.push(`Repos: ${report.summary.repo_count}`);
-  lines.push("");
-  lines.push("## Artifacts");
-  lines.push(`Present: ${report.artifacts.present.length > 0 ? report.artifacts.present.join(", ") : "(none)"}`);
-  lines.push(`Missing artifacts: ${report.artifacts.missing.length > 0 ? report.artifacts.missing.join(", ") : "(none)"}`);
-  lines.push("");
-  lines.push("## Findings");
-  lines.push(
-    `Total: ${report.summary.findings.total} · Risk: ${report.summary.findings.risk} · Needs verification: ${report.summary.findings.needs_verification} · Suppressed: ${report.summary.findings.suppressed}`,
-  );
-  lines.push(
-    `Severity: critical ${report.summary.findings.by_severity.critical}, high ${report.summary.findings.by_severity.high}, medium ${report.summary.findings.by_severity.medium}, low ${report.summary.findings.by_severity.low}`,
-  );
-  lines.push("");
-  lines.push("## Queue And Route");
-  lines.push(`Queue: ${report.summary.queue.total} total, ${report.summary.queue.ready} ready, ${report.summary.queue.blocked} blocked, ${report.summary.queue.done} done`);
-  lines.push(`Next: ${report.summary.route.next_id ?? "(none)"}`);
-  if (report.summary.route.no_safe_task_reasons.length > 0) {
-    for (const reason of report.summary.route.no_safe_task_reasons) lines.push(`- ${reason}`);
+  return lines;
+}
+
+function reviewSection(report: AkerBuildReport): string[] {
+  const review = report.summary.review;
+  if (!review) return ["## Review", "(no review artifact)", ""];
+  return [
+    "## Review",
+    `Verdict: ${review.verdict}`,
+    `Changed files: ${review.changed_files}`,
+    `Findings: ${review.findings}`,
+    "",
+  ];
+}
+
+function suppressionsSection(report: AkerBuildReport): string[] {
+  const lines = ["## Suppressions"];
+  if (report.suppressions.length === 0) return [...lines, "(none)", ""];
+  for (const suppression of report.suppressions) {
+    const severity = suppression.severity ? `, ${suppression.severity}` : "";
+    lines.push(`- ${suppression.id} (${suppression.gate_id}, ${suppression.finding_status}${severity}) — ${suppression.reason} [owner: ${suppression.owner}]`);
   }
   lines.push("");
-  lines.push("## Review");
-  if (report.summary.review) {
-    lines.push(`Verdict: ${report.summary.review.verdict}`);
-    lines.push(`Changed files: ${report.summary.review.changed_files}`);
-    lines.push(`Findings: ${report.summary.review.findings}`);
-  } else {
-    lines.push("(no review artifact)");
-  }
-  lines.push("");
-  lines.push("## Suppressions");
-  if (report.suppressions.length === 0) {
-    lines.push("(none)");
-  } else {
-    for (const suppression of report.suppressions) {
-      const severity = suppression.severity ? `, ${suppression.severity}` : "";
-      lines.push(`- ${suppression.id} (${suppression.gate_id}, ${suppression.finding_status}${severity}) — ${suppression.reason} [owner: ${suppression.owner}]`);
-    }
-  }
-  lines.push("");
-  lines.push("## Config And Spec Kit");
-  lines.push(`Config: ${report.config.path ?? "(none)"}`);
+  return lines;
+}
+
+function configSection(report: AkerBuildReport): string[] {
+  const lines = ["## Config And Spec Kit", `Config: ${report.config.path ?? "(none)"}`];
   if (report.config.error) lines.push(`Config warning: ${report.config.error}`);
   lines.push(`Configured suppressions: ${report.config.suppressions_configured}`);
   lines.push(`Spec Kit artifacts: ${report.spec_kit.artifact_count}`);
@@ -265,7 +323,20 @@ export function renderReportMarkdown(report: AkerBuildReport): string {
     lines.push(`Spec Kit secret-like artifacts: ${report.spec_kit.secret_like_count} (values not captured)`);
   }
   lines.push("");
-  return lines.join("\n");
+  return lines;
+}
+
+export function renderReportMarkdown(report: AkerBuildReport): string {
+  return [
+    ...reportHeader(report),
+    ...coverageSection(report),
+    ...artifactsSection(report),
+    ...findingsSection(report),
+    ...queueSection(report),
+    ...reviewSection(report),
+    ...suppressionsSection(report),
+    ...configSection(report),
+  ].join("\n");
 }
 
 export function writeReportToFiles(targetPath: string, opts: ReportOptions = {}): WrittenReport {

@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aker-build.dev/schemas/project-map/v1.json",
+  "$id": "https://aker-build.dev/schemas/project-map/v2.json",
   "title": "Aker Build Project Map",
   "description": "Contract artifact (non-executable) describing the Project Map shape. Canonical runtime validation is the Zod schema derived at implementation time; this JSON Schema documents the same contract for interop. Consumers MUST tolerate unknown fields (additionalProperties:true => forward compatibility).",
   "type": "object",
   "additionalProperties": true,
   "required": ["version", "project", "repos", "boundaries", "tenant_model", "critical_surfaces"],
   "properties": {
-    "version": { "type": "integer", "minimum": 1, "description": "Schema version. Starts at 1; drives the compatibility policy." },
+    "version": { "type": "integer", "minimum": 1, "description": "Schema version. Current producer version is 2; v1 remains valid." },
     "project": {
       "type": "object",
       "additionalProperties": true,
@@ -79,6 +79,37 @@
       ]
     },
     "critical_surfaces": { "type": "array", "items": { "type": "string" } },
+    "data_access": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "routes": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "migrations": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "auth": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "config_surface": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["source_files_examined", "packs"],
+      "properties": {
+        "source_files_examined": { "type": "integer", "minimum": 0 },
+        "packs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["id", "capabilities", "matched_files"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "capabilities": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "enum": ["auth", "data_access", "routes"] }
+              },
+              "matched_files": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      },
+      "description": "Recognized signature-pack evidence only; never a claim of complete coverage. Optional for v1 compatibility."
+    },
     "metadata": {
       "type": "object",
       "additionalProperties": true,
