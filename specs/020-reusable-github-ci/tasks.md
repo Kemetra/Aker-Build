@@ -31,7 +31,7 @@
   first-run smoke.
 - [x] T012 Audit the exact changed-file and forbidden-surface set.
 - [x] T013 Record evidence, mark Spec 020 implemented, and commit locally.
-- [ ] T014 Fast-forward the local integration branch and rerun the integrated
+- [x] T014 Fast-forward the local integration branch and rerun the integrated
   workspace suite; do not push.
 
 ## Stop Conditions
@@ -67,3 +67,6 @@
   persisted checkout credential, mutable package resolution, or remote change.
 - Live proof remains operator-owned: npm publication, tag/push, consumer opt-in,
   and cross-repository workflow execution were not performed locally.
+- Integration: `integration/origin-main-reconcile` fast-forwarded from
+  `35d10fc` to the verified Spec 020 head, then `pnpm test` passed again with
+  458 tests and the same 3 credential-gated skips. No remote ref changed.
