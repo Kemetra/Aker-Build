@@ -215,6 +215,6 @@ Then:
 Do not implement CLI scanner before the Project Map schema exists.
 
 <!-- SPECKIT START -->
-For the active feature requirements and current planning boundary, read:
-`specs/020-reusable-github-ci/spec.md` (active feature: 020-reusable-github-ci).
+For the active feature requirements and implementation boundary, read:
+`specs/020-reusable-github-ci/plan.md` (active feature: 020-reusable-github-ci).
 <!-- SPECKIT END -->
