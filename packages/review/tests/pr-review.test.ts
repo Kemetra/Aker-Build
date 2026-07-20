@@ -52,7 +52,7 @@ describe("PR review reuses the attribute→verdict core over PR changed files (T
   });
 
   it("keeps excluded PR files visible while ignoring them for attribution", () => {
-    const repoRoot = mkdtempSync(join(tmpdir(), "tg-pr-config-"));
+    const repoRoot = mkdtempSync(join(tmpdir(), "aker-build-pr-config-"));
     const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,

@@ -9,7 +9,7 @@ import { runReviewCommand } from "../src/commands/review.js";
 
 /** A temp git repo with a committed baseline + an uncommitted change, and a real project-map.json. */
 function reviewRepo(opts: { withMap?: boolean; git?: boolean } = {}): { root: string; outDir: string } {
-  const root = join(mkdtempSync(join(tmpdir(), "tg-cli-review-")), "repo");
+  const root = join(mkdtempSync(join(tmpdir(), "aker-build-cli-review-")), "repo");
   mkdirSync(root, { recursive: true });
   if (opts.git !== false) {
     execFileSync("git", ["init", "-q"], { cwd: root, stdio: "ignore" });

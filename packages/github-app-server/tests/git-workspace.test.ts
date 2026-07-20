@@ -31,7 +31,7 @@ afterEach(() => {
 describe("git-workspace secret safety (FR-006, advisor #1)", () => {
   it("passes the token via -c http.extraheader, NEVER as a token@host remote URL", async () => {
     const git = recordingGit();
-    const tmpRoot = mkdtempSync(join(tmpdir(), "tg-test-root-"));
+    const tmpRoot = mkdtempSync(join(tmpdir(), "aker-build-test-root-"));
     created.push(tmpRoot);
     const ws = makeGitWorkspace({ git, authToken: async () => TOKEN_SENTINEL, tmpRoot });
 
@@ -54,7 +54,7 @@ describe("git-workspace secret safety (FR-006, advisor #1)", () => {
         return { stdout: "", stderr: `fatal: could not read from https://x:${TOKEN_SENTINEL}@github.com`, code: 128 };
       },
     };
-    const tmpRoot = mkdtempSync(join(tmpdir(), "tg-test-root-"));
+    const tmpRoot = mkdtempSync(join(tmpdir(), "aker-build-test-root-"));
     created.push(tmpRoot);
     const ws = makeGitWorkspace({ git: failingGit, authToken: async () => TOKEN_SENTINEL, tmpRoot });
     try {
@@ -69,7 +69,7 @@ describe("git-workspace secret safety (FR-006, advisor #1)", () => {
 
   it("dispose removes the ephemeral dir; checkout dirs are unique per event (FR-014)", async () => {
     const git = recordingGit();
-    const tmpRoot = mkdtempSync(join(tmpdir(), "tg-test-root-"));
+    const tmpRoot = mkdtempSync(join(tmpdir(), "aker-build-test-root-"));
     created.push(tmpRoot);
     const ws = makeGitWorkspace({ git, authToken: async () => TOKEN_SENTINEL, tmpRoot });
 
@@ -85,7 +85,7 @@ describe("git-workspace secret safety (FR-006, advisor #1)", () => {
 
   it("after dispose, no checked-out files remain (no .git/config with token on disk)", async () => {
     const git = recordingGit();
-    const tmpRoot = mkdtempSync(join(tmpdir(), "tg-test-root-"));
+    const tmpRoot = mkdtempSync(join(tmpdir(), "aker-build-test-root-"));
     created.push(tmpRoot);
     const ws = makeGitWorkspace({ git, authToken: async () => TOKEN_SENTINEL, tmpRoot });
     const dir = await ws.checkout({ owner: "o", repo: "r", headSha: "s" });

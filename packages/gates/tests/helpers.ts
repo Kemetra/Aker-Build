@@ -24,7 +24,7 @@ export function gatesFixture(name: string): { repoRoot: string; outDir: string }
   if (cached) return cached;
 
   const src = resolve(here, "fixtures", name);
-  const repoRoot = join(mkdtempSync(join(tmpdir(), "tg-gates-")), name);
+  const repoRoot = join(mkdtempSync(join(tmpdir(), "aker-build-gates-")), name);
   if (SYNTHETIC_FIXTURES.has(name)) {
     mkdirSync(repoRoot, { recursive: true });
   } else {

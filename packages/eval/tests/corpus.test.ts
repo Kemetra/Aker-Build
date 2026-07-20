@@ -28,7 +28,7 @@ describe("loadCases", () => {
   });
 
   it("throws a clear error when a case omits gates_under_test", () => {
-    const root = mkdtempSync(join(tmpdir(), "tg-corpus-"));
+    const root = mkdtempSync(join(tmpdir(), "aker-build-corpus-"));
     const caseDir = join(root, "bad-case");
     mkdirSync(join(caseDir, "repo"), { recursive: true });
     writeFileSync(join(caseDir, "expected.json"), JSON.stringify({ description: "x", expected_findings: [] }));
@@ -37,7 +37,7 @@ describe("loadCases", () => {
   });
 
   it("throws when a case is missing its repo/ directory", () => {
-    const root = mkdtempSync(join(tmpdir(), "tg-corpus-"));
+    const root = mkdtempSync(join(tmpdir(), "aker-build-corpus-"));
     const caseDir = join(root, "norepo");
     mkdirSync(caseDir, { recursive: true });
     writeFileSync(

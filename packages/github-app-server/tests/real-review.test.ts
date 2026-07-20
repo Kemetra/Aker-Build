@@ -29,7 +29,7 @@ afterEach(() => {
 
 /** Make a real, committed git repo with a couple of source files for the gates to inspect. */
 function makeRealRepo(): string {
-  const dir = mkdtempSync(join(tmpdir(), "tg-realrepo-"));
+  const dir = mkdtempSync(join(tmpdir(), "aker-build-realrepo-"));
   dirs.push(dir);
   const git = (...a: string[]) => execFileSync("git", a, { cwd: dir, stdio: "pipe" });
   git("init", "--quiet");
@@ -39,7 +39,7 @@ function makeRealRepo(): string {
   writeFileSync(join(dir, "apps", "api", "index.ts"), "export const x = 1;\n");
   writeFileSync(join(dir, "README.md"), "# real repo\n");
   git("add", "-A");
-  git("commit", "--quiet", "-m", "init");
+  git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "init");
   return dir;
 }
 
@@ -49,7 +49,7 @@ function makeRealRepo(): string {
  * is the simplest deterministic high-confidence trigger that needs no queue item / declared map.
  */
 function makeRepoWithUnguardedAdminRoute(): string {
-  const dir = mkdtempSync(join(tmpdir(), "tg-realrepo-bad-"));
+  const dir = mkdtempSync(join(tmpdir(), "aker-build-realrepo-bad-"));
   dirs.push(dir);
   const git = (...a: string[]) => execFileSync("git", a, { cwd: dir, stdio: "pipe" });
   git("init", "--quiet");
@@ -60,7 +60,7 @@ function makeRepoWithUnguardedAdminRoute(): string {
   writeFileSync(join(dir, "apps", "api", "routes", "admin.ts"), "app.get('/admin', (req, res) => res.send('hi'));\n");
   writeFileSync(join(dir, "README.md"), "# repo with unguarded admin route\n");
   git("add", "-A");
-  git("commit", "--quiet", "-m", "init");
+  git("-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "init");
   return dir;
 }
 

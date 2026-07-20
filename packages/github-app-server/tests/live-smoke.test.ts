@@ -28,7 +28,7 @@
  * To run:
  *   AKER_BUILD_APP_ID=... AKER_BUILD_APP_PRIVATE_KEY="$(cat key.pem)" \
  *   AKER_BUILD_WEBHOOK_SECRET=... AKER_BUILD_INSTALLATION_ID=... \
- *   TG_SMOKE_OWNER=... TG_SMOKE_REPO=... TG_SMOKE_PR=<existing PR #> TG_SMOKE_HEAD_SHA=<that PR's head sha> \
+ *   AKER_BUILD_SMOKE_OWNER=... AKER_BUILD_SMOKE_REPO=... AKER_BUILD_SMOKE_PR=<existing PR #> AKER_BUILD_SMOKE_HEAD_SHA=<that PR's head sha> \
  *   AKER_BUILD_SMOKE=1 pnpm --filter @aker-build/github-app-server test live-smoke
  */
 import { describe, it, expect } from "vitest";
@@ -58,9 +58,9 @@ describe.skipIf(!SMOKE)("LIVE smoke against api.github.com (real App + installat
   });
 
   it("lists a real PR's changed files through octokit pagination (no truncation)", async () => {
-    const owner = need("TG_SMOKE_OWNER");
-    const repo = need("TG_SMOKE_REPO");
-    const prNumber = Number(need("TG_SMOKE_PR"));
+    const owner = need("AKER_BUILD_SMOKE_OWNER");
+    const repo = need("AKER_BUILD_SMOKE_REPO");
+    const prNumber = Number(need("AKER_BUILD_SMOKE_PR"));
     expect(Number.isInteger(prNumber)).toBe(true);
 
     const { api } = composeDeps(process.env); // the operator's REAL composition root
@@ -74,9 +74,9 @@ describe.skipIf(!SMOKE)("LIVE smoke against api.github.com (real App + installat
   });
 
   it("creates a real Aker Build check at the PR head and returns its id (check-write path)", async () => {
-    const owner = need("TG_SMOKE_OWNER");
-    const repo = need("TG_SMOKE_REPO");
-    const headSha = need("TG_SMOKE_HEAD_SHA");
+    const owner = need("AKER_BUILD_SMOKE_OWNER");
+    const repo = need("AKER_BUILD_SMOKE_REPO");
+    const headSha = need("AKER_BUILD_SMOKE_HEAD_SHA");
 
     const { api } = composeDeps(process.env);
     const { id } = await api.createCheckRun({
