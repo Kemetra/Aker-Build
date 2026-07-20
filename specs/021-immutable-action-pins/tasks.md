@@ -7,7 +7,7 @@
 - [x] T005 Document selected releases and controlled update policy.
 - [x] T006 Run the full verification matrix and exact scope audit.
 - [x] T007 Record evidence and mark Spec 021 implemented.
-- [ ] T008 Fast-forward local integration and rerun the workspace suite.
+- [x] T008 Fast-forward local integration and rerun the workspace suite.
 
 ## Stop Conditions
 
@@ -40,3 +40,6 @@
 - Scope: exactly 14 approved files changed from the local integration base, with
   zero manifest, lockfile, product source, new action, updater, generated
   artifact, secret, permission, or remote mutation.
+- Integration: `integration/origin-main-reconcile` fast-forwarded to the verified
+  Spec 021 head and `pnpm test` passed again with 459 tests and the same 3
+  credential-gated skips.
