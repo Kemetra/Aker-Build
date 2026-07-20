@@ -30,9 +30,9 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with safe repository onboarding active.
+MVP implementation / dogfooding, with safe repository onboarding implemented.
 
-The MVP analysis chain is implemented (`check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). Spec 019 closes the remaining declared onboarding gap with explicit `init` and read-only `doctor` commands. The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
+The MVP CLI is implemented (`init`, `doctor`, `check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). `init` creates at most one optional config and never overwrites; `doctor` is read-only. The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
 
 Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
 
@@ -52,8 +52,8 @@ The hosted dashboard / org view (P5) and any enforcing/blocking-merge check (P6)
 - Tests: Vitest
 - Schema validation: Zod
 - CLI first
-- GitHub Action later
-- GitHub App later
+- Report-only GitHub Action
+- Self-hostable, report-only GitHub App
 - Hosted dashboard later
 
 ---
@@ -78,6 +78,7 @@ MVP commands:
 
 ```bash
 aker-build init
+aker-build doctor
 aker-build check
 aker-build scan
 aker-build map

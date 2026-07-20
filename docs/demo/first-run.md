@@ -24,7 +24,16 @@ aker-build-report.md
 
 ## Manual Flow
 
-Use this shape when running against your own local git repo:
+Use this shape when onboarding your own local Git repo. Config is optional;
+`init` is explicit and refuses overwrite, while `doctor` is read-only:
+
+```bash
+pnpm dlx tsx packages/cli/src/bin.ts init <repo>
+pnpm dlx tsx packages/cli/src/bin.ts doctor <repo>
+pnpm dlx tsx packages/cli/src/bin.ts check <repo> --out <out-dir>
+```
+
+Use the standalone stages when investigating one part of the chain:
 
 ```bash
 pnpm dlx tsx packages/cli/src/bin.ts scan <repo> --out <out-dir>
@@ -48,4 +57,7 @@ Expected value:
 
 ## Boundaries
 
-The demo is intentionally report-only. Aker Build does not execute agents, commit, push, open PRs, auto-fix, auto-merge, or require hosted infrastructure.
+The demo is intentionally report-only. Apart from the explicitly requested,
+single-file `init` config creation, Aker Build does not mutate the analyzed
+repository. It does not execute agents, commit, push, open PRs, auto-fix,
+auto-merge, edit `.gitignore`, or require hosted infrastructure.

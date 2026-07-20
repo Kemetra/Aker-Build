@@ -2,7 +2,7 @@
 
 **Feature Branch**: `019-safe-onboarding`
 **Created**: 2026-07-20
-**Status**: Approved for implementation
+**Status**: Implemented
 **Input**: Close the declared MVP onboarding gap with deterministic `init` and read-only `doctor` commands.
 
 ## Purpose

@@ -403,7 +403,7 @@ packaging as the next bounded adoption-polish candidate. Keep P5/P6 deferred.
 ```powershell
 pnpm check:namespace
 git diff --check
-rg -n "MVP CLI is implemented \(`check`|active feature: 018|superseded by specs 011–018" README.md CLAUDE.md docs specs/019-safe-onboarding
+rg -n "active feature: 018|superseded by specs 011–018|GitHub Action later|GitHub App later" README.md CLAUDE.md docs/status docs/roadmap
 ```
 
 Expected: namespace passes, diff check passes, and no obsolete active pointer is
