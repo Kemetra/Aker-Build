@@ -2,7 +2,7 @@
 
 **Feature Branch**: `019-safe-onboarding`
 **Created**: 2026-07-20
-**Status**: Approved for planning
+**Status**: Approved for implementation
 **Input**: Close the declared MVP onboarding gap with deterministic `init` and read-only `doctor` commands.
 
 ## Purpose
@@ -24,10 +24,10 @@ safe onboarding surface without weakening Aker Build's no-hidden-mutation rule.
   dependencies, scans source, or creates analysis artifacts.
 - `init` defaults to `aker-build.config.yaml`, supports `--format yaml|json`, and
   supports `--stdout` as a no-write preview suitable for redirection.
-- A valid recognized config means the repository is already initialized and is
-  an idempotent success. An invalid or unreadable recognized config is an error.
-  `init` never overwrites either recognized config format and provides no force
-  option.
+- One valid recognized config means the repository is already initialized and
+  is an idempotent success. An invalid/unreadable config or the simultaneous
+  presence of both recognized formats is an error. `init` never overwrites
+  either recognized config format and provides no force option.
 - Generated configuration is intentionally behavior-neutral: schema version 1
   plus commented YAML examples where the format supports comments. It MUST load
   through the existing config validator without changing default analysis scope.
@@ -113,7 +113,8 @@ prints a token value.
   strictly no-write.
 - **FR-005**: `init` MUST inspect both recognized config filenames and MUST
   never overwrite one. A valid existing config is success; an invalid existing
-  config is a validation failure with no write.
+  config or two simultaneous recognized configs is a validation/conflict
+  failure with no write.
 - **FR-006**: A writing `init` run MUST create exactly one config file using an
   exclusive create operation so a concurrent writer cannot be overwritten.
 - **FR-007**: `doctor` MUST be read-only and MUST report deterministic checks

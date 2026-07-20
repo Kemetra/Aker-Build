@@ -214,6 +214,7 @@ Then:
 Do not implement CLI scanner before the Project Map schema exists.
 
 <!-- SPECKIT START -->
-For the active feature requirements and current planning boundary, read:
-`specs/019-safe-onboarding/spec.md` (active feature: 019-safe-onboarding).
+For additional context about technologies, structure, commands, and boundaries,
+read the current plan:
+`specs/019-safe-onboarding/plan.md` (active feature: 019-safe-onboarding).
 <!-- SPECKIT END -->
