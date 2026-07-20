@@ -78,12 +78,55 @@ function runEnforcement(findings: Array<Record<string, string>>) {
   });
 }
 
+function workflowFilenames(): string[] {
+  return readdirSync(workflowDirectory)
+    .filter((name) => /\.ya?ml$/.test(name))
+    .sort();
+}
+
+function workflowActionSteps(document: WorkflowDocument): WorkflowStep[] {
+  return Object.values(document.jobs)
+    .flatMap((job) => job.steps ?? [])
+    .filter((step) => step.uses !== undefined);
+}
+
+function assertApprovedAction(filename: string, step: WorkflowStep): string {
+  const reference = step.uses ?? "";
+  expect(reference, `${filename}: immutable action reference`).toMatch(
+    /^[a-z0-9_.-]+\/[a-z0-9_.-]+@[0-9a-f]{40}$/,
+  );
+  expect(
+    [
+      `actions/checkout@${CHECKOUT_SHA}`,
+      `actions/setup-node@${SETUP_NODE_SHA}`,
+    ],
+    `${filename}: approved action allowlist`,
+  ).toContain(reference);
+  if (reference === `actions/checkout@${CHECKOUT_SHA}`) {
+    expect(step.with?.["persist-credentials"], `${filename}: checkout safety`).toBe(false);
+  }
+  return reference;
+}
+
+function assertActionVersionComments(source: string): void {
+  const lines = source.split(/\r?\n/);
+  const checkoutLines = lines.filter((line) => line.includes(`actions/checkout@${CHECKOUT_SHA}`));
+  const setupNodeLines = lines.filter((line) => line.includes(`actions/setup-node@${SETUP_NODE_SHA}`));
+  expect(checkoutLines.every((line) => line.includes("# v6.0.2"))).toBe(true);
+  expect(setupNodeLines.every((line) => line.includes("# v6.4.0"))).toBe(true);
+}
+
+function actionReferences(filename: string): string[] {
+  const source = readFileSync(join(workflowDirectory, filename), "utf8");
+  const document = parse(source) as WorkflowDocument;
+  const references = workflowActionSteps(document).map((step) => assertApprovedAction(filename, step));
+  assertActionVersionComments(source);
+  return references;
+}
+
 describe("reusable GitHub CI workflow", () => {
   it("pins every repository action and disables checkout credential persistence", () => {
-    const workflowFiles = readdirSync(workflowDirectory)
-      .filter((name) => /\.ya?ml$/.test(name))
-      .sort();
-    const references: string[] = [];
+    const workflowFiles = workflowFilenames();
 
     expect(workflowFiles).toEqual([
       "aker-build-review.yml",
@@ -91,35 +134,7 @@ describe("reusable GitHub CI workflow", () => {
       "npm-release.yml",
     ]);
 
-    for (const filename of workflowFiles) {
-      const source = readFileSync(join(workflowDirectory, filename), "utf8");
-      const document = parse(source) as WorkflowDocument;
-      for (const job of Object.values(document.jobs)) {
-        for (const step of job.steps ?? []) {
-          if (!step.uses) continue;
-          references.push(step.uses);
-          expect(step.uses, `${filename}: immutable action reference`).toMatch(
-            /^[a-z0-9_.-]+\/[a-z0-9_.-]+@[0-9a-f]{40}$/,
-          );
-          expect(
-            [
-              `actions/checkout@${CHECKOUT_SHA}`,
-              `actions/setup-node@${SETUP_NODE_SHA}`,
-            ],
-            `${filename}: approved action allowlist`,
-          ).toContain(step.uses);
-
-          if (step.uses.startsWith("actions/checkout@")) {
-            expect(step.with?.["persist-credentials"], `${filename}: checkout safety`).toBe(false);
-          }
-        }
-      }
-
-      for (const line of source.split(/\r?\n/)) {
-        if (line.includes(`actions/checkout@${CHECKOUT_SHA}`)) expect(line).toContain("# v6.0.2");
-        if (line.includes(`actions/setup-node@${SETUP_NODE_SHA}`)) expect(line).toContain("# v6.4.0");
-      }
-    }
+    const references = workflowFiles.flatMap(actionReferences);
 
     expect(references).toHaveLength(14);
     expect(references.filter((reference) => reference === `actions/checkout@${CHECKOUT_SHA}`)).toHaveLength(7);
