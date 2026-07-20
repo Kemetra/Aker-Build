@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -7,9 +7,12 @@ import { afterEach, describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const workflowPath = join(repoRoot, ".github", "workflows", "aker-build-review.yml");
+const workflowDirectory = join(repoRoot, ".github", "workflows");
+const workflowPath = join(workflowDirectory, "aker-build-review.yml");
 const guidePath = join(repoRoot, "docs", "ci", "github-actions.md");
 const tempRoots: string[] = [];
+const CHECKOUT_SHA = "de0fac2e4500dabe0009e67214ff5f5447ce83dd";
+const SETUP_NODE_SHA = "48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e";
 
 interface WorkflowStep {
   name?: string;
@@ -76,6 +79,53 @@ function runEnforcement(findings: Array<Record<string, string>>) {
 }
 
 describe("reusable GitHub CI workflow", () => {
+  it("pins every repository action and disables checkout credential persistence", () => {
+    const workflowFiles = readdirSync(workflowDirectory)
+      .filter((name) => /\.ya?ml$/.test(name))
+      .sort();
+    const references: string[] = [];
+
+    expect(workflowFiles).toEqual([
+      "aker-build-review.yml",
+      "aker-build.yml",
+      "npm-release.yml",
+    ]);
+
+    for (const filename of workflowFiles) {
+      const source = readFileSync(join(workflowDirectory, filename), "utf8");
+      const document = parse(source) as WorkflowDocument;
+      for (const job of Object.values(document.jobs)) {
+        for (const step of job.steps ?? []) {
+          if (!step.uses) continue;
+          references.push(step.uses);
+          expect(step.uses, `${filename}: immutable action reference`).toMatch(
+            /^[a-z0-9_.-]+\/[a-z0-9_.-]+@[0-9a-f]{40}$/,
+          );
+          expect(
+            [
+              `actions/checkout@${CHECKOUT_SHA}`,
+              `actions/setup-node@${SETUP_NODE_SHA}`,
+            ],
+            `${filename}: approved action allowlist`,
+          ).toContain(step.uses);
+
+          if (step.uses.startsWith("actions/checkout@")) {
+            expect(step.with?.["persist-credentials"], `${filename}: checkout safety`).toBe(false);
+          }
+        }
+      }
+
+      for (const line of source.split(/\r?\n/)) {
+        if (line.includes(`actions/checkout@${CHECKOUT_SHA}`)) expect(line).toContain("# v6.0.2");
+        if (line.includes(`actions/setup-node@${SETUP_NODE_SHA}`)) expect(line).toContain("# v6.4.0");
+      }
+    }
+
+    expect(references).toHaveLength(14);
+    expect(references.filter((reference) => reference === `actions/checkout@${CHECKOUT_SHA}`)).toHaveLength(7);
+    expect(references.filter((reference) => reference === `actions/setup-node@${SETUP_NODE_SHA}`)).toHaveLength(7);
+  });
+
   it("is callable-only with one report-only input and read-only permissions", () => {
     const { document, source } = loadWorkflow();
 
@@ -107,14 +157,14 @@ describe("reusable GitHub CI workflow", () => {
     expect(job["runs-on"]).toBe("ubuntu-latest");
     expect(job.permissions).toBeUndefined();
     expect(checkout).toMatchObject({
-      uses: "actions/checkout@v6",
+      uses: `actions/checkout@${CHECKOUT_SHA}`,
       with: {
         ref: "${{ github.event.pull_request.head.sha }}",
         "persist-credentials": false,
       },
     });
     expect(setup).toMatchObject({
-      uses: "actions/setup-node@v6",
+      uses: `actions/setup-node@${SETUP_NODE_SHA}`,
       with: { "node-version": "22.14", "package-manager-cache": false },
     });
   });

@@ -1,9 +1,9 @@
 # Tasks: Immutable GitHub Action Pins
 
-- [ ] T001 Add failing all-workflow action-pin and checkout-safety tests.
-- [ ] T002 Retain the meaningful RED result.
-- [ ] T003 Pin all 14 action references and harden every checkout.
-- [ ] T004 Run focused GREEN tests, typecheck, and semantic workflow audit.
+- [x] T001 Add failing all-workflow action-pin and checkout-safety tests.
+- [x] T002 Retain the meaningful RED result.
+- [x] T003 Pin all 14 action references and harden every checkout.
+- [x] T004 Run focused GREEN tests, typecheck, and semantic workflow audit.
 - [ ] T005 Document selected releases and controlled update policy.
 - [ ] T006 Run the full verification matrix and exact scope audit.
 - [ ] T007 Record evidence and mark Spec 021 implemented.
