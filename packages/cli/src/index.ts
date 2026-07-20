@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { runCheck } from "./commands/check.js";
 import { runScan } from "./commands/scan.js";
 import { runMap } from "./commands/map.js";
 import { runGatesCommand } from "./commands/gates.js";
@@ -7,7 +8,9 @@ import { runRouteCommand } from "./commands/route.js";
 import { runPromptCommand } from "./commands/prompt.js";
 import { runReviewCommand } from "./commands/review.js";
 import { runReportCommand } from "./commands/report.js";
+import { CLI_VERSION } from "./version.js";
 
+export { runCheck } from "./commands/check.js";
 export { runScan } from "./commands/scan.js";
 export { runMap } from "./commands/map.js";
 export { runGatesCommand } from "./commands/gates.js";
@@ -16,6 +19,7 @@ export { runRouteCommand } from "./commands/route.js";
 export { runPromptCommand } from "./commands/prompt.js";
 export { runReviewCommand } from "./commands/review.js";
 export { runReportCommand } from "./commands/report.js";
+export { CLI_VERSION } from "./version.js";
 
 /** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
 export function buildProgram(): Command {
@@ -23,7 +27,17 @@ export function buildProgram(): Command {
   program
     .name("aker-build")
     .description("Aker Build — CLI-first SaaS Build Kernel")
-    .version("0.0.0");
+    .version(CLI_VERSION);
+
+  program
+    .command("check")
+    .description("Run scan, gates, queue, route, and report in one read-only pass")
+    .argument("[path]", "target repo path", ".")
+    .option("--config <path>", "explicit aker-build.config.json/yaml path")
+    .option("--out <dir>", "output directory for the complete artifact set", ".aker-build")
+    .action((path: string, opts: { config?: string; out: string }) => {
+      process.exitCode = runCheck(path, opts);
+    });
 
   program
     .command("scan")
