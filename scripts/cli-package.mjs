@@ -62,6 +62,16 @@ export function validateVersion({ packageVersion, cliVersion }) {
   }
 }
 
+export function parseVerifierArgs(args) {
+  if (args.length === 0) return {};
+  if (args[0] !== "--tarball-dir" || args.length > 2) {
+    throw new Error(`unknown verifier argument: ${args.join(" ")}`);
+  }
+  const value = args[1];
+  if (!value || value.startsWith("--")) throw new Error("--tarball-dir requires a path");
+  return { tarballDir: value };
+}
+
 export function validatePackedPaths(paths) {
   if (!Array.isArray(paths)) throw new Error("packed paths must be an array");
   const allowed = new Set(["package.json", ...REQUIRED_PACKAGE_FILES]);

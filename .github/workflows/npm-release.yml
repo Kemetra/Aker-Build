@@ -1,0 +1,44 @@
+name: npm release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact package version; dispatch this workflow from refs/tags/v<version>
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Verify and publish aker-build
+    runs-on: ubuntu-latest
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node and npm registry
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.14"
+          registry-url: "https://registry.npmjs.org/"
+          package-manager-cache: false
+
+      - run: corepack enable
+      - run: npm install --global npm@11.5.1
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm check:namespace
+      - run: corepack pnpm test
+      - run: corepack pnpm typecheck
+      - run: corepack pnpm dlx tsx packages/eval/src/bin.ts
+      - run: corepack pnpm build:cli-package
+      - run: node scripts/release-preflight.mjs "$RELEASE_VERSION"
+      - run: node scripts/verify-cli-package.mjs --tarball-dir release
+      - run: npm publish "release/aker-build-${RELEASE_VERSION}.tgz" --provenance
