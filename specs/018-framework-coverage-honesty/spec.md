@@ -2,7 +2,7 @@
 
 **Feature Branch**: `018-framework-coverage-honesty`  
 **Created**: 2026-07-20  
-**Status**: Approved for implementation  
+**Status**: Implemented
 **Input**: Continue the recommended fortification work after Specs 016–017. Close W3b's known blind spots without adding an AST parser or overstating coverage.
 
 ## Problem
@@ -79,7 +79,7 @@ Existing v1 Project Maps remain readable, outputs stay deterministic and secret-
 - **FR-012**: Multi-line tenant-token classification MUST preserve the existing five-line bounded window and confidence semantics.
 - **FR-013**: Route detection MUST add Next.js App Router, NestJS, Fastify, and Django route signatures while preserving Express behavior.
 - **FR-014**: Auth detection MUST add NestJS, Fastify, and Django guard signatures while preserving the existing generic auth/role tokens.
-- **FR-015**: G4 MUST consume scanner route/auth evidence when those fields are present and MUST retain its legacy source-scan fallback for older maps where the fields are absent.
+- **FR-015**: G4 MUST consume scanner route/auth evidence when those fields are present and MUST retain a deduplicated live source-scan fallback for older maps and route locations added after the map was produced.
 - **FR-016**: G4 route/guard correlation MUST recognize inline or nearby guards, downgrade ambiguous file-level middleware to suspected evidence, and keep unguarded routes confirmed only when no relevant guard exists in the file.
 - **FR-017**: New positive and clean benchmark fixtures MUST pin Mongoose data-access and NestJS route/auth behavior without lowering existing thresholds.
 - **FR-018**: No output may contain source text, secret values, credentials, or any mutation instruction.
@@ -91,6 +91,7 @@ Existing v1 Project Maps remain readable, outputs stay deterministic and secret-
 - A Next.js function named `GET` outside an App Router `route.*` file: it is not treated as a route.
 - A capitalized JavaScript class exposes `findOne` without Mongoose markers: it is not classified as Mongoose solely from capitalization.
 - A v1 map omits `routes`, `auth`, and `coverage`: validation succeeds and G4 uses its legacy fallback.
+- A route is added after a v2 map was produced: G4 live-detects the unmapped route without duplicating mapped route findings.
 - Unreadable files are skipped using the existing scanner behavior and never reported as covered.
 
 ## Success Criteria
@@ -108,4 +109,3 @@ Existing v1 Project Maps remain readable, outputs stay deterministic and secret-
 - Hosted dashboards, org aggregation, blocking enforcement, or public release operations.
 - Agent execution, auto-fix, source mutation, commit, push, or merge behavior in the product.
 - Framework-specific business rules, Retail Tower logic, or ERPNext logic.
-

@@ -34,13 +34,12 @@
 
 ## Decision 5 — Scanner evidence becomes G4's primary route/auth input
 
-**Decision**: G4 correlates `projectMap.routes` and `projectMap.auth` when both fields exist, using a bounded nearby-line check. It falls back to the current source scan only when those fields are absent.
+**Decision**: G4 correlates `projectMap.routes` and `projectMap.auth` when both fields exist, using a bounded nearby-line check. A deduplicated live Express/Fastify source scan supplements locations absent from the map so post-scan diffs remain visible; old maps naturally use the same fallback.
 
-**Why**: Signature packs otherwise improve Project Map evidence but not user-visible findings. Consuming the public evidence preserves the scanner/gate boundary: detectors observe; the gate judges. The legacy fallback keeps old maps useful.
+**Why**: Signature packs otherwise improve Project Map evidence but not user-visible findings. Consuming the public evidence preserves the scanner/gate boundary: detectors observe; the gate judges. The live supplement keeps old maps useful and preserves `review-pr` safety when a route is added after `scan`.
 
 ## Decision 6 — Benchmark the highest-risk new paths
 
 **Decision**: Add positive/clean Mongoose and NestJS cases to the real corpus; unit-test the remaining packs directly.
 
 **Why**: Mongoose closes the named model-first tenant-isolation blind spot. NestJS proves route/auth evidence reaches G4. Four fixtures keep the statistical corpus focused while unit tests cover signature breadth.
-

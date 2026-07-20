@@ -15,9 +15,9 @@ function writeJson(outDir: string, name: string, value: unknown): void {
   writeFileSync(join(outDir, name), JSON.stringify(value, null, 2), "utf8");
 }
 
-function seedProjectMap(outDir: string): void {
+function seedProjectMap(outDir: string, coverage: "matched" | "none" | "legacy" = "matched"): void {
   writeJson(outDir, "project-map.json", {
-    version: 1,
+    version: coverage === "legacy" ? 1 : 2,
     project: {
       name: "demo-saas",
       detected_stack: { runtime: "node", package_manager: "pnpm", frameworks: ["express"] },
@@ -26,6 +26,16 @@ function seedProjectMap(outDir: string): void {
     boundaries: [],
     tenant_model: { status: "detected", strategy: "shared-db", tenant_key: "tenant_id", required_surfaces: ["api_routes"] },
     critical_surfaces: ["api_routes"],
+    ...(coverage === "legacy"
+      ? {}
+      : {
+          coverage: {
+            source_files_examined: 5,
+            packs: coverage === "matched"
+              ? [{ id: "nestjs", capabilities: ["auth", "routes"], matched_files: 2 }]
+              : [],
+          },
+        }),
   });
 }
 
@@ -114,10 +124,13 @@ describe("Aker Build report", () => {
     expect(report.summary.findings.suppressed).toBe(1);
     expect(report.summary.queue.blocked).toBe(1);
     expect(report.summary.review?.verdict).toBe("needs_verification");
+    expect(report.summary.coverage?.packs[0]?.id).toBe("nestjs");
     expect(report.spec_kit.present).toBe(true);
 
     const markdown = renderReportMarkdown(report);
     expect(markdown).toContain("# Aker Build Report");
+    expect(markdown).toContain("nestjs (auth, routes; 2 matched files)");
+    expect(markdown).toContain("not proof of complete framework or repository coverage");
     expect(markdown).toContain("TG-G4-DEMO-001");
     expect(markdown).toContain("Spec Kit artifacts: 1");
   });
@@ -148,12 +161,34 @@ describe("Aker Build report", () => {
     expect(serialized).not.toContain("0123456789abcdef");
   });
 
+  it("warns when no framework signature pack matched", () => {
+    const { repoRoot, outDir } = tempRepo();
+    seedProjectMap(outDir, "none");
+
+    const report = buildReport(repoRoot, { out: outDir });
+    expect(report.summary.coverage).toEqual({ source_files_examined: 5, packs: [] });
+    expect(renderReportMarkdown(report)).toContain(
+      "No framework signature pack matched; a clean finding set does not establish framework coverage.",
+    );
+  });
+
+  it("keeps coverage nullable for a legacy v1 Project Map", () => {
+    const { repoRoot, outDir } = tempRepo();
+    seedProjectMap(outDir, "legacy");
+
+    const report = buildReport(repoRoot, { out: outDir });
+    expect(report.summary.coverage).toBeNull();
+    expect(renderReportMarkdown(report)).toContain(
+      "Coverage evidence is unavailable in this legacy Project Map; a clean finding set does not establish framework coverage.",
+    );
+  });
+
   it("writes report JSON and Markdown files", () => {
     const { repoRoot, outDir } = tempRepo();
     seedProjectMap(outDir);
     const { jsonPath, mdPath, report } = writeReportToFiles(repoRoot, { out: outDir });
 
-    expect(JSON.parse(readFileSync(jsonPath, "utf8")).schema_version).toBe(1);
+    expect(JSON.parse(readFileSync(jsonPath, "utf8")).schema_version).toBe(2);
     expect(readFileSync(mdPath, "utf8")).toContain("# Aker Build Report");
     expect(report.artifacts.present).toContain("project-map.json");
   });

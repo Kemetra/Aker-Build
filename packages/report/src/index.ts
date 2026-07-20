@@ -174,6 +174,7 @@ function buildReportUnchecked(repoRoot: string, outDir: string): AkerBuildReport
       project_name: artifacts.projectMap?.project.name ?? null,
       repo_count: artifacts.projectMap?.repos.length ?? 0,
       tenant_status: artifacts.projectMap?.tenant_model.status ?? null,
+      coverage: artifacts.projectMap?.coverage ?? null,
       findings: summarizeFindings(artifacts.risks),
       queue: {
         total: artifacts.queue?.items.length ?? 0,
@@ -217,6 +218,21 @@ export function renderReportMarkdown(report: AkerBuildReport): string {
   lines.push(`Project: ${report.summary.project_name ?? "(unknown)"}`);
   lines.push(`Tenant model: ${report.summary.tenant_status ?? "(unknown)"}`);
   lines.push(`Repos: ${report.summary.repo_count}`);
+  lines.push("");
+  lines.push("## Framework Coverage");
+  if (report.summary.coverage === null) {
+    lines.push("Coverage evidence is unavailable in this legacy Project Map; a clean finding set does not establish framework coverage.");
+  } else if (report.summary.coverage.packs.length === 0) {
+    lines.push(`Source files examined: ${report.summary.coverage.source_files_examined}`);
+    lines.push("No framework signature pack matched; a clean finding set does not establish framework coverage.");
+  } else {
+    lines.push(`Source files examined: ${report.summary.coverage.source_files_examined}`);
+    lines.push("Recognized signature packs:");
+    for (const pack of report.summary.coverage.packs) {
+      lines.push(`- ${pack.id} (${pack.capabilities.join(", ")}; ${pack.matched_files} matched files)`);
+    }
+    lines.push("Signature recognition is not proof of complete framework or repository coverage.");
+  }
   lines.push("");
   lines.push("## Artifacts");
   lines.push(`Present: ${report.artifacts.present.length > 0 ? report.artifacts.present.join(", ") : "(none)"}`);

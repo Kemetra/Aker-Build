@@ -1,0 +1,5 @@
+{
+  "description": "A NestJS admin route with nearby auth and role decorators remains clean.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": []
+}

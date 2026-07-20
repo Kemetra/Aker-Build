@@ -1,0 +1,7 @@
+{
+  "description": "A model-first Mongoose query in a Mongoose-marked file omits tenant scope and fires G4 at suspected.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": [
+    { "gate_id": "TG-G4", "path": "src/users.ts", "tier": "suspected" }
+  ]
+}

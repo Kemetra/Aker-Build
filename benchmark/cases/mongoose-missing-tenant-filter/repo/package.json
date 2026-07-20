@@ -1,0 +1,5 @@
+{
+  "name": "mongoose-missing-tenant-filter-case",
+  "private": true,
+  "dependencies": { "mongoose": "^8.0.0" }
+}

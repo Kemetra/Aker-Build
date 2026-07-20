@@ -33,9 +33,37 @@ describe("detectAuth", () => {
     expect(detectAuth(root, ["util.ts"])).toEqual([]);
   });
 
+  it("ignores guard signatures that appear only in comments", () => {
+    const root = fixture({ "comments.ts": `app.get("/users", handler); // requireAuth is missing\n` });
+    expect(detectAuth(root, ["comments.ts"])).toEqual([]);
+  });
+
   it("is deterministic: sorted by path then line", () => {
     const root = fixture({ "b.ts": `requireAuth();\n`, "a.ts": `authenticate();\n` });
     const ev = detectAuth(root, ["b.ts", "a.ts"]);
     expect(ev.map((e) => e.path)).toEqual(["a.ts", "b.ts"]);
+  });
+
+  it("recognizes NestJS auth and role decorators", () => {
+    const root = fixture({
+      "users.controller.ts": `@Controller("users")\n@UseGuards(AuthGuard)\n@Roles("admin")\n@Get()\nlist() {}\n`,
+    });
+
+    expect(detectAuth(root, ["users.controller.ts"]).map((e) => `${e.line}:${e.signal}`)).toEqual([
+      "2:auth_guard_decorator",
+      "3:role_guard_decorator",
+    ]);
+  });
+
+  it("recognizes Fastify and Django guard signatures", () => {
+    const root = fixture({
+      "fastify.ts": `import Fastify from "fastify";\nfastify.addHook("onRequest", authenticate);\n`,
+      "views.py": `from django.contrib.auth.decorators import login_required\n@login_required\ndef users(request): pass\n`,
+    });
+
+    expect(detectAuth(root, ["views.py", "fastify.ts"]).map((e) => `${e.path}:${e.line}:${e.signal}`)).toEqual([
+      "fastify.ts:2:auth_guard",
+      "views.py:2:auth_guard_decorator",
+    ]);
   });
 });

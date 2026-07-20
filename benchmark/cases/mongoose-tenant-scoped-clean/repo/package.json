@@ -1,0 +1,5 @@
+{
+  "name": "mongoose-tenant-scoped-clean-case",
+  "private": true,
+  "dependencies": { "mongoose": "^8.0.0" }
+}
