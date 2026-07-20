@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 function tempRun(): { repoRoot: string; outDir: string } {
-  const repoRoot = mkdtempSync(join(tmpdir(), "tg-cli-report-"));
+  const repoRoot = mkdtempSync(join(tmpdir(), "aker-build-cli-report-"));
   const outDir = join(repoRoot, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   created.push(repoRoot);

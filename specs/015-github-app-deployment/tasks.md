@@ -9,7 +9,7 @@ description: "Task list for 015-github-app-deployment"
 
 **Tests**: REQUIRED (TDD — write tests first, RED→GREEN). Secret-safety is a first-class test, not an afterthought.
 
-**Status**: Not started — implementation follows on branch `015-github-app-deployment`.
+**Status**: Implemented — commits `9f3771f`, `e6ae6aa`, `6dd1a71`, and `0445ced`; release-integrity follow-up closed by 016.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -20,16 +20,16 @@ description: "Task list for 015-github-app-deployment"
 
 ## Phase 1: Setup
 
-- [ ] T001 Verify repo state/branch and confirm allowed/forbidden files from `plan.md` before edits.
-- [ ] T002 Scaffold `packages/github-app-server/` (package.json, tsconfig, vitest config) matching existing package conventions; depend on `@aker-build/github-app`.
-- [ ] T003 [P] Add the package to the workspace + declare the GitHub REST/HTTP dependency (update `pnpm-lock.yaml` for the new manifest only).
+- [x] T001 Verify repo state/branch and confirm allowed/forbidden files from `plan.md` before edits.
+- [x] T002 Scaffold `packages/github-app-server/` (package.json, tsconfig, vitest config) matching existing package conventions; depend on `@aker-build/github-app`.
+- [x] T003 [P] Add the package to the workspace + declare the GitHub REST/HTTP dependency (update `pnpm-lock.yaml` for the new manifest only).
 
 ---
 
 ## Phase 2: Foundational (Blocking)
 
-- [ ] T004 Implement `src/config.ts` — read app id / private key / webhook secret from env; fail-fast validation that names a missing variable and NEVER prints a value (FR-005/FR-007).
-- [ ] T005 [P] Test `tests/config.test.ts` — present→ok; each missing→fail-fast naming the var; assert no value printed. (RED first.)
+- [x] T004 Implement `src/config.ts` — read app id / private key / webhook secret from env; fail-fast validation that names a missing variable and NEVER prints a value (FR-005/FR-007).
+- [x] T005 [P] Test `tests/config.test.ts` — present→ok; each missing→fail-fast naming the var; assert no value printed. (RED first.)
 
 **Checkpoint**: credentials load safely; story work can begin.
 
@@ -43,17 +43,17 @@ description: "Task list for 015-github-app-deployment"
 
 ### Tests first (RED)
 
-- [ ] T006 [P] [US1] `tests/checks-client.test.ts` — create/update/find map to Checks API calls; only checks writes occur.
-- [ ] T007 [P] [US1] `tests/git-workspace.test.ts` — checkout returns a path; dispose removes it; dispose runs even when the body throws.
-- [ ] T008 [P] [US1] `tests/server.test.ts` (happy path) — signed reviewable event dispatches to `handleEvent` and posts a check.
+- [x] T006 [P] [US1] `tests/checks-client.test.ts` — create/update/find map to Checks API calls; only checks writes occur.
+- [x] T007 [P] [US1] `tests/git-workspace.test.ts` — checkout returns a path; dispose removes it; dispose runs even when the body throws.
+- [x] T008 [P] [US1] `tests/server.test.ts` (happy path) — signed reviewable event dispatches to `handleEvent` and posts a check.
 
 ### Implementation (GREEN)
 
-- [ ] T009 [US1] `src/auth.ts` — mint a short-lived installation token from env creds; discard per event; never persist/log (FR-015).
-- [ ] T010 [US1] `src/checks-client.ts` — concrete `ChecksClient` over octokit; route writes through 014 `assertAllowedWrite`.
-- [ ] T011 [US1] `src/git-workspace.ts` — concrete `Workspace`: ephemeral checkout of head + guaranteed dispose (FR-004).
-- [ ] T012 [US1] `src/gh-sources.ts` — octokit-backed `prChangedFiles` / `prMetadata` for `RunnerDeps`.
-- [ ] T013 [US1] `src/server.ts` + `src/index.ts` — HTTP endpoint: read raw body → 014 `verifySignature` → `parseEvent` → dispatch to `handleEvent` with the concrete deps; compose + start.
+- [x] T009 [US1] `src/auth.ts` — mint a short-lived installation token from env creds; discard per event; never persist/log (FR-015).
+- [x] T010 [US1] `src/checks-client.ts` — concrete `ChecksClient` over octokit; route writes through 014 `assertAllowedWrite`.
+- [x] T011 [US1] `src/git-workspace.ts` — concrete `Workspace`: ephemeral checkout of head + guaranteed dispose (FR-004).
+- [x] T012 [US1] `src/gh-sources.ts` — octokit-backed `prChangedFiles` / `prMetadata` for `RunnerDeps`.
+- [x] T013 [US1] `src/server.ts` + `src/index.ts` — HTTP endpoint: read raw body → 014 `verifySignature` → `parseEvent` → dispatch to `handleEvent` with the concrete deps; compose + start.
 
 **Checkpoint**: US1 demoable — signed PR → live check.
 
@@ -67,13 +67,13 @@ description: "Task list for 015-github-app-deployment"
 
 ### Tests first (RED)
 
-- [ ] T014 [P] [US2] `tests/auth.test.ts` — token minted and used; assert neither token nor private key is logged or returned in any error.
-- [ ] T015 [P] [US2] `tests/secret-safety.test.ts` — sentinel scan across success + bad-signature + checkout-failure + API-error paths: NO sentinel in logs/errors/payload/files (SC-003).
+- [x] T014 [P] [US2] `tests/auth.test.ts` — token minted and used; assert neither token nor private key is logged or returned in any error.
+- [x] T015 [P] [US2] `tests/secret-safety.test.ts` — sentinel scan across success + bad-signature + checkout-failure + API-error paths: NO sentinel in logs/errors/payload/files (SC-003).
 
 ### Implementation (GREEN)
 
-- [ ] T016 [US2] Establish a no-secret logging convention (allowlisted fields only) and ensure config/auth/server never pass credential values to the logger or into error messages (FR-006).
-- [ ] T017 [US2] Audit error-handling paths so thrown/serialized errors carry no credential material; redact at the boundary if needed.
+- [x] T016 [US2] Establish a no-secret logging convention (allowlisted fields only) and ensure config/auth/server never pass credential values to the logger or into error messages (FR-006).
+- [x] T017 [US2] Audit error-handling paths so thrown/serialized errors carry no credential material; redact at the boundary if needed.
 
 **Checkpoint**: US2 demoable — secret-safety test green across all paths.
 
@@ -87,14 +87,14 @@ description: "Task list for 015-github-app-deployment"
 
 ### Tests first (RED)
 
-- [ ] T018 [P] [US3] `tests/server.test.ts` (degraded) — unsigned→401 no dispatch; wrong-sig→401; non-reviewable→202 no check; oversized→413 (FR-008/FR-009).
-- [ ] T019 [P] [US3] Checkout/review-failure test — concludes neutral, workspace disposed, never success (FR-010/SC-007).
+- [x] T018 [P] [US3] `tests/server.test.ts` (degraded) — unsigned→401 no dispatch; wrong-sig→401; non-reviewable→202 no check; oversized→413 (FR-008/FR-009).
+- [x] T019 [P] [US3] Checkout/review-failure test — concludes neutral, workspace disposed, never success (FR-010/SC-007).
 
 ### Implementation (GREEN)
 
-- [ ] T020 [US3] Implement signature/oversize/action gating + honest status mapping in `src/server.ts`.
-- [ ] T021 [US3] Wire incomplete-review → neutral via 014 `safeRun`/`handleEvent`; ensure dispose always runs (FR-010/FR-011).
-- [ ] T021a [P] [US3] Concurrency isolation test + impl — two overlapping events use distinct ephemeral workspaces (unique temp dirs); neither sees the other's checkout; both checks post correctly (FR-014).
+- [x] T020 [US3] Implement signature/oversize/action gating + honest status mapping in `src/server.ts`.
+- [x] T021 [US3] Wire incomplete-review → neutral via 014 `safeRun`/`handleEvent`; ensure dispose always runs (FR-010/FR-011).
+- [x] T021a [P] [US3] Concurrency isolation test + impl — two overlapping events use distinct ephemeral workspaces (unique temp dirs); neither sees the other's checkout; both checks post correctly (FR-014).
 
 **Checkpoint**: US3 demoable — endpoint is honest under bad input, partial failure, and concurrent events.
 
@@ -102,11 +102,11 @@ description: "Task list for 015-github-app-deployment"
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T022 [P] `packages/github-app-server/README.md` — run instructions + the verifiable safety boundary (env-only secrets, report-only, stateless).
-- [ ] T023 [P] Update `README.md` / `packages/cli/README.md` to mention the deployable service (no command behavior change).
-- [ ] T024 Run focused tests: `pnpm --filter @aker-build/github-app-server test`.
-- [ ] T025 Run full suite + typecheck: `pnpm test` and `pnpm typecheck` (must be green).
-- [ ] T026 Final status: confirm no secret in any output, only checks writes, zero source on disk, no P5/P6 drift; `git status` limited to allowed files.
+- [x] T022 [P] `packages/github-app-server/README.md` — run instructions + the verifiable safety boundary (env-only secrets, report-only, stateless).
+- [x] T023 [P] Update `README.md` / `packages/cli/README.md` to mention the deployable service (no command behavior change; closed by 016).
+- [x] T024 Run focused tests: `pnpm --filter @aker-build/github-app-server test`.
+- [x] T025 Run full suite + typecheck: `pnpm test` and `pnpm typecheck` (must be green; reverified by 016).
+- [x] T026 Final status: confirm no secret in any output, only checks writes, zero source on disk, no P5/P6 drift; `git status` limited to allowed files (reverified by 016).
 
 ---
 

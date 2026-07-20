@@ -7,7 +7,7 @@ import { makeNodeGit } from "../src/node-git.js";
 // Real local git — no network, no mocks (TDD: test real behavior). Each test gets a throwaway dir.
 const dirs: string[] = [];
 function tempDir(): string {
-  const d = mkdtempSync(join(tmpdir(), "tg-git-test-"));
+  const d = mkdtempSync(join(tmpdir(), "aker-build-git-test-"));
   dirs.push(d);
   return d;
 }

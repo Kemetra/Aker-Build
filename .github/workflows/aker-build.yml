@@ -84,3 +84,44 @@ jobs:
       # on any benchmark/thresholds.json breach (detection-quality regression gate).
       - name: Run benchmark regression gate
         run: corepack pnpm dlx tsx packages/eval/src/bin.ts
+
+  release-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node + pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+
+      - name: Install workspace dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Check namespace integrity
+        run: corepack pnpm check:namespace
+
+      - name: Run workspace tests
+        run: corepack pnpm test
+
+      - name: Run workspace typecheck
+        run: corepack pnpm typecheck
+
+  first-run-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node + pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+
+      - name: Install workspace dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Run documented first-run smoke
+        shell: pwsh
+        run: pwsh -File scripts/smoke-first-run.ps1 -RemoveTemp

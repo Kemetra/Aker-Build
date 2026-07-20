@@ -47,7 +47,7 @@ describe("a diff-attributable risk finding → Not Ready naming the gate (T012, 
   });
 
   it("excluded changed files do not contribute findings or scope violations", () => {
-    const repoRoot = mkdtempSync(join(tmpdir(), "tg-review-config-"));
+    const repoRoot = mkdtempSync(join(tmpdir(), "aker-build-review-config-"));
     const configPath = join(repoRoot, "aker-build.config.json");
     writeFileSync(
       configPath,

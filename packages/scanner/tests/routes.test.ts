@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { detectRoutes } from "../src/detect/routes.js";
 
 function fixture(files: Record<string, string>): string {
-  const root = mkdtempSync(join(tmpdir(), "tg-p1-"));
+  const root = mkdtempSync(join(tmpdir(), "aker-build-p1-"));
   for (const [rel, content] of Object.entries(files)) {
     const abs = join(root, rel);
     mkdirSync(join(abs, ".."), { recursive: true });

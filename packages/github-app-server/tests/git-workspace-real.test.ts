@@ -22,7 +22,7 @@ const git = (cwd: string, ...a: string[]) => execFileSync("git", a, { cwd, stdio
 
 /** Create a real source repo with one commit and return { repoDir, headSha }. */
 function makeOriginRepo(): { repoDir: string; headSha: string } {
-  const repoDir = mkdtempSync(join(tmpdir(), "tg-origin-"));
+  const repoDir = mkdtempSync(join(tmpdir(), "aker-build-origin-"));
   dirs.push(repoDir);
   git(repoDir, "init", "--quiet");
   git(repoDir, "config", "user.email", "t@t.test");
@@ -31,7 +31,7 @@ function makeOriginRepo(): { repoDir: string; headSha: string } {
   git(repoDir, "config", "uploadpack.allowAnySHA1InWant", "true");
   writeFileSync(join(repoDir, "marker.txt"), "the-real-head-content\n");
   git(repoDir, "add", "-A");
-  git(repoDir, "commit", "--quiet", "-m", "head commit");
+  git(repoDir, "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "head commit");
   const headSha = git(repoDir, "rev-parse", "HEAD").trim();
   return { repoDir, headSha };
 }
@@ -39,7 +39,7 @@ function makeOriginRepo(): { repoDir: string; headSha: string } {
 describe("makeGitWorkspace over a REAL file:// remote (real init/fetch/checkout sequence)", () => {
   it("fetches the PR head SHA and checks out its real content", async () => {
     const { repoDir, headSha } = makeOriginRepo();
-    const tmpRoot = mkdtempSync(join(tmpdir(), "tg-ws-root-"));
+    const tmpRoot = mkdtempSync(join(tmpdir(), "aker-build-ws-root-"));
     dirs.push(tmpRoot);
 
     const TOKEN = "ghs_REAL_GIT_TOKEN_SENTINEL_0000";
@@ -75,7 +75,7 @@ describe("makeGitWorkspace over a REAL file:// remote (real init/fetch/checkout 
 
   it("throws WorkspaceError when the head SHA does not exist on the remote (real git failure)", async () => {
     const { repoDir } = makeOriginRepo();
-    const tmpRoot = mkdtempSync(join(tmpdir(), "tg-ws-root-"));
+    const tmpRoot = mkdtempSync(join(tmpdir(), "aker-build-ws-root-"));
     dirs.push(tmpRoot);
     const ws = makeGitWorkspace({
       git: makeNodeGit(),

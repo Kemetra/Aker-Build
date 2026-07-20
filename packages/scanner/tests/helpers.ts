@@ -39,7 +39,7 @@ export function fixture(name: string): string {
   const cached = prepared.get(name);
   if (cached) return cached;
 
-  const dest = join(mkdtempSync(join(tmpdir(), "tg-fixture-")), name);
+  const dest = join(mkdtempSync(join(tmpdir(), "aker-build-fixture-")), name);
   if (SYNTHETIC_FIXTURES.has(name)) {
     mkdirSync(dest, { recursive: true }); // empty repo: no files, just a git root
   } else {

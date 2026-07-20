@@ -1,6 +1,6 @@
 # Aker Build Future Phases — Fortify, then Expand
 
-Status: Approved 2026-06-21 (owner approval). FORTIFY (P1–P3) shipped; EXPAND begins with P4 (report-only GitHub App, spec 014).
+Status: Approved 2026-06-21 (owner approval). FORTIFY (P1–P3) and the report-only GitHub App (P4, specs 014–015) shipped; 016 release integrity is current.
 Date: 2026-06-19
 Scope: The roadmap layer **after** public launch. The near-term waves A–F
 (`docs/roadmap/post-foundation-technical-plan.md`: contracts → config → npm →
@@ -259,11 +259,4 @@ No broad rewrites.
 
 ## The single next action
 
-This roadmap is approved (2026-06-21). FORTIFY (P1 deepen detection, P2 calibrate,
-P3 prove-it) is shipped, plus 013 config path scope. The next implementable slice is
-now **P4 — the report-only GitHub App** (spec `014-github-app-report-only`), which
-the merged Checks renderer was built to feed. Each phase ships as its own reviewed
-spec → plan → tasks cycle, per the constitution's implementation boundary.
-
-> Historical note: before approval, the original "single next action" was P1
-> (`data-access` detector). That FORTIFY work is complete; P4 is the current frontier.
+FORTIFY (P1–P3), the report-only GitHub App (P4), and its self-hostable single-tenant runtime are implemented. The current prerequisite is **016 — Release Integrity**, which restores reproducible verification and source-truth documentation. After 016, **017 — One-Command Activation and Distribution** will package the existing kernel for external adoption. P5 and P6 remain deferred.

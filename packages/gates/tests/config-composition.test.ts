@@ -34,7 +34,7 @@ function initGitRepo(dir: string): void {
 
 /** Build a throwaway repo with excluded/admin.ts + kept/admin.ts (identical content) + config. */
 function buildFixture(): { repoRoot: string; outDir: string } {
-  const repoRoot = mkdtempSync(join(tmpdir(), "tg-gates-composition-"));
+  const repoRoot = mkdtempSync(join(tmpdir(), "aker-build-gates-composition-"));
   mkdirSync(join(repoRoot, "excluded"), { recursive: true });
   mkdirSync(join(repoRoot, "kept"), { recursive: true });
   writeFileSync(join(repoRoot, "excluded", "admin.ts"), ADMIN_CONTENT, "utf8");

@@ -41,7 +41,7 @@ export function makeGitWorkspace(deps: GitWorkspaceDeps): Workspace {
 
   return {
     async checkout({ owner, repo, headSha }) {
-      const dir = mkdtempSync(join(tmpRoot, "tg-app-"));
+      const dir = mkdtempSync(join(tmpRoot, "aker-build-app-"));
       // If ANY step fails, remove the partial dir before throwing so no source is left on disk
       // (FR-011/SC-005). The workspace owns cleanup of its own partial state; the caller's dispose
       // only runs on the success path.

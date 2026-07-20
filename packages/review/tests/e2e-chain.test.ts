@@ -15,7 +15,7 @@ import { renderReport } from "../src/render.js";
  */
 describe("e2e: scan → gates → review-pr --local-diff (T036)", () => {
   it("a diff adding an unguarded admin route → Not Ready, TG-G4 attributed to the changed file", () => {
-    const root = join(mkdtempSync(join(tmpdir(), "tg-e2e-")), "sample");
+    const root = join(mkdtempSync(join(tmpdir(), "aker-build-e2e-")), "sample");
     mkdirSync(join(root, "apps/api/routes"), { recursive: true });
     const git = (...a: string[]) => execFileSync("git", a, { cwd: root, stdio: "ignore" });
     git("init", "-q");

@@ -27,7 +27,7 @@ export function fixture(name: string): string {
   const cached = prepared.get(name);
   if (cached) return cached;
 
-  const dest = join(mkdtempSync(join(tmpdir(), "tg-cli-fixture-")), name);
+  const dest = join(mkdtempSync(join(tmpdir(), "aker-build-cli-fixture-")), name);
   if (existsSync(src)) cpSync(src, dest, { recursive: true });
   else mkdirSync(dest, { recursive: true });
   initGitRepo(dest);

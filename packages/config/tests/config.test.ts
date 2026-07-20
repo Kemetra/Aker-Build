@@ -13,7 +13,7 @@ import {
 } from "../src/index.js";
 
 function tempRepo(): string {
-  return mkdtempSync(join(tmpdir(), "tg-config-"));
+  return mkdtempSync(join(tmpdir(), "aker-build-config-"));
 }
 
 describe("aker-build config schema and reader", () => {

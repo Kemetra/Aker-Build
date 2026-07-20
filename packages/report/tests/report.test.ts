@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { buildReport, renderReportMarkdown, validateReport, writeReportToFiles } from "../src/index.js";
 
 function tempRepo(): { repoRoot: string; outDir: string } {
-  const repoRoot = mkdtempSync(join(tmpdir(), "tg-report-repo-"));
+  const repoRoot = mkdtempSync(join(tmpdir(), "aker-build-report-repo-"));
   const outDir = join(repoRoot, ".aker-build");
   mkdirSync(outDir, { recursive: true });
   return { repoRoot, outDir };
