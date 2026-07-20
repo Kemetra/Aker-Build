@@ -4,8 +4,9 @@
 # fail the check; only an Aker Build *error* (non-zero exit) red-Xes the job.
 #
 # This is the AC-008 consumer opt-in from spec 008, with Aker Build as its own
-# first consumer. The tooling IS this repo, so the CLI runs directly via tsx from
-# the checkout (no published binary yet — see ADR-007).
+# first consumer. The tooling IS this repo, so this dogfood job runs source via
+# tsx (ADR-007). External consumers use the callable workflow from spec 020 after
+# npm 0.1.0 and its matching reviewed repository ref are public (ADR-013).
 name: Aker Build
 
 on:
@@ -20,12 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the PR head            # gates read file CONTENTS from the working tree
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Set up Node + pnpm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 22          # pnpm@11 (corepack-pinned) requires Node >=22.13
       - run: corepack enable
@@ -69,10 +71,12 @@ jobs:
   benchmark:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Set up Node + pnpm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 22
       - run: corepack enable
@@ -88,10 +92,12 @@ jobs:
   release-integrity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Set up Node + pnpm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 22
       - run: corepack enable
@@ -111,10 +117,12 @@ jobs:
   first-run-smoke:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Set up Node + pnpm
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 22
       - run: corepack enable
@@ -134,10 +142,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "22.14"
 

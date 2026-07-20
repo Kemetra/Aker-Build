@@ -30,7 +30,7 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with safe repository onboarding implemented.
+MVP implementation / dogfooding, with reusable consumer CI and immutable GitHub Action pins implemented locally; release activation is pending.
 
 The MVP CLI is implemented (`init`, `doctor`, `check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). `init` creates at most one optional config and never overwrites; `doctor` is read-only. The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
 
@@ -215,7 +215,6 @@ Then:
 Do not implement CLI scanner before the Project Map schema exists.
 
 <!-- SPECKIT START -->
-For additional context about technologies, structure, commands, and boundaries,
-read the current plan:
-`specs/019-safe-onboarding/plan.md` (active feature: 019-safe-onboarding).
+For the active feature requirements and implementation boundary, read:
+`specs/021-immutable-action-pins/plan.md` (active feature: 021-immutable-action-pins).
 <!-- SPECKIT END -->

@@ -1,5 +1,10 @@
 # Contract: Action inputs & outputs
 
+> **Historical contract.** Spec 020 supersedes this external input surface with
+> one reusable-workflow input, `fail-on-critical`, and a fixed `.aker-build`
+> output directory. See `docs/ci/github-actions.md`. The rules below are retained
+> as Spec 008 decision history.
+
 The configuration surface for the documented CI integration. These are **workflow inputs/env**, not a
 new code API — 008 ships no new package (FR-002). The example workflow (quickstart.md) wires them.
 

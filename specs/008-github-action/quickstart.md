@@ -1,8 +1,12 @@
 # Quickstart: GitHub Action
 
-How to run Aker Build on every PR. **This is documentation, not a live workflow** — copy the example
-below into your own repo's `.github/workflows/` to opt in (008 deliberately ships no live workflow file,
-AC-008; adopting it is your separately-gated choice).
+> **Superseded for external consumers by Spec 020.** Do not copy the historical
+> source-checkout recipe below. Use the pinned reusable workflow in
+> `docs/ci/github-actions.md`. The remainder is retained to explain Spec 008's
+> original contract and the repository-specific dogfood path.
+
+The historical recipe below shows how Spec 008 originally modeled PR review.
+It is documentation, not a live workflow, and remains only as decision history.
 
 ---
 
