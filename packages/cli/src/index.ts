@@ -8,6 +8,7 @@ import { runRouteCommand } from "./commands/route.js";
 import { runPromptCommand } from "./commands/prompt.js";
 import { runReviewCommand } from "./commands/review.js";
 import { runReportCommand } from "./commands/report.js";
+import { runInit } from "./commands/init.js";
 import { CLI_VERSION } from "./version.js";
 
 export { runCheck } from "./commands/check.js";
@@ -19,6 +20,7 @@ export { runRouteCommand } from "./commands/route.js";
 export { runPromptCommand } from "./commands/prompt.js";
 export { runReviewCommand } from "./commands/review.js";
 export { runReportCommand } from "./commands/report.js";
+export { runInit } from "./commands/init.js";
 export { CLI_VERSION } from "./version.js";
 
 /** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
@@ -28,6 +30,16 @@ export function buildProgram(): Command {
     .name("aker-build")
     .description("Aker Build — CLI-first SaaS Build Kernel")
     .version(CLI_VERSION);
+
+  program
+    .command("init")
+    .description("Create a minimal Aker Build config without overwriting files")
+    .argument("[path]", "target Git repository path", ".")
+    .option("--format <fmt>", "yaml | json", "yaml")
+    .option("--stdout", "preview config only; write no file")
+    .action((path: string, opts: { format: "yaml" | "json"; stdout?: boolean }) => {
+      process.exitCode = runInit(path, opts);
+    });
 
   program
     .command("check")
