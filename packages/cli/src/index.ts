@@ -9,6 +9,7 @@ import { runPromptCommand } from "./commands/prompt.js";
 import { runReviewCommand } from "./commands/review.js";
 import { runReportCommand } from "./commands/report.js";
 import { runInit } from "./commands/init.js";
+import { runDoctor } from "./commands/doctor.js";
 import { CLI_VERSION } from "./version.js";
 
 export { runCheck } from "./commands/check.js";
@@ -21,6 +22,19 @@ export { runPromptCommand } from "./commands/prompt.js";
 export { runReviewCommand } from "./commands/review.js";
 export { runReportCommand } from "./commands/report.js";
 export { runInit } from "./commands/init.js";
+export {
+  diagnoseRepository,
+  renderDoctorResult,
+  runDoctor,
+  type CommandProbeResult,
+  type DoctorCheck,
+  type DoctorCheckId,
+  type DoctorCheckStatus,
+  type DoctorDeps,
+  type DoctorMode,
+  type DoctorOptions,
+  type DoctorResult,
+} from "./commands/doctor.js";
 export { CLI_VERSION } from "./version.js";
 
 /** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
@@ -39,6 +53,16 @@ export function buildProgram(): Command {
     .option("--stdout", "preview config only; write no file")
     .action((path: string, opts: { format: "yaml" | "json"; stdout?: boolean }) => {
       process.exitCode = runInit(path, opts);
+    });
+
+  program
+    .command("doctor")
+    .description("Check local or GitHub PR-mode readiness without writing files")
+    .argument("[path]", "target repository path", ".")
+    .option("--github", "include GitHub PR-mode prerequisites")
+    .option("--format <fmt>", "text | json", "text")
+    .action((path: string, opts: { github?: boolean; format: "text" | "json" }) => {
+      process.exitCode = runDoctor(path, opts);
     });
 
   program
