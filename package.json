@@ -9,9 +9,14 @@
     "node": ">=22.13"
   },
   "scripts": {
+    "build:cli-package": "node scripts/build-cli-package.mjs",
     "test": "pnpm test:namespace && pnpm -r test",
+    "test:cli-package": "node --test scripts/cli-package.test.mjs && node scripts/verify-cli-package.mjs",
     "test:namespace": "node --test scripts/check-namespace.test.mjs",
     "check:namespace": "node scripts/check-namespace.mjs",
     "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "esbuild": "0.21.5"
   }
 }
