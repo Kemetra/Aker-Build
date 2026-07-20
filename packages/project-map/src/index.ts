@@ -3,8 +3,14 @@
 
 export {
   SCHEMA_VERSION,
+  coverageCapabilitySchema,
+  coveragePackSchema,
+  coverageSchema,
   evidenceSchema,
   projectMapSchema,
+  type Coverage,
+  type CoverageCapability,
+  type CoveragePack,
   type Evidence,
   type ProjectMap,
 } from "./schema.js";

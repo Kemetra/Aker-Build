@@ -18,9 +18,23 @@ describe("T016 forward/backward compatibility (FR-006, FR-007)", () => {
   });
 
   it("keeps a previously-conforming (older) map valid after an additive change — SC-003", () => {
-    // An older map that lacks the optional 'metadata' field still validates.
+    // A v1 map that lacks the optional v2 coverage field still validates.
     const older = conformingMap();
-    expect("metadata" in older).toBe(false);
+    expect(older.version).toBe(1);
+    expect("coverage" in older).toBe(false);
     expect(validate(older).ok).toBe(true);
+  });
+
+  it("validates known coverage fields instead of silently accepting malformed values", () => {
+    const map = conformingMap();
+    map.version = 2;
+    map.coverage = {
+      source_files_examined: -1,
+      packs: [{ id: "nestjs", capabilities: ["mutation"], matched_files: 0 }],
+    };
+
+    const result = validate(map);
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.path.startsWith("coverage"))).toBe(true);
   });
 });

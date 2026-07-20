@@ -1,6 +1,15 @@
 import { z } from "zod";
 
-export const REPORT_SCHEMA_VERSION = 1;
+export const REPORT_SCHEMA_VERSION = 2;
+
+const coverageSchema = z.object({
+  source_files_examined: z.number().int().min(0),
+  packs: z.array(z.object({
+    id: z.string().min(1),
+    capabilities: z.array(z.enum(["auth", "data_access", "routes"])).min(1),
+    matched_files: z.number().int().min(1),
+  })),
+});
 
 const severitySummarySchema = z.object({
   low: z.number().int().min(0),
@@ -45,6 +54,7 @@ export const reportSchema = z.object({
     project_name: z.string().nullable(),
     repo_count: z.number().int().min(0),
     tenant_status: z.string().nullable(),
+    coverage: coverageSchema.nullable(),
     findings: z.object({
       total: z.number().int().min(0),
       risk: z.number().int().min(0),

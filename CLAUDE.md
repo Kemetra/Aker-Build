@@ -30,7 +30,7 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with one-command activation and npm distribution hardening active.
+MVP implementation / dogfooding, with framework coverage honesty and detector fortification active.
 
 The MVP CLI is implemented (`check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
 
@@ -216,5 +216,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/017-one-command-distribution/plan.md` (active feature: 017-one-command-distribution).
+`specs/018-framework-coverage-honesty/plan.md` (active feature: 018-framework-coverage-honesty).
 <!-- SPECKIT END -->

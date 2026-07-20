@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Current Project Map schema version (R5). */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /**
  * Shared Evidence Object (FR-004b) — the normative `{type, path, line, signal, confidence}`
@@ -86,6 +86,19 @@ const metadataSchema = z
   })
   .optional();
 
+export const coverageCapabilitySchema = z.enum(["auth", "data_access", "routes"]);
+
+export const coveragePackSchema = z.object({
+  id: z.string().min(1),
+  capabilities: z.array(coverageCapabilitySchema).min(1),
+  matched_files: z.number().int().min(1),
+});
+
+export const coverageSchema = z.object({
+  source_files_examined: z.number().int().min(0),
+  packs: z.array(coveragePackSchema),
+});
+
 /**
  * The Project Map document schema. `.passthrough()` tolerates unknown top-level fields
  * (FR-007 forward compatibility) — unknown fields are ignored, never a hard failure.
@@ -103,9 +116,13 @@ export const projectMapSchema = z
     migrations: z.array(evidenceSchema).optional(),
     auth: z.array(evidenceSchema).optional(),
     config_surface: z.array(evidenceSchema).optional(),
+    coverage: coverageSchema.optional(),
     metadata: metadataSchema,
   })
   .passthrough();
 
 export type Evidence = z.infer<typeof evidenceSchema>;
+export type CoverageCapability = z.infer<typeof coverageCapabilitySchema>;
+export type CoveragePack = z.infer<typeof coveragePackSchema>;
+export type Coverage = z.infer<typeof coverageSchema>;
 export type ProjectMap = z.infer<typeof projectMapSchema>;

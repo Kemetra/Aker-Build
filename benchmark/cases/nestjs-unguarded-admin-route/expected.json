@@ -1,0 +1,7 @@
+{
+  "description": "A NestJS admin route without guard decorators fires G4 at confirmed.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": [
+    { "gate_id": "TG-G4", "path": "src/users.controller.ts", "tier": "confirmed" }
+  ]
+}

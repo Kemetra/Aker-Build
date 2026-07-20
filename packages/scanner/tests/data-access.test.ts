@@ -74,6 +74,13 @@ describe("detectDataAccess", () => {
     expect(detectDataAccess(root, ["data.json", "missing.ts"])).toEqual([]);
   });
 
+  it("ignores query signatures that appear only in comments", () => {
+    const root = fixture({
+      "comments.ts": `// prisma.user.findMany({});\n/* db.user.findOne({}) */\n`,
+    });
+    expect(detectDataAccess(root, ["comments.ts"])).toEqual([]);
+  });
+
   it("classifies a multi-line ORM call with the tenant token in the statement window as tenant_scoped (medium)", () => {
     const root = fixture({
       "invoices.ts": `export function list(prisma, tenantId) {\n  return prisma.invoice.findMany({\n    where: { tenantId },\n  });\n}\n`,
@@ -98,6 +105,29 @@ describe("detectDataAccess", () => {
     expect(ev).toHaveLength(1);
     expect(ev[0]?.signal).toBe("no_tenant_filter");
   });
+
+  it("recognizes model-first Mongoose queries only in a Mongoose-marked file", () => {
+    const root = fixture({
+      "users.ts": `import User from "./models/User";\nUser.findOne({ active: true });\n`,
+      "unmarked.ts": `User.findOne({ active: true });\n`,
+    });
+
+    expect(detectDataAccess(root, ["users.ts", "unmarked.ts"])).toEqual([
+      { type: "line", path: "users.ts", line: 2, signal: "no_tenant_filter", confidence: "medium" },
+    ]);
+  });
+
+  it("recognizes Django ORM and SQLAlchemy query sites without duplicating evidence", () => {
+    const root = fixture({
+      "django.py": `from django.db import models\nUser.objects.filter(tenant_id=tenant_id)\n`,
+      "sqlalchemy.py": `from sqlalchemy import select\nsession.query(User).filter(User.tenant_id == tenant_id)\n`,
+    });
+
+    expect(detectDataAccess(root, ["sqlalchemy.py", "django.py"])).toEqual([
+      { type: "line", path: "django.py", line: 2, signal: "tenant_scoped", confidence: "high" },
+      { type: "line", path: "sqlalchemy.py", line: 2, signal: "tenant_scoped", confidence: "high" },
+    ]);
+  });
 });
 
 describe("assemble integrates data_access evidence", () => {
@@ -116,5 +146,19 @@ describe("assemble integrates data_access evidence", () => {
     const root = fixture({ "package.json": `{"name":"x"}`, "readme.md": `hi\n` });
     const { map } = assemble(root, listFiles);
     expect(map.data_access ?? []).toEqual([]);
+  });
+
+  it("emits v2 signature-pack coverage with every scan", () => {
+    const root = fixture({
+      "package.json": `{"name":"x"}`,
+      "api/users.ts": `prisma.user.findMany({ where: { tenant_id: t } });\n`,
+    });
+    const { map } = assemble(root, listFiles);
+
+    expect(map.version).toBe(2);
+    expect(map.coverage).toEqual({
+      source_files_examined: 1,
+      packs: [{ id: "prisma", capabilities: ["data_access"], matched_files: 1 }],
+    });
   });
 });

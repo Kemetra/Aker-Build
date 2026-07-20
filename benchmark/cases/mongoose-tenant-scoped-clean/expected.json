@@ -1,0 +1,5 @@
+{
+  "description": "A model-first Mongoose query carries an explicit tenant token and remains clean.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": []
+}

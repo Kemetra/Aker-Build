@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parse as parseYaml } from "yaml";
-import { validate } from "../src/index.js";
+import { SCHEMA_VERSION, validate } from "../src/index.js";
 import { readContract, conformingMap } from "./helpers.js";
 
 describe("T006 accept: conforming maps validate", () => {
@@ -31,5 +31,20 @@ describe("T006 accept: conforming maps validate", () => {
     ];
     const result = validate(map);
     expect(result.ok).toBe(true);
+  });
+
+  it("accepts additive v2 framework coverage evidence", () => {
+    expect(SCHEMA_VERSION).toBe(2);
+    const map = conformingMap();
+    map.version = SCHEMA_VERSION;
+    map.coverage = {
+      source_files_examined: 7,
+      packs: [
+        { id: "nestjs", capabilities: ["auth", "routes"], matched_files: 2 },
+        { id: "prisma", capabilities: ["data_access"], matched_files: 1 },
+      ],
+    };
+
+    expect(validate(map)).toEqual({ ok: true, errors: [] });
   });
 });
