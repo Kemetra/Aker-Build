@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { validateSurfaceEntry } from "./agent-bundle.mjs";
+import { reconcile, validateSurfaceEntry } from "./agent-bundle.mjs";
 
 const valid = {
   name: "next",
@@ -61,4 +61,76 @@ test("accepts an empty cli_verbs list so the surface can carry verb-less command
 
 test("rejects an unknown platform", () => {
   assert.match(validateSurfaceEntry({ ...valid, platform: "codex" }).join(" "), /platform/);
+});
+
+const shipped = (name) => ({
+  name,
+  platform: "claude",
+  intent: `Do ${name}.`,
+  cli_verbs: [],
+  skill: "aker-build",
+  wrapper_template: `distribution/bundle-templates/claude/commands/${name}.md`,
+  bundle_destination: `commands/${name}.md`,
+  mode: "read-only",
+  status: "shipped",
+});
+
+test("passes when the authority and the wrappers on disk agree", () => {
+  assert.deepEqual(
+    reconcile({
+      entries: [shipped("check"), shipped("next")],
+      wrapperPaths: [
+        "distribution/bundle-templates/claude/commands/check.md",
+        "distribution/bundle-templates/claude/commands/next.md",
+      ],
+    }),
+    [],
+  );
+});
+
+test("fails on a wrapper that no authority entry declares", () => {
+  const problems = reconcile({
+    entries: [shipped("check")],
+    wrapperPaths: [
+      "distribution/bundle-templates/claude/commands/check.md",
+      "distribution/bundle-templates/claude/commands/sneaky.md",
+    ],
+  });
+  assert.match(problems.join(" "), /sneaky\.md/);
+});
+
+test("fails on a shipped entry whose wrapper is missing from disk", () => {
+  const problems = reconcile({
+    entries: [shipped("check"), shipped("ghost")],
+    wrapperPaths: ["distribution/bundle-templates/claude/commands/check.md"],
+  });
+  assert.match(problems.join(" "), /ghost\.md/);
+});
+
+test("ignores a deferred entry when reconciling wrappers", () => {
+  const deferred = {
+    ...shipped("auto"),
+    status: "deferred",
+    wrapper_template: "",
+    bundle_destination: "",
+  };
+  assert.deepEqual(
+    reconcile({
+      entries: [shipped("check"), deferred],
+      wrapperPaths: ["distribution/bundle-templates/claude/commands/check.md"],
+    }),
+    [],
+  );
+});
+
+test("fails on two entries claiming the same bundle destination", () => {
+  const clash = { ...shipped("next"), bundle_destination: "commands/check.md" };
+  const problems = reconcile({
+    entries: [shipped("check"), clash],
+    wrapperPaths: [
+      "distribution/bundle-templates/claude/commands/check.md",
+      "distribution/bundle-templates/claude/commands/next.md",
+    ],
+  });
+  assert.match(problems.join(" "), /duplicate/i);
 });

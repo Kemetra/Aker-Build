@@ -67,3 +67,44 @@ export function validateSurfaceEntry(entry) {
   }
   return problems;
 }
+
+/**
+ * Reconcile the authority against the wrappers that actually exist on disk.
+ *
+ * Both directions matter. Checking only authority-to-disk lets an unreviewed wrapper
+ * ship; checking only disk-to-authority lets the authority advertise a command that
+ * does not exist. Together they make the surface reviewed rather than accumulated.
+ */
+export function reconcile({ entries, wrapperPaths }) {
+  const problems = [];
+  const shipped = entries.filter((e) => e.status === "shipped");
+
+  const declared = new Set(shipped.map((e) => e.wrapper_template));
+  const onDisk = new Set(wrapperPaths);
+
+  for (const path of onDisk) {
+    if (!declared.has(path)) {
+      problems.push(`wrapper ${path} is absent from the command surface authority`);
+    }
+  }
+  for (const entry of shipped) {
+    if (!onDisk.has(entry.wrapper_template)) {
+      problems.push(
+        `${entry.name}: declared wrapper ${entry.wrapper_template} is missing on disk`,
+      );
+    }
+  }
+
+  const seenNames = new Set();
+  const seenDestinations = new Set();
+  for (const entry of entries) {
+    if (seenNames.has(entry.name)) problems.push(`duplicate command name ${entry.name}`);
+    seenNames.add(entry.name);
+    if (entry.status !== "shipped") continue;
+    if (seenDestinations.has(entry.bundle_destination)) {
+      problems.push(`duplicate bundle destination ${entry.bundle_destination}`);
+    }
+    seenDestinations.add(entry.bundle_destination);
+  }
+  return problems;
+}
