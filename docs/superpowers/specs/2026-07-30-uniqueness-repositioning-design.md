@@ -494,13 +494,22 @@ it is invisible in the CI summary.
    sin at a smaller scale. Treat "new pattern ⇒ new hard negative" as a standing
    rule, not a Stage A one-off. The same rule caught the ORM-blind coverage
    field, which passed its own unit tests while answering the wrong question.
-6. **Empirical check beats reasoning about regexes.** Both post-review defects
+6. **A correct fix can follow a wrong diagnosis.** Aker Build's self-scan reported
+   empty coverage; this was diagnosed as a monorepo blindness defect (the root
+   manifest is dependency-free in a pnpm workspace) and fixed. The fix was real —
+   workspace manifests genuinely went unread — but the diagnosis was wrong: the
+   empty result was *correct*, because Aker Build is a CLI that uses no web
+   framework and no ORM. Both facts are worth keeping: the fix stands on its own
+   merits, and the empirical check is what separated them. Verified by scanning a
+   synthetic workspace where deps live only in `packages/*`, which previously
+   reported nothing and now reports `covered:[express,prisma]`.
+7. **Empirical check beats reasoning about regexes.** Both post-review defects
    were found by *running* the pattern against candidate inputs, not by reading
    it. The window fix was likewise validated by scanning this repository at the
    pre-fix and post-fix commits and diffing the evidence — which showed no new
    findings on real source. Cheap, and it settles questions that inspection
    leaves open.
-7. **The window fix changed a tier boundary, not just a verdict.** Before it, a
+8. **The window fix changed a tier boundary, not just a verdict.** Before it, a
    query whose scoping token sat below the call was classified from an arbitrary
    line window; now the window ends with the statement. Cases where the token is
    genuinely absent are correctly `no_tenant_filter` instead of silently scoped.
