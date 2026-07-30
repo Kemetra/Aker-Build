@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { route } from "@aker-build/queue";
 import type { Queue, QueueItem } from "@aker-build/queue";
+import { compilePrompt } from "@aker-build/prompt";
+import type { AgentName } from "@aker-build/prompt";
 import { ensureChain } from "./ensure.js";
 import type { EnsureOptions } from "./ensure.js";
 
@@ -102,5 +104,37 @@ export function nextTask(targetPath: string, opts: EnsureOptions = {}): NextTask
     })),
     blocked: decision.blocked,
     freshness,
+  };
+}
+
+export interface CompiledPromptResult {
+  id: string;
+  agent: string;
+  markdown: string;
+  freshness: { refreshed: boolean; age_ms: number };
+}
+
+/**
+ * Compile the safe, scoped prompt for a queue item.
+ *
+ * The prompt already carries objective, allowed/forbidden files, validation commands, git rules,
+ * stop conditions and the required final-report shape — the compiler refuses to emit one when
+ * scope information is missing rather than guessing. This wrapper adds only cold-callability.
+ *
+ * Read-only, and it does not execute anything: it returns text for the caller to act on.
+ */
+export function compileFor(
+  targetPath: string,
+  id: string,
+  agent?: string,
+  opts: EnsureOptions = {},
+): CompiledPromptResult {
+  const fresh = ensureChain(targetPath, opts);
+  const compiled = compilePrompt(id, { out: fresh.out, agent: agent as AgentName | undefined });
+  return {
+    id,
+    agent: agent ?? "generic",
+    markdown: compiled.markdown,
+    freshness: { refreshed: fresh.refreshed, age_ms: fresh.ageMs },
   };
 }
