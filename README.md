@@ -104,6 +104,16 @@ Aker Build analyses TypeScript **application-layer** query code. For
 database-layer RLS analysis it complements, rather than replaces, tools such as
 [pgrls](https://github.com/pgrls/pgrls).
 
+### Running it on real code
+
+[`docs/evidence/2026-07-30-self-scan.md`](docs/evidence/2026-07-30-self-scan.md)
+records what Aker Build reports when scanning its own repository — including the
+unflattering part: **76% of its 34 findings are in its own test fixtures**, because
+a detector's test suite is necessarily full of deliberately-vulnerable code. Each
+finding is locally correct and most are not useful, which is why path scoping
+matters in real adoption and why the roadmap gates blocking checks behind more
+than benchmark precision.
+
 Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.aker-build/benchmark-report.{json,md}`).
 
 ## Quickstart
