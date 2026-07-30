@@ -12,6 +12,14 @@ const ORM_QUERY =
 const RAW_SQL =
   /\b(SELECT|UPDATE|DELETE|INSERT)\b[\s\S]{0,80}\bFROM\b|\bUPDATE\b\s+\w+\s+\bSET\b/i;
 
+// Model-first ORM idioms (Mongoose, Sequelize, TypeORM ActiveRecord): the receiver is the model
+// itself, e.g. `User.findOne(`. Receiver gating cannot use a handle allow-list here, so it keys on
+// the PascalCase naming convention models follow — a lowercase receiver like `users.find(` stays an
+// array method and is still ignored. The method list is narrower than ORM_QUERY's on purpose:
+// `create`/`update`/`delete` are common non-ORM method names on PascalCase classes.
+const MODEL_QUERY =
+  /\b[A-Z][A-Za-z0-9]*\.\s*(find|findMany|findFirst|findUnique|findOne|findAll|findByPk|select|insert)\s*\(/;
+
 // A tenant-id token scoping the statement.
 const TENANT_TOKEN = /\btenant_?id\b|\borg_?id\b|\baccount_?id\b/i;
 
@@ -71,7 +79,7 @@ export function detectDataAccess(root: string, files: string[]): Evidence[] {
     const lines = content.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
       const text = lines[i] ?? "";
-      if (!ORM_QUERY.test(text) && !RAW_SQL.test(text)) continue;
+      if (!ORM_QUERY.test(text) && !RAW_SQL.test(text) && !MODEL_QUERY.test(text)) continue;
       if (TENANT_TOKEN.test(text)) {
         out.push({ type: "line", path: rel, line: i + 1, signal: "tenant_scoped", confidence: "high" });
         continue;

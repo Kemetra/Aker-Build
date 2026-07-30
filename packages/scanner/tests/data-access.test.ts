@@ -111,6 +111,32 @@ describe("detectDataAccess", () => {
     expect(detectDataAccess(root, ["util.ts"])).toEqual([]);
   });
 
+  it("detects model-first ORM calls on a PascalCase receiver (Mongoose style)", () => {
+    const root = fixture({
+      "models.ts": `export const byEmail = (email) => User.findOne({ email });\n`,
+    });
+    const ev = detectDataAccess(root, ["models.ts"]);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]).toMatchObject({ line: 1, signal: "no_tenant_filter" });
+  });
+
+  it("scopes a model-first call carrying a tenant token", () => {
+    const root = fixture({
+      "models.ts": `export const mine = (t) => Invoice.find({ tenantId: t });\n`,
+    });
+    const ev = detectDataAccess(root, ["models.ts"]);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]?.signal).toBe("tenant_scoped");
+  });
+
+  it("does not treat a lowercase local variable as a model receiver", () => {
+    // `users.find(...)` is an array method. Only PascalCase receivers read as ORM models.
+    const root = fixture({
+      "util.ts": `export const active = (users) => users.find((u) => u.active);\n`,
+    });
+    expect(detectDataAccess(root, ["util.ts"])).toEqual([]);
+  });
+
   it("still counts raw SQL regardless of receiver", () => {
     const root = fixture({
       "raw.ts": `export const q = () => run("SELECT id FROM invoices WHERE status = 'open'");\n`,
