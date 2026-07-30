@@ -1,0 +1,5 @@
+{
+  "description": "GROUND TRUTH: the admin route is guarded by requireAdmin middleware in the handler chain, so TG-G4 must stay silent. Hard negative measuring the auth detector's false-positive rate.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": []
+}
