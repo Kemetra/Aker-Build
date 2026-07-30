@@ -108,14 +108,19 @@ Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.aker-build/benchma
 
 ## Quickstart
 
-From a fresh checkout:
+From a fresh checkout, on Linux or macOS:
 
 ```bash
-pnpm install
-pwsh -File scripts/smoke-first-run.ps1
+pnpm install && bash scripts/smoke-first-run.sh
 ```
 
-The smoke script copies `examples/multi-tenant-saas-basic` into a temporary git repo, runs the MVP CLI chain, creates a controlled local diff, and verifies the expected outputs.
+On Windows:
+
+```bash
+pnpm install; pwsh -File scripts/smoke-first-run.ps1
+```
+
+The smoke script copies `examples/multi-tenant-saas-basic` into a temporary git repo, runs the MVP CLI chain, creates a controlled local diff, and verifies the expected outputs. Both scripts assert the same things — that the reviewer returns `not_ready` for the controlled diff and that findings are actually summarized — so a detector going silent fails the smoke rather than passing it.
 
 Run the complete read-only advisory chain from source:
 
