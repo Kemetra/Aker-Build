@@ -28,7 +28,7 @@ Aker Build's MVP CLI chain and FORTIFY phases are implemented. The repository no
 ## Benchmark scorecard
 
 ![benchmark](https://img.shields.io/badge/G4_confirmed_precision-100%25-brightgreen)
-![benchmark](https://img.shields.io/badge/G4_suspected_recall-50%25-orange)
+![benchmark](https://img.shields.io/badge/G4_suspected_recall-100%25-brightgreen)
 
 Aker Build's detection quality is measured, not asserted — **including where it
 fails**. A labeled corpus of synthetic multi-tenant failure cases
@@ -44,33 +44,42 @@ in this repository.
 | TG-G3 Migration Safety | confirmed | 100% | 100% | 1 | 0 | 0 |
 | TG-G3 Migration Safety | suspected | 100% | 100% | 1 | 0 | 0 |
 | TG-G4 Tenant Isolation | confirmed | 100% | 100% | 2 | 0 | 0 |
-| TG-G4 Tenant Isolation | suspected | 100% | **50%** | 2 | 0 | 2 |
+| TG-G4 Tenant Isolation | suspected | 100% | 100% | 4 | 0 | 0 |
 | TG-G5 Idempotency | suspected | 100% | 100% | 2 | 0 | 0 |
 
 Absolute counts are shown because percentages over small denominators mislead:
-these rates rest on 8 true positives in total. Treat the corpus as a regression
+these rates rest on 10 true positives in total. Treat the corpus as a regression
 harness that is still growing, not as a population estimate.
 
-### What we miss
+### What the corpus proves
 
-These are corpus cases that currently **fail**. They are published rather than
-hidden, because a scorecard with no misses is a corpus that is not hard enough.
-Both were known limitations before they were measured; now they are pinned so
-they cannot be quietly forgotten.
+A scorecard reading 100% is only meaningful if the corpus contains cases the
+engine can fail. Four of these cases exist specifically to break it, and two of
+them did:
 
-- **Window bleed** (`window-bleed-false-negative`) — the data-access detector
-  scans a 5-line window below a query for a tenant token. A token belonging to a
-  *neighbouring* statement can scope an unscoped query, producing a **false
-  negative in the tenant-isolation gate**. Fixing it requires statement-bounded
-  windows.
-- **Model-first ORM calls** (`model-first-orm`) — query detection is gated on a
-  known database-handle receiver (`db`, `prisma`, `knex`, …), so Mongoose-style
-  `User.findOne(` is never seen at all. Fixing it requires framework signature
-  packs.
+- **Window bleed** (`window-bleed-false-negative`) — an unscoped query with a
+  *neighbouring* statement's tenant token nearby. The detector's line window used
+  to treat that token as scoping the query, a **false negative in the
+  tenant-isolation gate**. Now the window is bounded by the query's own bracket
+  depth, so it ends where the statement ends.
+- **Model-first ORM calls** (`model-first-orm`) — Mongoose-style
+  `User.findOne(`. Query detection gated on a database-handle allow-list
+  (`db`, `prisma`, `knex`, …), so these were never seen at all. Now PascalCase
+  receivers are recognised as models.
+- **Multi-line scoping** (`multiline-tenant-scope`) and **array methods**
+  (`bare-array-method`) pin the opposite failures — a `where: { tenantId }` on
+  the line below the call must still count as scoped, and `users.find(...)` must
+  still be ignored as an array method, not read as a query.
 
-Both misses land in `suspected`, the honest-uncertainty channel: findings the
-engine cannot structurally prove. `suspected` advises and never blocks. Every
-finding carries an evidence span (`file:line`) and a confidence tier.
+Both fixes remain heuristics rather than parsing: window-based classifications
+are emitted at `medium` confidence, which maps to the `suspected` tier — the
+honest-uncertainty channel that advises and never blocks. Every finding carries
+an evidence span (`file:line`) and a confidence tier.
+
+Known remaining limitation: detection is still regex-based, so ORM idioms
+outside the handle allow-list and the PascalCase convention (e.g. a lowercase
+repository object with an unlisted name) go unseen. The `coverage` field below
+is how that shows up honestly rather than silently.
 
 ### Coverage
 
