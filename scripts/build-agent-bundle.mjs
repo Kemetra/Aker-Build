@@ -116,7 +116,8 @@ export function buildAgentBundle() {
 // pathToFileURL rather than concatenating "file://" onto process.argv[1] matters: argv[1]
 // is the path as typed (often relative) and uses backslashes on Windows, so the naive
 // string form silently never matches and the script exits having done nothing.
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// argv[1] is undefined when Node evaluates inline source (`node -e`), so check it first.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { output: dir, manifest } = buildAgentBundle();
   process.stdout.write(`Wrote ${manifest.entries.length} files to ${dir}\n`);
 }

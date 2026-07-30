@@ -23,6 +23,11 @@ coverage/
 packages/plugin/dist/*
 !packages/plugin/dist/bundle-manifest.json
 
+# Raw skill-eval run transcripts. The prompts, assertions, and graded results are
+# committed (distribution/evals/*.json); per-run output is a point-in-time artifact
+# of one model version and goes stale, so it is not tracked.
+distribution/evals/workspace/
+
 # Editor / OS
 .DS_Store
 *.log
