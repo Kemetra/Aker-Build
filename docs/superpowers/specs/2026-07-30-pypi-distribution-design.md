@@ -11,7 +11,8 @@
 > costs one line; renumbering the loop would rewrite recorded records, which this project
 > declines to do on principle.
 
-> **Sequencing: Spec 021 lands first.** The wheel wraps whatever binary
+> **Sequencing: satisfied.** Spec 021 landed in `75b4911`, so the bundle is already
+> `dist/aker.js` and the command is already `aker`. Original note: the wheel wraps whatever binary
 > `pnpm build:cli-package` emits, and 021 renames that binary from `aker-build` to
 > `aker`. Implementing 020 first would vendor a bundle under the old filename and
 > declare a console script that 021 then has to change — so the Python work would be
@@ -39,7 +40,7 @@ artifact (`pnpm build:cli-package`) before designing. **None blocks.**
 | Concern | Finding | Verdict |
 |---|---|---|
 | Licensing | Bundle is MIT. Bundled deps (Commander, YAML, Zod) are MIT/ISC, full texts already aggregated into `THIRD_PARTY_NOTICES.txt` by the existing build. All permissive and redistributable. | Clear |
-| Size | `aker-build.js` is 619 KB; the whole npm artifact is 5 files. PyPI's per-file default limit is 100 MB. | Clear |
+| Size | `aker.js` is 620 KB; the whole npm artifact is 5 files. PyPI's per-file default limit is 100 MB. | Clear |
 | Platform | The bundle is **pure JavaScript — zero native code, zero `node_modules`**. | Clear, and decisive |
 
 The platform finding shapes the whole design: because nothing is compiled, the
@@ -54,7 +55,7 @@ packages/cli/src/version.ts    (CLI_VERSION — read directly for wheel metadata
 packages/cli/src/**            (TypeScript — the only source of truth)
         ↓  pnpm build:cli-package   (existing, unchanged)
 packages/cli/dist/npm/
-        dist/aker-build.js         619 KB, pure JS, zero deps, shebang intact
+        dist/aker.js               620 KB, pure JS, zero deps, shebang intact
         THIRD_PARTY_NOTICES.txt
         ↓  hatch build hook (new)
 python/aker_build/vendor/          (copied at build time, git-ignored)
@@ -81,7 +82,7 @@ npm to be published before PyPI can work at all, and turns an unpinned fetch int
 a supply-chain surface.
 
 **Commit the bundle into the Python tree.** Rejected. It removes the Node build
-requirement, but commits a 619 KB generated artifact to git history, and it drifts
+requirement, but commits a 620 KB generated artifact to git history, and it drifts
 from the TypeScript silently. Spec 018's entire lesson was that a hand-maintained
 copy of generated content disagrees with its source eventually — the same argument
 applies here.
@@ -161,7 +162,7 @@ self-consistent.
 `python -m build` builds the wheel *from the sdist* by default, so the sdist must
 be self-sufficient. **Verified by a scratch build:** including the vendored bundle
 in the sdist makes the sdist→wheel step need no Node at all, and the wheel
-contained `aker_build/vendor/aker-build.js` without any `force-include` — a
+contained `aker_build/vendor/aker.js` without any `force-include` — a
 subdirectory inside the package directory ships automatically.
 
 The resulting chain:
@@ -203,7 +204,7 @@ action.
 | Existing repo tests | `pnpm test`, `pnpm typecheck`, `pnpm test:agent-bundle` still pass |
 
 The forwarding and exit-code tests use a stub Node script rather than the real
-619 KB bundle, so they stay fast and do not depend on a prior JS build.
+620 KB bundle, so they stay fast and do not depend on a prior JS build.
 
 ### CI
 
