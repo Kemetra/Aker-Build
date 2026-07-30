@@ -426,9 +426,26 @@ typecheck clean.
 2. **`MODEL_QUERY`** (same file) — recognises model-first ORM idioms via the
    PascalCase naming convention (`User.findOne(`), since a handle allow-list
    structurally cannot cover them. Lowercase receivers stay ignored as array
-   methods (`bare-array-method` passes). The method list is deliberately narrower
-   than `ORM_QUERY`'s because `create`/`update`/`delete` are common non-ORM
-   method names on PascalCase classes.
+   methods (`bare-array-method` passes).
+
+   **This pattern shipped defective and was corrected in review.** Its first
+   draft admitted generic verbs, so `Array.find(`, `Object.select(`,
+   `Registry.find(`, `Cache.find(` and `Router.find(` all fired — builtins and
+   utility classes read as ORM models. It was caught by applying Stage A's own
+   rule to the new pattern: *every detector needs a case it must stay silent on*,
+   and this one had none, so its precision was unfalsifiable — the exact defect
+   the stage exists to remove, reintroduced by the fix for it. Narrowed to
+   unambiguously-ORM verbs (`findMany`/`findFirst`/`findUnique`/`findOne`/
+   `findAll`/`findByPk`) and pinned by `pascal-case-non-model` (corpus 18 → 19).
+   Nothing real was lost: recall unchanged, thresholds still met.
+
+3. **ORM-aware coverage** (`stack.ts`) — `FRAMEWORK_DEPS` listed only UI/server
+   frameworks, so Prisma, Mongoose, Knex, Sequelize, TypeORM and Drizzle could
+   land in neither `covered` nor `uncovered`. The flagship detector keys entirely
+   on ORM idioms, so the field built to report its coverage was blind to the one
+   thing that matters: a Prisma repo reported `covered: ["express"]` and said
+   nothing about whether its queries were understood. Each entry in
+   `COVERED_FRAMEWORKS` is now backed by a named pattern. Verified end to end.
 
 ### CI masking fixed
 
@@ -465,7 +482,20 @@ it is invisible in the CI summary.
    (`g7-observability.ts`) but no case and no threshold. Adding only a clean case
    would have created a fresh trivially-1.0 row, so it was deliberately excluded;
    G7 joins when it gets a positive case and a threshold together.
-5. **The window fix changed a tier boundary, not just a verdict.** Before it, a
+5. **A fix can reintroduce the defect it fixes.** `MODEL_QUERY` closed a recall
+   gap and opened an unfalsifiable precision claim in the same commit (detail in
+   "Detector fixes shipped" above). The general lesson for this codebase: adding
+   a detection pattern without a matching hard negative reproduces the original
+   sin at a smaller scale. Treat "new pattern ⇒ new hard negative" as a standing
+   rule, not a Stage A one-off. The same rule caught the ORM-blind coverage
+   field, which passed its own unit tests while answering the wrong question.
+6. **Empirical check beats reasoning about regexes.** Both post-review defects
+   were found by *running* the pattern against candidate inputs, not by reading
+   it. The window fix was likewise validated by scanning this repository at the
+   pre-fix and post-fix commits and diffing the evidence — which showed no new
+   findings on real source. Cheap, and it settles questions that inspection
+   leaves open.
+7. **The window fix changed a tier boundary, not just a verdict.** Before it, a
    query whose scoping token sat below the call was classified from an arbitrary
    line window; now the window ends with the statement. Cases where the token is
    genuinely absent are correctly `no_tenant_filter` instead of silently scoped.
