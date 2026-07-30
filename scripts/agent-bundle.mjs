@@ -25,47 +25,70 @@ const REQUIRED_FIELDS = [
  * pass; a generator that failed on the first bad entry would make fixing a surface
  * an iterative guessing game.
  */
-export function validateSurfaceEntry(entry) {
-  const problems = [];
-  if (entry === null || typeof entry !== "object") return ["entry is not an object"];
+/** Field-level rules, each a predicate plus the message for when it fails. */
+const FIELD_RULES = [
+  {
+    ok: (e) => typeof e.name === "string" && /^[a-z][a-z0-9-]*$/.test(e.name),
+    message: () => "name must be lower-kebab-case",
+  },
+  {
+    ok: (e) => PLATFORMS.includes(e.platform),
+    message: () => `platform must be one of ${PLATFORMS.join(", ")}`,
+  },
+  {
+    ok: (e) => typeof e.intent === "string" && e.intent.trim() !== "",
+    message: () => "intent must be a non-empty string",
+  },
+  {
+    ok: (e) => Array.isArray(e.cli_verbs),
+    message: () => "cli_verbs must be an array (empty is allowed)",
+  },
+  {
+    ok: (e) => STATUSES.includes(e.status),
+    message: () => `status must be one of ${STATUSES.join(", ")}`,
+  },
+  {
+    // 018 ships a read-only surface; a mutating entry must be a recorded decision,
+    // not a quiet edit, so the rule lives in code rather than in review habit.
+    ok: (e) => SHIPPED_MODES.includes(e.mode),
+    message: () => `mode must be one of ${SHIPPED_MODES.join(", ")}`,
+  },
+];
 
-  for (const field of REQUIRED_FIELDS) {
-    if (!(field in entry)) problems.push(`${entry.name ?? "(unnamed)"}: missing ${field}`);
-  }
-  if (problems.length > 0) return problems;
-
-  const id = entry.name;
-  if (typeof id !== "string" || !/^[a-z][a-z0-9-]*$/.test(id)) {
-    problems.push(`${id}: name must be lower-kebab-case`);
-  }
-  if (!PLATFORMS.includes(entry.platform)) {
-    problems.push(`${id}: platform must be one of ${PLATFORMS.join(", ")}`);
-  }
-  if (typeof entry.intent !== "string" || entry.intent.trim() === "") {
-    problems.push(`${id}: intent must be a non-empty string`);
-  }
-  if (!Array.isArray(entry.cli_verbs)) {
-    problems.push(`${id}: cli_verbs must be an array (empty is allowed)`);
-  }
-  if (!STATUSES.includes(entry.status)) {
-    problems.push(`${id}: status must be one of ${STATUSES.join(", ")}`);
-  }
-  // 018 ships a read-only surface; a mutating entry must be a recorded decision,
-  // not a quiet edit, so the rule lives in code rather than in review habit.
-  if (!SHIPPED_MODES.includes(entry.mode)) {
-    problems.push(`${id}: mode must be one of ${SHIPPED_MODES.join(", ")}`);
-  }
-
+/**
+ * A shipped command needs a wrapper; a deferred or internal one must not have one.
+ * Both directions matter: the first would advertise a command with no prompt behind it,
+ * the second would ship a file the authority says does not exist yet.
+ */
+function checkWrapperPairing(entry) {
   const shipped = entry.status === "shipped";
   if (shipped && (!entry.wrapper_template || !entry.bundle_destination)) {
-    problems.push(`${id}: shipped entries need wrapper_template and bundle_destination`);
+    return ["shipped entries need wrapper_template and bundle_destination"];
   }
   if (!shipped && (entry.wrapper_template || entry.bundle_destination)) {
-    problems.push(
-      `${id}: ${entry.status} entries must declare no wrapper_template or bundle_destination`,
-    );
+    return [`${entry.status} entries must declare no wrapper_template or bundle_destination`];
   }
-  return problems;
+  return [];
+}
+
+function findMissingFields(entry) {
+  return REQUIRED_FIELDS.filter((field) => !(field in entry)).map(
+    (field) => `${entry.name ?? "(unnamed)"}: missing ${field}`,
+  );
+}
+
+export function validateSurfaceEntry(entry) {
+  if (entry === null || typeof entry !== "object") return ["entry is not an object"];
+
+  // Absent fields first: every rule below would otherwise report a second, derived
+  // problem for the same root cause.
+  const missing = findMissingFields(entry);
+  if (missing.length > 0) return missing;
+
+  return [
+    ...FIELD_RULES.filter((rule) => !rule.ok(entry)).map((rule) => rule.message(entry)),
+    ...checkWrapperPairing(entry),
+  ].map((message) => `${entry.name}: ${message}`);
 }
 
 /**
@@ -75,26 +98,24 @@ export function validateSurfaceEntry(entry) {
  * ship; checking only disk-to-authority lets the authority advertise a command that
  * does not exist. Together they make the surface reviewed rather than accumulated.
  */
-export function reconcile({ entries, wrapperPaths }) {
-  const problems = [];
-  const shipped = entries.filter((e) => e.status === "shipped");
-
+/** A wrapper on disk that no authority entry declares would ship unreviewed. */
+function findUndeclaredWrappers(shipped, onDisk) {
   const declared = new Set(shipped.map((e) => e.wrapper_template));
-  const onDisk = new Set(wrapperPaths);
+  return [...onDisk]
+    .filter((path) => !declared.has(path))
+    .map((path) => `wrapper ${path} is absent from the command surface authority`);
+}
 
-  for (const path of onDisk) {
-    if (!declared.has(path)) {
-      problems.push(`wrapper ${path} is absent from the command surface authority`);
-    }
-  }
-  for (const entry of shipped) {
-    if (!onDisk.has(entry.wrapper_template)) {
-      problems.push(
-        `${entry.name}: declared wrapper ${entry.wrapper_template} is missing on disk`,
-      );
-    }
-  }
+/** An entry whose wrapper is absent would advertise a command that does not exist. */
+function findMissingWrappers(shipped, onDisk) {
+  return shipped
+    .filter((entry) => !onDisk.has(entry.wrapper_template))
+    .map((entry) => `${entry.name}: declared wrapper ${entry.wrapper_template} is missing on disk`);
+}
 
+/** Values that must be unique across the surface, keyed by what they collide on. */
+function findDuplicates(entries) {
+  const problems = [];
   const seenNames = new Set();
   const seenDestinations = new Set();
   for (const entry of entries) {
@@ -107,6 +128,16 @@ export function reconcile({ entries, wrapperPaths }) {
     seenDestinations.add(entry.bundle_destination);
   }
   return problems;
+}
+
+export function reconcile({ entries, wrapperPaths }) {
+  const shipped = entries.filter((e) => e.status === "shipped");
+  const onDisk = new Set(wrapperPaths);
+  return [
+    ...findUndeclaredWrappers(shipped, onDisk),
+    ...findMissingWrappers(shipped, onDisk),
+    ...findDuplicates(entries),
+  ];
 }
 
 /**
