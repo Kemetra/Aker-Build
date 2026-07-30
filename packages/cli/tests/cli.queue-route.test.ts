@@ -43,7 +43,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T027 `aker-build queue` / `route` commands", () => {
+describe("T027 `aker queue` / `route` commands", () => {
   it("queue produces a valid queue.json and exits 0", () => {
     const { repoRoot, outDir } = repo();
     created.push(repoRoot);

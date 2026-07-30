@@ -30,7 +30,7 @@ function tempRun(): { repoRoot: string; outDir: string } {
   return { repoRoot, outDir };
 }
 
-describe("`aker-build report` command", () => {
+describe("`aker report` command", () => {
   it("writes aker-build-report.json and aker-build-report.md", () => {
     const { repoRoot, outDir } = tempRun();
     const lines: string[] = [];

@@ -35,7 +35,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T017 `aker-build review-pr --local-diff`", () => {
+describe("T017 `aker review-pr --local-diff`", () => {
   it("reviews the local diff, writes review.json + review.md, exits 0", () => {
     const { root, outDir } = reviewRepo();
     created.push(resolve(root, ".."));

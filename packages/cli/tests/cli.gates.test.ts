@@ -43,7 +43,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T033 `aker-build gates` command", () => {
+describe("T033 `aker gates` command", () => {
   it("produces a valid risks.json and exits 0", () => {
     const { repoRoot, outDir } = prepRepoWithMap();
     created.push(repoRoot);

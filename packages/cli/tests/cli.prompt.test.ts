@@ -37,7 +37,7 @@ afterEach(() => {
   created.length = 0;
 });
 
-describe("T024 `aker-build prompt` command", () => {
+describe("T024 `aker prompt` command", () => {
   it("compiles a prompt, writes prompt-<id>.md + prints it, exits 0", () => {
     const { outDir, root } = repo();
     created.push(root);
