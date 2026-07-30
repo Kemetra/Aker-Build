@@ -155,3 +155,85 @@ export function extractCliVerbs(indexSource) {
   while ((match = pattern.exec(indexSource)) !== null) verbs.push(match[1]);
   return verbs;
 }
+
+/** Strip surrounding quotes and coerce the few scalar shapes the authority uses. */
+function parseScalar(raw) {
+  const text = raw.trim();
+  if (text === "") return "";
+  if (/^".*"$/.test(text) || /^'.*'$/.test(text)) return text.slice(1, -1);
+  if (/^\[.*\]$/.test(text)) {
+    const inner = text.slice(1, -1).trim();
+    if (inner === "") return [];
+    return inner.split(",").map((part) => parseScalar(part));
+  }
+  if (/^-?\d+$/.test(text)) return Number(text);
+  return text;
+}
+
+/**
+ * Parse the command-surface authority.
+ *
+ * Hand-rolled rather than pulled from a YAML library on purpose: this module backs the
+ * verifier that answers "is this bundle trustworthy?", and a verifier with no third-party
+ * dependencies can run on a fresh clone before any install step. The authority uses a
+ * deliberately small subset — two top-level scalars and a list of flat maps with inline
+ * arrays — so the cost of parsing it directly is low.
+ *
+ * The strictness is the point. A parser that quietly mis-reads a construct it does not
+ * support is worse than one that refuses, because the surface it produces would look
+ * valid while describing something else. Anything outside the subset throws.
+ */
+export function parseSurfaceYaml(text) {
+  const root = {};
+  const commands = [];
+  let current = null;
+
+  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  for (const [index, line] of lines.entries()) {
+    const where = `line ${index + 1}`;
+    if (line.trim() === "" || line.trimStart().startsWith("#")) continue;
+    if (/[&*]|<<:/.test(line) && !line.trimStart().startsWith("#")) {
+      // Anchors, aliases, and merge keys change what a document means; refuse them.
+      if (/(^|\s)[&*][A-Za-z0-9_-]+/.test(line)) {
+        throw new Error(`${where}: unsupported YAML anchor or alias in the command surface`);
+      }
+    }
+
+    const indent = line.length - line.trimStart().length;
+    const body = line.trim();
+
+    if (indent === 0) {
+      const match = /^([a-z_]+):\s*(.*)$/.exec(body);
+      if (!match) throw new Error(`${where}: unsupported top-level line "${body}"`);
+      const [, key, value] = match;
+      if (key === "commands") {
+        if (value.trim() !== "") throw new Error(`${where}: commands must be a block list`);
+        continue;
+      }
+      if (value.trim() === "") throw new Error(`${where}: unsupported empty scalar for ${key}`);
+      root[key] = parseScalar(value);
+      continue;
+    }
+
+    if (body.startsWith("- ")) {
+      const match = /^-\s+([a-z_]+):\s*(.*)$/.exec(body);
+      if (!match) throw new Error(`${where}: unsupported list item "${body}"`);
+      current = {};
+      commands.push(current);
+      current[match[1]] = parseScalar(match[2]);
+      continue;
+    }
+
+    const match = /^([a-z_]+):\s*(.*)$/.exec(body);
+    if (!match) throw new Error(`${where}: unsupported mapping line "${body}"`);
+    if (current === null) throw new Error(`${where}: mapping outside any list item`);
+    const [, key, value] = match;
+    // A key with no inline value would introduce nesting, which this subset excludes.
+    if (value.trim() === "" && key !== "wrapper_template" && key !== "bundle_destination") {
+      throw new Error(`${where}: unsupported nested mapping under "${key}"`);
+    }
+    current[key] = parseScalar(value);
+  }
+
+  return { ...root, commands };
+}

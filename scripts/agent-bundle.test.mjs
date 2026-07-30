@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   extractCliVerbs,
   parseFrontmatter,
+  parseSurfaceYaml,
   reconcile,
   validateSurfaceEntry,
   validateWrapperText,
@@ -169,4 +170,57 @@ test("extracts registered CLI verbs from the commander index source", () => {
     program.command("route").description("Select one next task");
   `;
   assert.deepEqual(extractCliVerbs(source), ["check", "route"]);
+});
+
+const SURFACE = `# a comment
+schema_version: 1
+canonical_repository: Kemetra/Aker-Build
+commands:
+  - name: help
+    platform: claude
+    intent: Show the map.
+    cli_verbs: []
+    skill: aker-build
+    wrapper_template: distribution/bundle-templates/claude/commands/help.md
+    bundle_destination: commands/help.md
+    mode: read-only
+    status: shipped
+  - name: auto
+    platform: claude
+    intent: Run the loop.
+    cli_verbs: [route, check]
+    skill: aker-build
+    wrapper_template: ""
+    bundle_destination: ""
+    mode: read-only
+    status: deferred
+`;
+
+test("parses the surface authority into scalars and a command list", () => {
+  const surface = parseSurfaceYaml(SURFACE);
+  assert.equal(surface.schema_version, 1);
+  assert.equal(surface.canonical_repository, "Kemetra/Aker-Build");
+  assert.equal(surface.commands.length, 2);
+});
+
+test("parses an empty inline list, a populated one, and quoted empty strings", () => {
+  const [help, auto] = parseSurfaceYaml(SURFACE).commands;
+  assert.deepEqual(help.cli_verbs, []);
+  assert.deepEqual(auto.cli_verbs, ["route", "check"]);
+  assert.equal(auto.wrapper_template, "");
+  assert.equal(help.bundle_destination, "commands/help.md");
+});
+
+test("keeps an intent containing a period intact", () => {
+  assert.equal(parseSurfaceYaml(SURFACE).commands[0].intent, "Show the map.");
+});
+
+test("refuses a nested mapping rather than silently mis-parsing it", () => {
+  const nested = SURFACE.replace("    status: shipped", "    status:\n      deep: value");
+  assert.throws(() => parseSurfaceYaml(nested), /unsupported/i);
+});
+
+test("refuses a YAML anchor rather than ignoring it", () => {
+  const anchored = SURFACE.replace("  - name: help", "  - name: &ref help");
+  assert.throws(() => parseSurfaceYaml(anchored), /unsupported/i);
 });
