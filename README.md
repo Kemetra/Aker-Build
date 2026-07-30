@@ -163,6 +163,64 @@ pnpm dlx tsx packages/cli/src/bin.ts review-pr <repo> --local-diff --out <out-di
 pnpm dlx tsx packages/cli/src/bin.ts report <repo> --out <out-dir>
 ```
 
+## For AI coding agents (MCP)
+
+Your agent asks Aker Build what to work on next, and what it is allowed to touch:
+
+> *"What is my next safest task in this repository?"*
+
+```json
+{
+  "item": { "id": "Q-002", "title": "Fix: API route without an auth guard", "confidence_tier": "confirmed" },
+  "reason": ["highest score (0.86)", "status=ready", "tier=confirmed", "validation available"],
+  "allowed_files": ["src/api.ts"],
+  "forbidden_files": [],
+  "evidence": [{ "path": "src/api.ts", "line": 1, "signal": "API route without an auth guard", "confidence": "high" }],
+  "blocked": [{ "id": "Q-001", "reason": "insufficient evidence to scope a safe action (needs verification)" }],
+  "freshness": { "refreshed": true, "age_ms": 0 }
+}
+```
+
+Two things here are not available elsewhere. **The scope is derived**, not declared —
+Aker Build computes the touchable file set from a scan of the architecture, rather
+than asking you to write it down first. And **the task is ordered by agent-safety**,
+not by technical debt: items it cannot scope safely are reported as blocked with a
+reason, never guessed at.
+
+Register the server with any MCP client:
+
+```json
+{
+  "mcpServers": {
+    "aker-build": {
+      "command": "pnpm",
+      "args": ["dlx", "tsx", "packages/mcp/src/bin.ts"]
+    }
+  }
+}
+```
+
+Three read-only tools:
+
+| Tool | Answers |
+|---|---|
+| `aker_build_next_task` | What should I work on, and what may I touch? |
+| `aker_build_compile_prompt` | Give me the scoped prompt for `Q-002`. |
+| `aker_build_deny_block` | Turn the forbidden set into a `settings.json` deny-block. |
+
+The deny-block emitter closes the gap between advice and enforcement: a prompt
+saying "do not touch these files" is text a model may ignore, while a Claude Code
+deny rule is evaluated mechanically, deny-first. Aker Build computes the boundary;
+the platform enforces it.
+
+**Caveat, stated plainly:** deny rules govern the agent's own file tools. They do
+not constrain arbitrary subprocesses an agent may spawn. This is stronger than a
+prompt, not airtight.
+
+All three tools are read-only. The server never modifies your repository, never
+commits, never merges, and never executes an agent — consistent with Aker Build's
+identity as a control plane rather than an actor.
+
 ## Core flow
 
 ```text
