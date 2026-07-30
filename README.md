@@ -1,8 +1,16 @@
 # Aker Build
 
-[![CI](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml/badge.svg?branch=main)](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml) [![License: MIT](https://img.shields.io/github/license/Kemetra/Aker-Build)](LICENSE)
+[![CI](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml/badge.svg?branch=main)](https://github.com/Kemetra/Aker-Build/actions/workflows/aker-build.yml) [![License: MIT](https://img.shields.io/github/license/Kemetra/Aker-Build)](LICENSE) [![Sponsor](https://img.shields.io/badge/Sponsor-Kemetra-EA4AAA?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/Kemetra)
 
 ![Aker Build logo](docs/aker-logo.png)
+
+<p align="center">
+  <a href="https://github.com/sponsors/Kemetra">
+    <img src="https://img.shields.io/badge/Sponsor%20Aker%20Build-Support%20the%20public%20roadmap-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor Aker Build through GitHub Sponsors" height="46" />
+  </a>
+  <br />
+  <sub>Fund benchmark coverage, framework support, documentation, and GitHub-native integrations.</sub>
+</p>
 
 Aker Build is a CLI-first SaaS Build Kernel for teams building multi-tenant SaaS systems with GitHub, specs, CI, and AI coding agents.
 
@@ -23,6 +31,7 @@ Aker Build's MVP CLI chain and FORTIFY phases are implemented. The repository no
 
 - Aker Build runs against its own repo through a report-only GitHub Action.
 - A self-hostable, single-tenant report-only GitHub App runtime is implemented and tested locally; credentialed field verification remains an operator-run smoke step.
+- An MCP server (`packages/mcp`) exposes the control plane to AI coding agents, read-only.
 - Public npm availability is pending the owner-run first publish; the hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
 
 ## Benchmark scorecard
@@ -250,11 +259,24 @@ aker-build report [path]
 
 `check` composes `scan → gates → queue → route → report` and promotes its six-file output only after every stage succeeds. It does not generate prompts, review diffs, execute agents, or mutate the analyzed source.
 
+## Support Aker Build
+
+Aker Build is developed in public. Sponsorship helps fund benchmark expansion,
+framework coverage, documentation, contributor support, and the work required to
+turn the CLI kernel into a dependable GitHub-native product.
+
+[**Sponsor Aker Build through GitHub Sponsors**](https://github.com/sponsors/Kemetra)
+
+Sponsorship supports development; it does not buy a gate result, suppress a finding,
+or change the project's published evidence and safety boundaries.
+
 ## Documentation
 
 - First-run demo: `docs/demo/first-run.md`
 - npm release runbook: `docs/release/npm.md`
 - Post-foundation plan: `docs/roadmap/post-foundation-technical-plan.md`
+- Release integrity: `specs/016-release-integrity/spec.md`
 - One-command distribution: `specs/017-one-command-distribution/spec.md`
+- MCP server for AI agents: `packages/mcp/`
 - GitHub App server: `packages/github-app-server/README.md`
 - Contributor guide: `CONTRIBUTING.md`
