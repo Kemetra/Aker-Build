@@ -22,7 +22,7 @@ export function runMap(opts: MapCmdOptions = {}): number {
 
   const file = resolve(out, "project-map.json");
   if (!existsSync(file)) {
-    printErr(`No produced map at ${file}. Run \`aker-build scan\` first.`);
+    printErr(`No produced map at ${file}. Run \`aker scan\` first.`);
     return 1;
   }
   const map = JSON.parse(readFileSync(file, "utf8"));

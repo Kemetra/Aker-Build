@@ -34,7 +34,7 @@ export class ChainFailedError extends Error {}
  * stale, or forced.
  *
  * Why this exists: `deriveQueue`, `route` and `compilePrompt` all read artifacts from an out-dir
- * and throw when they are missing (`route` throws MissingQueueError: "Run `aker-build queue`
+ * and throw when they are missing (`route` throws MissingQueueError: "Run `aker queue`
  * first"). An MCP tool that called them directly would hand a cold agent an exception instead of
  * an answer, which would defeat the entire premise — the agent is supposed to ask and receive.
  *
