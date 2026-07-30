@@ -59,13 +59,19 @@ function promote(staged: string, output: string): void {
   const previousPaths = new Map<string, string>();
   const promoted = new Set<string>();
 
-  try {
+  // The four phases below close over the three maps above rather than taking them as parameters.
+  // They are a transaction, not independent steps: rollback depends on knowing exactly what was
+  // staged, backed up, and swapped. Threading that state through free functions would spread the
+  // atomicity guarantee across signatures instead of keeping it visible in one place.
+  const stageAll = (): void => {
     for (const file of CHECK_ARTIFACTS) {
       const next = join(output, `.${basename(file)}.${transaction}.next`);
       copyFileSync(join(staged, file), next);
       nextPaths.set(file, next);
     }
+  };
 
+  const backUpExisting = (): void => {
     for (const file of CHECK_ARTIFACTS) {
       const destination = join(output, file);
       if (!existsSync(destination)) continue;
@@ -73,22 +79,37 @@ function promote(staged: string, output: string): void {
       renameSync(destination, previous);
       previousPaths.set(file, previous);
     }
+  };
 
+  const swapIn = (): void => {
     for (const file of CHECK_ARTIFACTS) {
       renameSync(nextPaths.get(file)!, join(output, file));
       promoted.add(file);
     }
+  };
 
-    for (const previous of previousPaths.values()) rmSync(previous, { force: true });
-  } catch (error) {
+  const rollBack = (): void => {
     for (const file of promoted) rmSync(join(output, file), { force: true });
     for (const [file, previous] of previousPaths) {
       if (existsSync(previous)) renameSync(previous, join(output, file));
     }
-    throw error;
-  } finally {
+  };
+
+  const discardTemporaries = (): void => {
     for (const next of nextPaths.values()) rmSync(next, { force: true });
     for (const previous of previousPaths.values()) rmSync(previous, { force: true });
+  };
+
+  try {
+    stageAll();
+    backUpExisting();
+    swapIn();
+    discardTemporaries();
+  } catch (error) {
+    rollBack();
+    throw error;
+  } finally {
+    discardTemporaries();
   }
 }
 

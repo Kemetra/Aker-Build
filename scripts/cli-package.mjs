@@ -9,50 +9,88 @@ function hasEntries(value) {
   return value && typeof value === "object" && Object.keys(value).length > 0;
 }
 
+/** Dependency fields that must be absent — the zero-dependency guarantee of the release artifact. */
+const FORBIDDEN_DEPENDENCY_FIELDS = [
+  "dependencies",
+  "optionalDependencies",
+  "peerDependencies",
+  "bundledDependencies",
+];
+
+/** Lifecycle scripts an installed package must not define (arbitrary code on `npm install`). */
+const FORBIDDEN_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall"];
+
+/**
+ * Release-manifest rules, as data. Each entry is a predicate that must hold plus the message
+ * emitted when it does not. Kept as a table rather than a chain of `if`s because the checks are
+ * independent: expressing them declaratively keeps each rule readable on its own line and makes
+ * adding one a data change instead of another branch.
+ *
+ * Order is preserved and messages are unchanged, so failure behaviour is identical to the previous
+ * inline form — the tests in cli-package.test.ts assert on these exact strings.
+ */
+const RELEASE_MANIFEST_RULES = [
+  {
+    holds: (m) => m.name === "aker-build" && m.version === "0.1.0",
+    message: "release identity must be aker-build@0.1.0",
+  },
+  {
+    holds: (m) => m.description === "Aker Build — CLI-first SaaS Build Kernel" && m.type === "module",
+    message: "release package description/type mismatch",
+  },
+  {
+    holds: (m) => m.bin?.["aker-build"] === "dist/aker-build.js",
+    message: "aker-build bin must target dist/aker-build.js",
+  },
+  {
+    holds: (m) => m.engines?.node === ">=22.13",
+    message: "Node engine must be >=22.13",
+  },
+  {
+    holds: (m) => m.private !== true,
+    message: "generated release manifest cannot be private",
+  },
+  {
+    holds: (m) => !JSON.stringify(m).includes("workspace:"),
+    message: "release package cannot contain workspace protocol references",
+  },
+  {
+    holds: (m) => JSON.stringify(m.files) === JSON.stringify(REQUIRED_PACKAGE_FILES),
+    message: "release files allowlist mismatch",
+  },
+  {
+    holds: (m) =>
+      m.license === "MIT"
+      && m.publishConfig?.access === "public"
+      && m.publishConfig?.registry === "https://registry.npmjs.org/",
+    message: "release license/publish metadata mismatch",
+  },
+  {
+    holds: (m) =>
+      m.repository?.type === "git"
+      && Boolean(m.repository?.url)
+      && Boolean(m.homepage)
+      && Boolean(m.bugs?.url)
+      && Array.isArray(m.keywords)
+      && m.keywords.length > 0,
+    message: "release discovery metadata missing",
+  },
+];
+
 export function validateReleaseManifest(manifest) {
   if (!manifest || typeof manifest !== "object") throw new Error("release manifest must be an object");
-  if (manifest.name !== "aker-build" || manifest.version !== "0.1.0") {
-    throw new Error("release identity must be aker-build@0.1.0");
-  }
-  if (manifest.description !== "Aker Build — CLI-first SaaS Build Kernel" || manifest.type !== "module") {
-    throw new Error("release package description/type mismatch");
-  }
-  if (manifest.bin?.["aker-build"] !== "dist/aker-build.js") {
-    throw new Error("aker-build bin must target dist/aker-build.js");
-  }
-  if (manifest.engines?.node !== ">=22.13") throw new Error("Node engine must be >=22.13");
-  if (manifest.private === true) throw new Error("generated release manifest cannot be private");
 
-  for (const field of ["dependencies", "optionalDependencies", "peerDependencies", "bundledDependencies"]) {
+  for (const field of FORBIDDEN_DEPENDENCY_FIELDS) {
     if (hasEntries(manifest[field])) throw new Error(`release package must have zero ${field}`);
-  }
-  if (JSON.stringify(manifest).includes("workspace:")) {
-    throw new Error("release package cannot contain workspace protocol references");
   }
 
   const scripts = manifest.scripts ?? {};
-  for (const name of ["preinstall", "install", "postinstall"]) {
+  for (const name of FORBIDDEN_LIFECYCLE_SCRIPTS) {
     if (scripts[name]) throw new Error(`release package cannot define ${name}`);
   }
-  if (JSON.stringify(manifest.files) !== JSON.stringify(REQUIRED_PACKAGE_FILES)) {
-    throw new Error("release files allowlist mismatch");
-  }
-  if (
-    manifest.license !== "MIT"
-    || manifest.publishConfig?.access !== "public"
-    || manifest.publishConfig?.registry !== "https://registry.npmjs.org/"
-  ) {
-    throw new Error("release license/publish metadata mismatch");
-  }
-  if (
-    manifest.repository?.type !== "git"
-    || !manifest.repository?.url
-    || !manifest.homepage
-    || !manifest.bugs?.url
-    || !Array.isArray(manifest.keywords)
-    || manifest.keywords.length === 0
-  ) {
-    throw new Error("release discovery metadata missing");
+
+  for (const rule of RELEASE_MANIFEST_RULES) {
+    if (!rule.holds(manifest)) throw new Error(rule.message);
   }
 }
 
