@@ -11,6 +11,12 @@
 > costs one line; renumbering the loop would rewrite recorded records, which this project
 > declines to do on principle.
 
+> **Sequencing: Spec 021 lands first.** The wheel wraps whatever binary
+> `pnpm build:cli-package` emits, and 021 renames that binary from `aker-build` to
+> `aker`. Implementing 020 first would vendor a bundle under the old filename and
+> declare a console script that 021 then has to change — so the Python work would be
+> written twice. 021 is a small, self-contained rename; do it, then build on it.
+
 ## Problem
 
 Aker Build ships as an npm package. Teams whose tooling is Python-first — data
@@ -21,7 +27,7 @@ The goal is a second distribution channel, not a second implementation:
 
 ```bash
 pip install aker-build
-aker-build check .
+aker check .
 ```
 
 ## Stop-condition assessment
@@ -82,8 +88,19 @@ applies here.
 
 ## The launcher
 
-`python/aker_build/__main__.py`, plus a console-script entry point so both
-`aker-build` and the short alias `akr` work.
+`python/aker_build/__main__.py`, plus one console-script entry point named `aker`.
+
+The package is `aker-build`; the command is `aker`. Distribution and invocation are
+separate concerns, and both registries model them as independent fields — see Spec
+021, which renames the command across the existing surface. `aker-build` ships **no**
+console script of its own: nothing is published yet, so there is no prior name to stay
+compatible with, and a second entry point would be a permanent surface added for
+nobody.
+
+```toml
+[project.scripts]
+aker = "aker_build.__main__:main"
+```
 
 Responsibilities, in order:
 
@@ -182,7 +199,7 @@ action.
 | Exit-code propagation | Child codes surface unchanged, verbatim, with no per-command mapping in the launcher |
 | Version sync | `CLI_VERSION` == npm manifest == wheel metadata |
 | Wheel build | `python -m build` produces one `py3-none-any` wheel + sdist |
-| Clean-venv install | Fresh venv, `pip install <wheel>`, `aker-build --version` succeeds |
+| Clean-venv install | Fresh venv, `pip install <wheel>`, then `aker --version` succeeds and `aker-build` is absent |
 | Existing repo tests | `pnpm test`, `pnpm typecheck`, `pnpm test:agent-bundle` still pass |
 
 The forwarding and exit-code tests use a stub Node script rather than the real
