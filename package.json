@@ -9,6 +9,7 @@
     "node": ">=22.13"
   },
   "scripts": {
+    "build:agent-bundle": "node scripts/build-agent-bundle.mjs",
     "build:cli-package": "node scripts/build-cli-package.mjs",
     "test": "pnpm test:namespace && pnpm -r --no-bail test",
     "test:cli-package": "node --test scripts/cli-package.test.mjs && node scripts/verify-cli-package.mjs",

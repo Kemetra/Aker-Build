@@ -156,6 +156,41 @@ export function extractCliVerbs(indexSource) {
   return verbs;
 }
 
+/** Normalize to LF with exactly one trailing newline so hashes are stable across platforms. */
+export function normalizeText(text) {
+  return `${text.replace(/\r\n/g, "\n").replace(/\n+$/, "")}\n`;
+}
+
+export function sha256(text) {
+  return createHash("sha256").update(text, "utf8").digest("hex");
+}
+
+/**
+ * One manifest entry per generated file, mirroring the shape Spec 017 already proves.
+ *
+ * Both hashes are taken over normalized text. Git converts line endings on checkout
+ * (this repository checks out CRLF on Windows), so hashing raw bytes would make the
+ * manifest platform-dependent and the baseline comparison would fail on a clean clone
+ * for a reason that has nothing to do with content.
+ */
+export function manifestEntry({
+  source,
+  sourceText,
+  destination,
+  outputText,
+  transform,
+  classification,
+}) {
+  return {
+    classification,
+    destination,
+    output_sha256: sha256(normalizeText(outputText)),
+    source,
+    source_sha256: sha256(normalizeText(sourceText)),
+    transform,
+  };
+}
+
 /** Strip surrounding quotes and coerce the few scalar shapes the authority uses. */
 function parseScalar(raw) {
   const text = raw.trim();
