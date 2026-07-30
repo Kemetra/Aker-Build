@@ -56,7 +56,6 @@ describe("ensureChain", () => {
     const root = repo();
     const written: string[] = [];
     const original = process.stdout.write.bind(process.stdout);
-    // @ts-expect-error narrow test double
     process.stdout.write = (chunk: string): boolean => {
       written.push(String(chunk));
       return true;
