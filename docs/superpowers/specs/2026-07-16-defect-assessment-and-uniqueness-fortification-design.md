@@ -1,5 +1,12 @@
 # Aker Build — Defect Assessment & Uniqueness Fortification
 
+> **Superseded in part (2026-07-30).** The defect table below is stale: D1–D5 are
+> closed in code (15→19 benchmark cases, 8 detectors, thresholds on G3/G4/G5, npm
+> artifact building, Checks renderer wired). Its *uniqueness thesis* is also
+> superseded — competitive research retired three of its five legs. See
+> `2026-07-30-uniqueness-repositioning-design.md` for the current positioning and
+> the evidence behind it. Kept for provenance; do not plan from this document.
+
 Status: Design, pending review
 Date: 2026-07-16
 Scope: What is defective or too thin today, and what to fortify/add so Aker Build
