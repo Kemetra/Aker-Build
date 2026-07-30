@@ -30,24 +30,34 @@ aker-build` returns 404. There are zero installed users, so renaming the command
 breaks nothing. After the first publish, the same change is breaking for everyone
 who installed the previous name. This is the last moment the rename is free.
 
-## The three things that share the string `aker-build`
+## The four things that share the string `aker-build`
 
 Conflating these is the expensive mistake this spec exists to prevent. Only the
-first changes.
+first two change.
 
 | Thing | Example | Count | Action |
 |---|---|---|---|
 | **The user-typed command** | `bin` declaration; `` `Run `aker-build scan`` `` in error text | ~29 files | **Rename** |
+| **The bundle filename** | `dist/aker-build.js`, and the validator asserting it | 5 files | **Rename** — follows the bin |
 | **The internal package scope** | `@aker-build/queue`, `@aker-build/gates` | 195 refs | **Leave** |
-| **The output directory** | `.aker-build/queue.json` | many | **Leave** |
+| **Output artifact names** | `.aker-build/queue.json`, `aker-build-report.json` | many | **Leave** |
 
 **The scope must not change.** `@aker-build/*` is a package namespace users never
 see. Renaming it across 14 workspace packages is precisely the broad refactor
 `CLAUDE.md` forbids, and it delivers no user-visible benefit.
 
-**The output directory must not change.** `.aker-build/` is not a command.
-Renaming it would orphan every existing artifact directory and every
-`.gitignore` entry pointing at one, for no gain.
+**Output artifact names must not change.** `.aker-build/` is a directory, and
+`aker-build-report.json` / `aker-build-report.md` are documented output filenames
+referenced by the report contract (`contracts/report.schema.json`), both smoke
+scripts, and `packages/report`. Renaming them would break the published output
+contract and orphan every existing artifact directory, for no user-visible gain.
+Neither is a command.
+
+**The bundle filename does change**, because it is the bin target. `scripts/cli-package.mjs`
+*validates* that `bin["aker-build"] === "dist/aker-build.js"` and that the packed
+file list contains `dist/aker-build.js`, so the validator and its tests move in
+lockstep with the rename or `pnpm test:cli-package` fails. That coupling is
+desirable: it means the rename cannot be half-applied in the release path.
 
 **The error strings must change.** If the bin becomes `aker` and the text does
 not, the tool prints *"Run `aker-build scan` first"* — instructions for a command
@@ -58,9 +68,11 @@ reason this rename cannot be limited to the `bin` field.
 
 | Group | Files | Change |
 |---|---|---|
-| Bin declarations | `packages/cli/package.json`, `scripts/build-cli-package.mjs` | `"aker-build":` → `"aker":`; bundle output filename follows |
-| User-facing error text | `packages/cli/src/commands/map.ts`, `packages/gates/src/context.ts`, `packages/prompt/src/io.ts`, `packages/queue/src/context.ts` (×2), `packages/queue/src/index.ts`, `packages/review/src/io.ts`, `packages/mcp/src/ensure.ts` (doc comment) | `` `aker-build <verb>` `` → `` `aker <verb>` `` |
-| Tests pinning that text | 7 files under `packages/cli/tests/` | Update expected strings |
+| Bin declarations | `packages/cli/package.json:30`, `scripts/build-cli-package.mjs:72` | `"aker-build":` → `"aker":` |
+| Bundle filename + its validator | `scripts/build-cli-package.mjs` (:47, :59, :73), `scripts/cli-package.mjs` (:2, :42, :43), `scripts/cli-package.test.mjs` (:21, :22, :39, :50, :97), `scripts/verify-cli-package.mjs:85` | `dist/aker-build.js` → `dist/aker.js`; the Windows shim becomes `aker.cmd` |
+| User-facing error text | `packages/cli/src/commands/map.ts:25`, `packages/gates/src/context.ts:30`, `packages/prompt/src/io.ts:15`, `packages/queue/src/context.ts` (:32, :44), `packages/queue/src/index.ts:72`, `packages/review/src/io.ts:19`, `packages/mcp/src/ensure.ts:37` (doc comment) | `` `aker-build <verb>` `` → `` `aker <verb>` `` |
+| Test labels | 7 `describe()` strings under `packages/cli/tests/` | Cosmetic; update for consistency |
+| **New** error-text test | `packages/queue/tests/` | See below — no test currently pins these strings |
 | Live user docs | `README.md`, `packages/cli/README.md`, `CLAUDE.md` | Command examples |
 | Spec 018 plugin surface | 6 wrappers + `SKILL.md` + regenerated `bundle-manifest.json` | Command examples; manifest baseline recommit |
 | Eval fixtures | `distribution/evals/aker-build-skill.json`, `grade.test.mjs` | Expected-command assertions |
@@ -98,11 +110,24 @@ the plugin name in `.claude-plugin/plugin.json`, which is the distribution
 identity, not the command. Only the command examples inside the wrapper bodies
 change.
 
+## The error strings are currently unguarded
+
+Measured, not assumed: the seven `aker-build <verb>` hits under
+`packages/cli/tests/` are all `describe()` **labels**. No test asserts the error
+text itself. So today, changing the bin name and forgetting an error string would
+leave the tool telling users to run a command that does not exist, and the entire
+suite would still pass.
+
+The rename therefore adds a real assertion on the guidance text — the one thing a
+user acts on. Without it this spec's central correctness claim rests on grep, which
+is a one-time check rather than a standing guard.
+
 ## Testing
 
 | Test | Proves |
 |---|---|
-| `pnpm test` | The 7 updated CLI tests pass; no other test depended on the old string |
+| New error-text test | `MissingProjectMapError` / `MissingRisksError` / `MissingQueueError` messages name `aker <verb>`, so a future rename cannot silently strand users |
+| `pnpm test` | Nothing else depended on the old string |
 | `pnpm typecheck` | No type surface changed |
 | `pnpm test:agent-bundle` | Manifest baseline matches after regeneration; verbs still resolve |
 | `pnpm test:cli-package` | Tarball builds, packs, installs, and smokes with the new bin name |
@@ -116,7 +141,9 @@ other proves it did not leak into the package namespace. A rename verified only 
 ## Out of scope
 
 - Renaming `@aker-build/*` package scope.
-- Renaming the `.aker-build/` output directory.
+- Renaming output artifacts: the `.aker-build/` directory, `aker-build-report.json`,
+  `aker-build-report.md`.
+- Renaming the npm or PyPI distribution. Both stay `aker-build`.
 - Rewriting historical specs, ADRs, or roadmap documents.
 - Publishing to either registry.
 - A backward-compatible `aker-build` alias. Nothing is published, so there is
@@ -128,7 +155,8 @@ other proves it did not leak into the package namespace. A rename verified only 
 | Risk | Mitigation |
 |---|---|
 | Rename leaks into `@aker-build/*` scope | Test asserts the reference count stays at 195 |
-| An error string is missed, telling users to run a dead command | Grep assertion over live files, excluding historical records by path |
+| An error string is missed, telling users to run a dead command | A new test asserts the guidance text (none exists today — the current 7 hits are `describe()` labels), plus a grep assertion over live files excluding historical records by path |
+| Bundle filename renamed but its validator not | `scripts/cli-package.mjs` asserts both the bin target and the packed file list, so `pnpm test:cli-package` fails on a half-applied rename |
 | Plugin manifest drift fails CI | Plan sequences `pnpm build:agent-bundle` and the baseline commit immediately after wrapper edits |
 | Old specs now name a dead command | Accepted deliberately; recorded in `CHANGELOG.md` rather than by rewriting records |
-| `.aker-build/` output dir mistaken for a command reference | Explicitly out of scope; grep patterns match `aker-build <verb>`, not the bare string |
+| Output artifact names mistaken for command references | Explicitly out of scope: `.aker-build/`, `aker-build-report.json`, `aker-build-report.md`. Grep patterns match `aker-build <verb>`, never the bare string |
