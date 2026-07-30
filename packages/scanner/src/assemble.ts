@@ -27,7 +27,7 @@ export function assemble(
   const notes: RunNote[] = [];
   const files = listFiles(root);
 
-  const stack = detectStack(root);
+  const stack = detectStack(root, files);
   const { repos } = detectRepos(root, listFiles);
 
   // P1 deepened detection — read-only evidence detectors. Each emits normative Evidence[]; none

@@ -74,8 +74,34 @@ export function partitionCoverage(frameworks: string[]): CoverageReport {
   return { covered: covered.sort(), uncovered: uncovered.sort() };
 }
 
-/** Detect runtime / package manager / frameworks from high-signal manifests at the repo root. */
-export function detectStack(root: string): StackDetection {
+/** Collect framework ids from a manifest's dependency maps into `into`. */
+function collectFrameworks(raw: string | null, into: Set<string>): void {
+  if (!raw) return;
+  try {
+    const pkg = JSON.parse(raw) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+    for (const dep of Object.keys(deps)) {
+      const fw = FRAMEWORK_DEPS[dep];
+      if (fw) into.add(fw);
+    }
+  } catch {
+    // malformed manifest — skip it; the caller's other signals still stand (honest)
+  }
+}
+
+/**
+ * Detect runtime / package manager / frameworks from high-signal manifests.
+ *
+ * `files` is optional and, when supplied, extends framework detection to workspace package
+ * manifests. This matters because pnpm/npm workspaces keep the root manifest dependency-free —
+ * reading only the root reports an empty stack for the monorepo layout Aker Build targets, which
+ * made the coverage field blind on Aker Build's own repository. Runtime and package-manager
+ * detection stay root-only: those are properties of the repo, not of a package within it.
+ */
+export function detectStack(root: string, files?: string[]): StackDetection {
   const signals: DetectionSignal[] = [];
   let runtime: string | null = null;
   let package_manager: string | null = null;
@@ -84,25 +110,25 @@ export function detectStack(root: string): StackDetection {
   if (fileExists(root, "package.json")) {
     runtime = "node";
     signals.push({ type: "file", path: "package.json", signal: "package_json_present", confidence: "high" });
-    const raw = readFileSafe(root, "package.json");
-    if (raw) {
-      try {
-        const pkg = JSON.parse(raw) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
-        const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-        for (const dep of Object.keys(deps)) {
-          const fw = FRAMEWORK_DEPS[dep];
-          if (fw) frameworks.add(fw);
-        }
-      } catch {
-        // malformed manifest — runtime still known, frameworks left empty (honest)
-      }
-    }
+    collectFrameworks(readFileSafe(root, "package.json"), frameworks);
   } else if (fileExists(root, "go.mod")) {
     runtime = "go";
     signals.push({ type: "file", path: "go.mod", signal: "go_mod_present", confidence: "high" });
   } else if (fileExists(root, "pyproject.toml")) {
     runtime = "python";
     signals.push({ type: "file", path: "pyproject.toml", signal: "pyproject_present", confidence: "high" });
+  }
+
+  // Workspace package manifests. Vendored trees are excluded: a dependency's own manifest
+  // describes the dependency, not this repo's stack.
+  if (files) {
+    for (const rel of files) {
+      const normalized = rel.replace(/\\/g, "/");
+      if (!normalized.endsWith("package.json")) continue;
+      if (normalized === "package.json") continue; // already read above
+      if (/(^|\/)(node_modules|vendor|dist|build|\.next|out)\//.test(normalized)) continue;
+      collectFrameworks(readFileSafe(root, rel), frameworks);
+    }
   }
 
   if (fileExists(root, "pnpm-lock.yaml") || fileExists(root, "pnpm-workspace.yaml")) {
