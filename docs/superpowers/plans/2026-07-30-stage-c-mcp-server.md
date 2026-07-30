@@ -77,10 +77,21 @@ consistent with the coverage-honesty principle.
 Do not copy registration patterns from memory. `server.tool()` (positional) and
 `server.registerTool()` (object) have both existed in `@modelcontextprotocol/sdk`.
 
-Run: `npm view @modelcontextprotocol/sdk version` and consult Context7 (library
-"MCP") or https://modelcontextprotocol.io for the current `McpServer` registration
-and `StdioServerTransport` signatures. Record the resolved version — it gets pinned
-exactly, not caret-ranged.
+**RESOLVED (verified against the installed `.d.ts`, not documentation):**
+
+- Version: **1.30.0**, pinned exactly.
+- `server.tool(...)` is **deprecated in every overload**. The current API is
+  `registerTool(name, config, cb)` where config is
+  `{ title?, description?, inputSchema?, outputSchema?, annotations?, _meta? }`
+  and `inputSchema` is a Zod raw shape (a plain object of Zod validators, not a
+  wrapped `z.object`).
+- Transport: `new StdioServerTransport()` (zero-arg), then
+  `await server.connect(transport)`.
+- Imports resolve via subpath exports: `@modelcontextprotocol/sdk/server/mcp.js`
+  and `@modelcontextprotocol/sdk/server/stdio.js`.
+
+This is why the step exists: `tool()` is what most tutorials still show, and it
+would have compiled, run, and been deprecated from day one.
 
 - [ ] **Step 2: Copy a sibling's tsconfig and vitest config**
 
