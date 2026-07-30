@@ -156,6 +156,26 @@ export function extractCliVerbs(indexSource) {
   return verbs;
 }
 
+/**
+ * Confirm every referenced CLI verb still exists.
+ *
+ * The surface is a projection of the CLI, so a renamed verb must break the build
+ * loudly rather than leave the bundle advertising a verb that no longer resolves.
+ */
+export function checkCliVerbsExist({ entries, registered }) {
+  const known = new Set(registered);
+  const problems = [];
+  for (const entry of entries) {
+    if (entry.status !== "shipped") continue;
+    for (const verb of entry.cli_verbs ?? []) {
+      if (!known.has(verb)) {
+        problems.push(`${entry.name}: references CLI verb "${verb}" which is not registered`);
+      }
+    }
+  }
+  return problems;
+}
+
 /** Normalize to LF with exactly one trailing newline so hashes are stable across platforms. */
 export function normalizeText(text) {
   return `${text.replace(/\r\n/g, "\n").replace(/\n+$/, "")}\n`;

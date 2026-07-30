@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  checkCliVerbsExist,
   extractCliVerbs,
+  normalizeText,
   parseFrontmatter,
   parseSurfaceYaml,
   reconcile,
+  sha256,
   validateSurfaceEntry,
   validateWrapperText,
 } from "./agent-bundle.mjs";
@@ -223,4 +226,43 @@ test("refuses a nested mapping rather than silently mis-parsing it", () => {
 test("refuses a YAML anchor rather than ignoring it", () => {
   const anchored = SURFACE.replace("  - name: help", "  - name: &ref help");
   assert.throws(() => parseSurfaceYaml(anchored), /unsupported/i);
+});
+
+test("passes when every referenced CLI verb is registered", () => {
+  assert.deepEqual(
+    checkCliVerbsExist({
+      entries: [{ name: "next", cli_verbs: ["route"], status: "shipped" }],
+      registered: ["check", "route", "report"],
+    }),
+    [],
+  );
+});
+
+test("fails on a referenced verb the CLI does not register", () => {
+  const problems = checkCliVerbsExist({
+    entries: [{ name: "ghost", cli_verbs: ["vanished"], status: "shipped" }],
+    registered: ["check", "route"],
+  });
+  assert.match(problems.join(" "), /vanished/);
+});
+
+test("accepts a shipped command that references no verb", () => {
+  assert.deepEqual(
+    checkCliVerbsExist({
+      entries: [{ name: "help", cli_verbs: [], status: "shipped" }],
+      registered: ["check"],
+    }),
+    [],
+  );
+});
+
+test("hashes CRLF and LF text identically so the manifest is platform-independent", () => {
+  // Git checks this repository out with CRLF on Windows. If the hash depended on line
+  // endings, the committed baseline could never match on both platforms.
+  assert.equal(sha256(normalizeText("a\r\nb\r\n")), sha256(normalizeText("a\nb\n")));
+});
+
+test("normalizes to exactly one trailing newline", () => {
+  assert.equal(normalizeText("x\n\n\n"), "x\n");
+  assert.equal(normalizeText("x"), "x\n");
 });
