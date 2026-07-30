@@ -1,7 +1,7 @@
 import type { ProjectMap } from "@aker-build/project-map";
 import { SCHEMA_VERSION } from "@aker-build/project-map";
 import type { RunNote } from "./types.js";
-import { detectStack } from "./detect/stack.js";
+import { detectStack, partitionCoverage } from "./detect/stack.js";
 import { detectRepos } from "./detect/repos.js";
 import { detectDataAccess } from "./detect/data-access.js";
 import { detectRoutes } from "./detect/routes.js";
@@ -27,7 +27,7 @@ export function assemble(
   const notes: RunNote[] = [];
   const files = listFiles(root);
 
-  const stack = detectStack(root);
+  const stack = detectStack(root, files);
   const { repos } = detectRepos(root, listFiles);
 
   // P1 deepened detection — read-only evidence detectors. Each emits normative Evidence[]; none
@@ -79,6 +79,9 @@ export function assemble(
         runtime: stack.runtime,
         package_manager: stack.package_manager,
         frameworks: stack.frameworks, // already sorted in detectStack
+        // Reuses the frameworks already detected above — no second filesystem pass, and one
+        // source of truth about which stack this repo uses.
+        coverage: partitionCoverage(stack.frameworks),
       },
     },
     repos, // already sorted by path in detectRepos

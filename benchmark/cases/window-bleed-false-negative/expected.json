@@ -1,0 +1,7 @@
+{
+  "description": "GROUND TRUTH: listAllInvoices is unscoped and SHOULD fire TG-G4. The tenantId token belongs to auditFor, a separate statement, but falls inside the 5-line window of data-access.ts, so the detector currently misreads the unscoped query as tenant_scoped. This is a FALSE NEGATIVE in the flagship tenant-isolation gate. Expected encodes truth, not current behavior. Expected to FAIL until the window is statement-bounded.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": [
+    { "gate_id": "TG-G4", "path": "src/db.ts", "tier": "suspected" }
+  ]
+}

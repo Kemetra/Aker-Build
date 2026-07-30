@@ -1,0 +1,5 @@
+{
+  "description": "GROUND TRUTH: none of these are database queries. PascalCase alone is not evidence of an ORM model — Array/Object are builtins, Registry/Cache/Router are utility classes. TG-G4 must stay silent. Hard negative measuring MODEL_QUERY's false-positive rate; without it the model-first pattern's precision is unfalsifiable.",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": []
+}

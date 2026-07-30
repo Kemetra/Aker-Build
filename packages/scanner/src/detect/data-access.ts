@@ -12,14 +12,71 @@ const ORM_QUERY =
 const RAW_SQL =
   /\b(SELECT|UPDATE|DELETE|INSERT)\b[\s\S]{0,80}\bFROM\b|\bUPDATE\b\s+\w+\s+\bSET\b/i;
 
+// Model-first ORM idioms (Mongoose, Sequelize, TypeORM ActiveRecord): the receiver is the model
+// itself, e.g. `User.findOne(`. Receiver gating cannot use a handle allow-list here, so it keys on
+// the PascalCase naming convention models follow — a lowercase receiver like `users.find(` stays an
+// array method and is still ignored.
+//
+// The method list is deliberately restricted to verbs that are unambiguously ORM. PascalCase alone
+// is NOT evidence of a model: `Array.find(`, `Object.select(`, `Registry.find(`, and `Cache.find(`
+// are builtins and utility classes. Admitting the generic verbs (`find`, `select`, `insert`,
+// `create`, `update`, `delete`) would turn this pattern into a precision hole in the flagship gate,
+// so they are excluded — a bare `Model.find(` with no db-handle receiver was never strong evidence
+// anyway. Pinned by the pascal-case-non-model hard negative.
+const MODEL_QUERY = /\b[A-Z][A-Za-z0-9]*\.\s*(findMany|findFirst|findUnique|findOne|findAll|findByPk)\s*\(/;
+
 // A tenant-id token scoping the statement.
 const TENANT_TOKEN = /\btenant_?id\b|\borg_?id\b|\baccount_?id\b/i;
 
-// Statement window: the match line plus the next 5 lines (multi-line builder calls put the
-// `where:` clause below the call). A regex window can neither prove presence robustly nor prove
-// absence, so every window-based classification is emitted at medium confidence; only a
-// same-line tenant token is high.
-const WINDOW_LINES = 5;
+// Statement window: multi-line builder calls put the `where:` clause below the call, so the
+// window must extend past the match line — but only to the end of the query's OWN statement. An
+// unconditional line window lets a neighbouring statement's tenant token scope an unscoped query,
+// which is a false negative in the tenant-isolation gate. Bounding by bracket depth keeps the
+// multi-line case working while cutting the window off where the statement ends.
+//
+// Still a heuristic, not a parser: a regex window can neither prove presence robustly nor prove
+// absence, so every window-based classification is emitted at medium confidence; only a same-line
+// tenant token is high.
+const MAX_WINDOW_LINES = 20;
+
+/**
+ * The lines belonging to the statement that starts on `startIndex`, bounded by bracket depth.
+ * Walks forward while the call's brackets remain open, so the window ends where the statement
+ * does. Capped at MAX_WINDOW_LINES so an unbalanced or minified file cannot run away.
+ */
+function statementWindow(lines: string[], startIndex: number): string {
+  const first = lines[startIndex] ?? "";
+  let depth = countDepth(first);
+  if (depth <= 0) return ""; // statement closed on its own line — nothing below belongs to it
+  const collected: string[] = [];
+  const limit = Math.min(lines.length, startIndex + 1 + MAX_WINDOW_LINES);
+  for (let i = startIndex + 1; i < limit; i++) {
+    const line = lines[i] ?? "";
+    collected.push(line);
+    depth += countDepth(line);
+    if (depth <= 0) break; // the statement's brackets closed here
+  }
+  return collected.join("\n");
+}
+
+/**
+ * Net bracket depth contributed by a line: openers minus closers.
+ *
+ * Known limitation: brackets inside string literals and comments are counted. A SQL literal such
+ * as `"SELECT ... WHERE (a)"` is balanced and harmless, but an unbalanced closer in a string could
+ * end the window early and misread a scoped query as unscoped. Tracking string state would require
+ * a tokenizer, which this detector deliberately is not — the honest tradeoff is that window-based
+ * classifications stay at medium confidence (the `suspected` tier, which advises and never blocks).
+ * Verified against this repository: the window change introduced no new findings on real source.
+ */
+function countDepth(line: string): number {
+  let depth = 0;
+  for (const ch of line) {
+    if (ch === "(" || ch === "{" || ch === "[") depth++;
+    else if (ch === ")" || ch === "}" || ch === "]") depth--;
+  }
+  return depth;
+}
 
 /**
  * Detect database access sites as normative Evidence. Read-only: records WHERE a query happens
@@ -36,12 +93,12 @@ export function detectDataAccess(root: string, files: string[]): Evidence[] {
     const lines = content.split(/\r?\n/);
     for (let i = 0; i < lines.length; i++) {
       const text = lines[i] ?? "";
-      if (!ORM_QUERY.test(text) && !RAW_SQL.test(text)) continue;
+      if (!ORM_QUERY.test(text) && !RAW_SQL.test(text) && !MODEL_QUERY.test(text)) continue;
       if (TENANT_TOKEN.test(text)) {
         out.push({ type: "line", path: rel, line: i + 1, signal: "tenant_scoped", confidence: "high" });
         continue;
       }
-      const window = lines.slice(i + 1, i + 1 + WINDOW_LINES).join("\n");
+      const window = statementWindow(lines, i);
       out.push({
         type: "line",
         path: rel,

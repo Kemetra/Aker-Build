@@ -259,4 +259,8 @@ No broad rewrites.
 
 ## The single next action
 
-FORTIFY (P1–P3), the report-only GitHub App (P4), and its self-hostable single-tenant runtime are implemented. The current prerequisite is **016 — Release Integrity**, which restores reproducible verification and source-truth documentation. After 016, **017 — One-Command Activation and Distribution** will package the existing kernel for external adoption. P5 and P6 remain deferred.
+FORTIFY (P1–P3), the report-only GitHub App (P4), its self-hostable single-tenant runtime, 016 (release integrity) and 017 (one-command distribution) are implemented.
+
+As of 2026-07-30, P3's "prove it" leg has been re-grounded: the benchmark corpus now contains cases the engine demonstrably failed before it passed (see `docs/superpowers/specs/2026-07-30-uniqueness-repositioning-design.md`). The next action is the **first public npm publish**, which is operator-owned and requires 2FA — everything up to it is verified.
+
+P5 and P6 remain deferred. P6's precondition is unchanged and now has a concrete open item: `confirmed`-tier precision depends on the `ROLE_GUARD` name allow-list in `g4-security.ts`, so a guard-name audit must precede any blocking check.

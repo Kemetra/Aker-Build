@@ -83,9 +83,70 @@ describe("detectDataAccess", () => {
     expect(ev[0]).toMatchObject({ line: 2, signal: "tenant_scoped", confidence: "medium" });
   });
 
+  it("does not let a neighbouring statement's tenant token scope an unscoped query", () => {
+    // The tenantId below belongs to auditFor, a separate statement. Treating it as scoping
+    // listAllInvoices is a false negative in the flagship tenant-isolation gate.
+    const root = fixture({
+      "db.ts":
+        `export async function listAllInvoices(db) {\n` +
+        `  return db.invoice.findMany({\n` +
+        `    orderBy: { createdAt: "desc" },\n` +
+        `  });\n` +
+        `}\n` +
+        `\n` +
+        `export async function auditFor(db, tenantId) {\n` +
+        `  return db.auditLog.findMany({ where: { tenantId } });\n` +
+        `}\n`,
+    });
+    const ev = detectDataAccess(root, ["db.ts"]);
+    expect(ev).toHaveLength(2);
+    expect(ev[0]).toMatchObject({ line: 2, signal: "no_tenant_filter" });
+    expect(ev[1]).toMatchObject({ line: 8, signal: "tenant_scoped" });
+  });
+
   it("ignores bare array/Map method calls (no db-ish receiver)", () => {
     const root = fixture({
       "util.ts": `export const active = (users) => users.find((u) => u.active);\nexport const drop = (m, k) => m.delete(k);\n`,
+    });
+    expect(detectDataAccess(root, ["util.ts"])).toEqual([]);
+  });
+
+  it("detects model-first ORM calls on a PascalCase receiver (Mongoose style)", () => {
+    const root = fixture({
+      "models.ts": `export const byEmail = (email) => User.findOne({ email });\n`,
+    });
+    const ev = detectDataAccess(root, ["models.ts"]);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]).toMatchObject({ line: 1, signal: "no_tenant_filter" });
+  });
+
+  it("scopes a model-first call carrying a tenant token", () => {
+    const root = fixture({
+      "models.ts": `export const mine = (t) => Invoice.findAll({ tenantId: t });\n`,
+    });
+    const ev = detectDataAccess(root, ["models.ts"]);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]?.signal).toBe("tenant_scoped");
+  });
+
+  it("does not fire on PascalCase non-model receivers (builtins and utility classes)", () => {
+    // PascalCase alone is not evidence of an ORM model. Generic verbs on builtins and utility
+    // classes must stay silent, or MODEL_QUERY becomes a precision hole in the flagship gate.
+    const root = fixture({
+      "util.ts":
+        `export const a = (x) => Array.find(x);\n` +
+        `export const b = (k) => Object.select(k);\n` +
+        `export const c = (id) => Registry.find(id);\n` +
+        `export const d = (key) => Cache.find(key);\n` +
+        `export const e = (p) => Router.find(p);\n`,
+    });
+    expect(detectDataAccess(root, ["util.ts"])).toEqual([]);
+  });
+
+  it("does not treat a lowercase local variable as a model receiver", () => {
+    // `users.find(...)` is an array method. Only PascalCase receivers read as ORM models.
+    const root = fixture({
+      "util.ts": `export const active = (users) => users.find((u) => u.active);\n`,
     });
     expect(detectDataAccess(root, ["util.ts"])).toEqual([]);
   });

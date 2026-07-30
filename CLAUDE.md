@@ -30,9 +30,11 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding, with report output contract hardening active.
+MVP implementation / dogfooding, with one-command activation and npm distribution hardening active.
 
-The MVP CLI is implemented (`scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`).
+The MVP CLI is implemented (`check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`). The repository builds and verifies `aker-build@0.1.0`; the first public npm publish remains operator-owned.
+
+> The Spec Kit block at the end of this file names 017 as the active feature. That block is tool-managed — treat this section as the authoritative statement of current phase.
 
 Implementation is allowed only through reviewed spec, plan, and tasks files. Do not implement production code unless a reviewed spec, plan, and tasks file explicitly allow it.
 
@@ -41,6 +43,13 @@ A report-only GitHub Action dogfood workflow exists (Aker Build runs against its
 The "Fortify, then Expand" roadmap is approved (2026-06-21). FORTIFY (P1–P3) and the self-hostable, single-tenant **report-only GitHub App (P4)** are implemented — see `specs/014-github-app-report-only/` and `specs/015-github-app-deployment/`. The App must stay report-only (Checks run + annotations only; no mutation), stateless, and secret-safe.
 
 The hosted dashboard / org view (P5) and any enforcing/blocking-merge check (P6) remain deferred and unapproved.
+
+Detection quality is measured against `benchmark/cases/` (19 cases) and gated by `benchmark/thresholds.json`. Two rules hold when working on detectors:
+
+1. **A new detection pattern requires a new hard negative.** A pattern with no case it must stay silent on has unfalsifiable precision, which is indistinguishable from having no measurement at all.
+2. **Never resolve a threshold breach by lowering the floor.** Fix the detector, or lower the floor as a recorded decision with a written reason and the uncovered pattern documented.
+
+See `docs/superpowers/specs/2026-07-30-uniqueness-repositioning-design.md` for the positioning these rules support, and for what the competitive research retired.
 
 ---
 
@@ -78,6 +87,7 @@ MVP commands:
 
 ```bash
 aker-build init
+aker-build check
 aker-build scan
 aker-build map
 aker-build gates
@@ -215,5 +225,5 @@ Do not implement CLI scanner before the Project Map schema exists.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/016-release-integrity/plan.md` (active feature: 016-release-integrity).
+`specs/017-one-command-distribution/plan.md` (active feature: 017-one-command-distribution).
 <!-- SPECKIT END -->

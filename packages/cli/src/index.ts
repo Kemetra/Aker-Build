@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { runCheck } from "./commands/check.js";
 import { runScan } from "./commands/scan.js";
 import { runMap } from "./commands/map.js";
 import { runGatesCommand } from "./commands/gates.js";
@@ -7,7 +8,9 @@ import { runRouteCommand } from "./commands/route.js";
 import { runPromptCommand } from "./commands/prompt.js";
 import { runReviewCommand } from "./commands/review.js";
 import { runReportCommand } from "./commands/report.js";
+import { CLI_VERSION } from "./version.js";
 
+export { runCheck } from "./commands/check.js";
 export { runScan } from "./commands/scan.js";
 export { runMap } from "./commands/map.js";
 export { runGatesCommand } from "./commands/gates.js";
@@ -16,14 +19,23 @@ export { runRouteCommand } from "./commands/route.js";
 export { runPromptCommand } from "./commands/prompt.js";
 export { runReviewCommand } from "./commands/review.js";
 export { runReportCommand } from "./commands/report.js";
+export { CLI_VERSION } from "./version.js";
 
-/** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
-export function buildProgram(): Command {
-  const program = new Command();
+/**
+ * Register the analysis stages: what is the source truth, and what is risky?
+ * Split from buildProgram purely so registration reads as three groups matching the product's own
+ * vocabulary (analyse → plan → verify) rather than one flat list of nine.
+ */
+function registerAnalysisCommands(program: Command): void {
   program
-    .name("aker-build")
-    .description("Aker Build — CLI-first SaaS Build Kernel")
-    .version("0.0.0");
+    .command("check")
+    .description("Run scan, gates, queue, route, and report in one read-only pass")
+    .argument("[path]", "target repo path", ".")
+    .option("--config <path>", "explicit aker-build.config.json/yaml path")
+    .option("--out <dir>", "output directory for the complete artifact set", ".aker-build")
+    .action((path: string, opts: { config?: string; out: string }) => {
+      process.exitCode = runCheck(path, opts);
+    });
 
   program
     .command("scan")
@@ -61,6 +73,10 @@ export function buildProgram(): Command {
       },
     );
 
+}
+
+/** Register the planning stages: what is next, and what may an agent touch? */
+function registerPlanningCommands(program: Command): void {
   program
     .command("queue")
     .description("Derive queue.json from the project map + gate findings")
@@ -94,6 +110,10 @@ export function buildProgram(): Command {
       process.exitCode = runPromptCommand(id, opts);
     });
 
+}
+
+/** Register the verification stages: is this ready, and what did we produce? */
+function registerVerificationCommands(program: Command): void {
   program
     .command("review-pr")
     .description("Review a local diff (or GitHub PR) against the gates + declared scope → Ready / Not Ready / Needs Verification")
@@ -123,6 +143,19 @@ export function buildProgram(): Command {
     .action((path: string, opts: { out: string; stdout?: boolean; format: "json" | "yaml" | "md" }) => {
       process.exitCode = runReportCommand(path, opts);
     });
+}
+
+/** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
+export function buildProgram(): Command {
+  const program = new Command();
+  program
+    .name("aker-build")
+    .description("Aker Build — CLI-first SaaS Build Kernel")
+    .version(CLI_VERSION);
+
+  registerAnalysisCommands(program);
+  registerPlanningCommands(program);
+  registerVerificationCommands(program);
 
   return program;
 }

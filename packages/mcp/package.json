@@ -1,0 +1,32 @@
+{
+  "name": "@aker-build/mcp",
+  "version": "0.0.0",
+  "description": "Aker Build MCP server — agents ask for the next safest task and the files they may touch",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "aker-build-mcp": "./src/bin.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aker-build/cli": "workspace:*",
+    "@aker-build/prompt": "workspace:*",
+    "@aker-build/queue": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

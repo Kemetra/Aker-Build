@@ -29,6 +29,15 @@ const detectedStackSchema = z.object({
   runtime: z.string().nullable(),
   package_manager: z.string().nullable(),
   frameworks: z.array(z.string()),
+  // Coverage honesty: which detected frameworks the detectors actually understand. Lets "no
+  // findings" be read as "no findings in covered frameworks" rather than as safety. Defaulted so
+  // maps written before this field still validate (output contract stays backward-compatible).
+  coverage: z
+    .object({
+      covered: z.array(z.string()).default([]),
+      uncovered: z.array(z.string()).default([]),
+    })
+    .default({ covered: [], uncovered: [] }),
 });
 
 const projectSchema = z.object({
