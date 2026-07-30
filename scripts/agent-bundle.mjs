@@ -108,3 +108,50 @@ export function reconcile({ entries, wrapperPaths }) {
   }
   return problems;
 }
+
+/**
+ * Read the `description` field out of a wrapper's YAML frontmatter.
+ *
+ * Deliberately a narrow line-scanner rather than a YAML parse: a wrapper's frontmatter
+ * carries exactly one scalar field, and keeping this dependency-free lets the verifier
+ * run before any install step.
+ */
+export function parseFrontmatter(text) {
+  const normalized = text.replace(/\r\n/g, "\n");
+  if (!normalized.startsWith("---\n")) return { description: null, body: normalized };
+  const end = normalized.indexOf("\n---", 3);
+  if (end === -1) return { description: null, body: normalized };
+
+  const block = normalized.slice(4, end);
+  const body = normalized.slice(end + 4);
+  let description = null;
+  for (const line of block.split("\n")) {
+    const match = /^description:\s*(.+)$/.exec(line.trim());
+    if (match) description = match[1].trim().replace(/^["']|["']$/g, "");
+  }
+  return { description, body };
+}
+
+/** A wrapper needs a description (it is what an agent sees when choosing a command) and a body. */
+export function validateWrapperText(text) {
+  const problems = [];
+  const { description, body } = parseFrontmatter(text);
+  if (!description) problems.push("wrapper is missing a frontmatter description");
+  if (body.trim() === "") problems.push("wrapper has an empty body");
+  return problems;
+}
+
+/**
+ * List the verbs Commander actually registers in the CLI entrypoint.
+ *
+ * This is what makes the projection rule enforceable: if a verb is renamed, a surface
+ * entry referencing the old name fails the build instead of quietly advertising a verb
+ * that no longer exists.
+ */
+export function extractCliVerbs(indexSource) {
+  const verbs = [];
+  const pattern = /\.command\(\s*"([a-z][a-z0-9-]*)"/g;
+  let match;
+  while ((match = pattern.exec(indexSource)) !== null) verbs.push(match[1]);
+  return verbs;
+}

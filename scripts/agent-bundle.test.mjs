@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reconcile, validateSurfaceEntry } from "./agent-bundle.mjs";
+import {
+  extractCliVerbs,
+  parseFrontmatter,
+  reconcile,
+  validateSurfaceEntry,
+  validateWrapperText,
+} from "./agent-bundle.mjs";
 
 const valid = {
   name: "next",
@@ -133,4 +139,34 @@ test("fails on two entries claiming the same bundle destination", () => {
     ],
   });
   assert.match(problems.join(" "), /duplicate/i);
+});
+
+test("parses a description out of wrapper frontmatter", () => {
+  const parsed = parseFrontmatter("---\ndescription: Do the thing\n---\n\nBody text.\n");
+  assert.equal(parsed.description, "Do the thing");
+  assert.equal(parsed.body.trim(), "Body text.");
+});
+
+test("reports a null description when frontmatter is absent", () => {
+  assert.equal(parseFrontmatter("Just a body.\n").description, null);
+});
+
+test("rejects a wrapper with no description because it drives slash-command discovery", () => {
+  assert.match(validateWrapperText("No frontmatter here.\n").join(" "), /description/);
+});
+
+test("rejects a wrapper with an empty body", () => {
+  assert.match(validateWrapperText("---\ndescription: Hi\n---\n\n").join(" "), /body/);
+});
+
+test("accepts a wrapper carrying both a description and a body", () => {
+  assert.deepEqual(validateWrapperText("---\ndescription: Hi\n---\n\nLoad the skill.\n"), []);
+});
+
+test("extracts registered CLI verbs from the commander index source", () => {
+  const source = `
+    program.command("check").description("Run the chain");
+    program.command("route").description("Select one next task");
+  `;
+  assert.deepEqual(extractCliVerbs(source), ["check", "route"]);
 });
