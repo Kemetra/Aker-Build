@@ -59,7 +59,16 @@ function statementWindow(lines: string[], startIndex: number): string {
   return collected.join("\n");
 }
 
-/** Net bracket depth contributed by a line: openers minus closers. */
+/**
+ * Net bracket depth contributed by a line: openers minus closers.
+ *
+ * Known limitation: brackets inside string literals and comments are counted. A SQL literal such
+ * as `"SELECT ... WHERE (a)"` is balanced and harmless, but an unbalanced closer in a string could
+ * end the window early and misread a scoped query as unscoped. Tracking string state would require
+ * a tokenizer, which this detector deliberately is not — the honest tradeoff is that window-based
+ * classifications stay at medium confidence (the `suspected` tier, which advises and never blocks).
+ * Verified against this repository: the window change introduced no new findings on real source.
+ */
 function countDepth(line: string): number {
   let depth = 0;
   for (const ch of line) {

@@ -32,7 +32,7 @@ Aker Build's MVP CLI chain and FORTIFY phases are implemented. The repository no
 
 Aker Build's detection quality is measured, not asserted — **including where it
 fails**. A labeled corpus of synthetic multi-tenant failure cases
-(`benchmark/cases/`, 18 cases) runs through the real `scan → gates` pipeline;
+(`benchmark/cases/`, 19 cases) runs through the real `scan → gates` pipeline;
 precision and recall are computed per gate × confidence tier, and CI fails if
 they drop below `benchmark/thresholds.json`.
 
@@ -66,27 +66,39 @@ them did:
   `User.findOne(`. Query detection gated on a database-handle allow-list
   (`db`, `prisma`, `knex`, …), so these were never seen at all. Now PascalCase
   receivers are recognised as models.
-- **Multi-line scoping** (`multiline-tenant-scope`) and **array methods**
-  (`bare-array-method`) pin the opposite failures — a `where: { tenantId }` on
-  the line below the call must still count as scoped, and `users.find(...)` must
-  still be ignored as an array method, not read as a query.
+- **Multi-line scoping** (`multiline-tenant-scope`), **array methods**
+  (`bare-array-method`) and **PascalCase non-models** (`pascal-case-non-model`)
+  pin the opposite failures — a `where: { tenantId }` on the line below the call
+  must still count as scoped; `users.find(...)` must still be ignored as an array
+  method; and `Array.find(`, `Registry.find(`, `Cache.find(` must not be mistaken
+  for ORM models just because they are capitalised.
 
 Both fixes remain heuristics rather than parsing: window-based classifications
 are emitted at `medium` confidence, which maps to the `suspected` tier — the
 honest-uncertainty channel that advises and never blocks. Every finding carries
 an evidence span (`file:line`) and a confidence tier.
 
-Known remaining limitation: detection is still regex-based, so ORM idioms
-outside the handle allow-list and the PascalCase convention (e.g. a lowercase
-repository object with an unlisted name) go unseen. The `coverage` field below
-is how that shows up honestly rather than silently.
+Known remaining limitations, all deliberate: detection is regex-based, not
+parsed, so ORM idioms outside the handle allow-list and the PascalCase convention
+(e.g. a lowercase repository object with an unlisted name) go unseen; and the
+statement window counts brackets inside string literals, so an unbalanced closer
+in a SQL string could end a window early. The `coverage` field below is how the
+first shows up honestly rather than silently; the second is why window-based
+findings stay in `suspected`.
 
 ### Coverage
 
-The scanner partitions the frameworks it detects into those its detectors
-understand and those they do not (`project-map.coverage.covered` /
-`.uncovered`), so "no findings" always reads as "no findings **in covered
-frameworks**". An unrecognised stack produces silence, and silence is not safety.
+The scanner partitions the frameworks and data-access libraries it detects into
+those its detectors understand and those they do not
+(`project-map.coverage.covered` / `.uncovered`), so "no findings" always reads as
+"no findings **in covered frameworks**". An unrecognised stack produces silence,
+and silence is not safety.
+
+Covered today: `express`, `prisma`, `mongoose`, `knex`, `sequelize`, `typeorm`,
+`drizzle`. Detected but **not** understood — and reported as such: `nextjs`
+(route handlers are `export async function GET`), `nestjs` (decorator-based),
+`fastify` (hook-based), and UI frameworks. A scan of an `express` + `prisma` +
+`next` repo reports `covered: [express, prisma]`, `uncovered: [nextjs]`.
 
 Aker Build analyses TypeScript **application-layer** query code. For
 database-layer RLS analysis it complements, rather than replaces, tools such as
