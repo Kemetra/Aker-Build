@@ -82,7 +82,7 @@ try {
     consumer,
     "node_modules",
     ".bin",
-    process.platform === "win32" ? "aker-build.cmd" : "aker-build",
+    process.platform === "win32" ? "aker.cmd" : "aker",
   );
   run(bin, ["--help"], consumer);
   const installedVersion = run(bin, ["--version"], consumer);
