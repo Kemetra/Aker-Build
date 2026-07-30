@@ -1,0 +1,7 @@
+{
+  "description": "GROUND TRUTH: findUserByEmail queries without a tenant filter, so TG-G4 SHOULD fire. The receiver-gated ORM_QUERY regex only matches chains starting with a known db-handle word (db, prisma, knex, ...), so a model-first call like User.findOne( is never detected at all. Expected encodes truth, not current behavior. Expected to FAIL until framework signature packs land (W3b).",
+  "gates_under_test": ["TG-G4"],
+  "expected_findings": [
+    { "gate_id": "TG-G4", "path": "src/models.ts", "tier": "suspected" }
+  ]
+}
