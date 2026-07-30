@@ -15,10 +15,15 @@ const RAW_SQL =
 // Model-first ORM idioms (Mongoose, Sequelize, TypeORM ActiveRecord): the receiver is the model
 // itself, e.g. `User.findOne(`. Receiver gating cannot use a handle allow-list here, so it keys on
 // the PascalCase naming convention models follow — a lowercase receiver like `users.find(` stays an
-// array method and is still ignored. The method list is narrower than ORM_QUERY's on purpose:
-// `create`/`update`/`delete` are common non-ORM method names on PascalCase classes.
-const MODEL_QUERY =
-  /\b[A-Z][A-Za-z0-9]*\.\s*(find|findMany|findFirst|findUnique|findOne|findAll|findByPk|select|insert)\s*\(/;
+// array method and is still ignored.
+//
+// The method list is deliberately restricted to verbs that are unambiguously ORM. PascalCase alone
+// is NOT evidence of a model: `Array.find(`, `Object.select(`, `Registry.find(`, and `Cache.find(`
+// are builtins and utility classes. Admitting the generic verbs (`find`, `select`, `insert`,
+// `create`, `update`, `delete`) would turn this pattern into a precision hole in the flagship gate,
+// so they are excluded — a bare `Model.find(` with no db-handle receiver was never strong evidence
+// anyway. Pinned by the pascal-case-non-model hard negative.
+const MODEL_QUERY = /\b[A-Z][A-Za-z0-9]*\.\s*(findMany|findFirst|findUnique|findOne|findAll|findByPk)\s*\(/;
 
 // A tenant-id token scoping the statement.
 const TENANT_TOKEN = /\btenant_?id\b|\borg_?id\b|\baccount_?id\b/i;

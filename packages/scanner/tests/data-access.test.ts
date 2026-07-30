@@ -122,11 +122,25 @@ describe("detectDataAccess", () => {
 
   it("scopes a model-first call carrying a tenant token", () => {
     const root = fixture({
-      "models.ts": `export const mine = (t) => Invoice.find({ tenantId: t });\n`,
+      "models.ts": `export const mine = (t) => Invoice.findAll({ tenantId: t });\n`,
     });
     const ev = detectDataAccess(root, ["models.ts"]);
     expect(ev).toHaveLength(1);
     expect(ev[0]?.signal).toBe("tenant_scoped");
+  });
+
+  it("does not fire on PascalCase non-model receivers (builtins and utility classes)", () => {
+    // PascalCase alone is not evidence of an ORM model. Generic verbs on builtins and utility
+    // classes must stay silent, or MODEL_QUERY becomes a precision hole in the flagship gate.
+    const root = fixture({
+      "util.ts":
+        `export const a = (x) => Array.find(x);\n` +
+        `export const b = (k) => Object.select(k);\n` +
+        `export const c = (id) => Registry.find(id);\n` +
+        `export const d = (key) => Cache.find(key);\n` +
+        `export const e = (p) => Router.find(p);\n`,
+    });
+    expect(detectDataAccess(root, ["util.ts"])).toEqual([]);
   });
 
   it("does not treat a lowercase local variable as a model receiver", () => {
