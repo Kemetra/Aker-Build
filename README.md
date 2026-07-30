@@ -157,8 +157,11 @@ node scripts/verify-cli-package.mjs --tarball-dir release
 After the owner completes the first public release, the canonical activation path is:
 
 ```bash
-npx aker-build check .
+npx --package aker-build aker check .
 ```
+
+> The package is `aker-build`; the command it installs is `aker`. Once installed
+> globally (`npm i -g aker-build`), it is just `aker check .`.
 
 The standalone source commands remain available when a specific stage is needed:
 
@@ -264,16 +267,16 @@ scan sources
 ## MVP Commands
 
 ```bash
-aker-build check [path]
-aker-build scan [path]
-aker-build map
-aker-build gates [path]
-aker-build queue [path]
-aker-build route [path]
-aker-build prompt <id> --agent claude|codex|generic
-aker-build review-pr [path] --local-diff
-aker-build review-pr <number>
-aker-build report [path]
+aker check [path]
+aker scan [path]
+aker map
+aker gates [path]
+aker queue [path]
+aker route [path]
+aker prompt <id> --agent claude|codex|generic
+aker review-pr [path] --local-diff
+aker review-pr <number>
+aker report [path]
 ```
 
 `check` composes `scan → gates → queue → route → report` and promotes its six-file output only after every stage succeeds. It does not generate prompts, review diffs, execute agents, or mutate the analyzed source.

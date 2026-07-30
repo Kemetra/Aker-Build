@@ -86,17 +86,17 @@ Aker Build itself must be Spec Kit compatible but not Spec Kit dependent.
 MVP commands:
 
 ```bash
-aker-build init
-aker-build check
-aker-build scan
-aker-build map
-aker-build gates
-aker-build queue
-aker-build route
-aker-build prompt Q-001 --agent claude
-aker-build prompt Q-001 --agent codex
-aker-build review-pr --local-diff
-aker-build report
+aker init
+aker check
+aker scan
+aker map
+aker gates
+aker queue
+aker route
+aker prompt Q-001 --agent claude
+aker prompt Q-001 --agent codex
+aker review-pr --local-diff
+aker report
 ```
 
 MVP outputs:
