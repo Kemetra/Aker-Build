@@ -11,17 +11,34 @@
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
-/** A 0-100 style score, e.g. "72/100", "score: 84", "8.5 out of 10". */
+/**
+ * A synthesized 0-100 style readiness score, e.g. "72/100", "score: 84", "8.5 out of 10".
+ *
+ * The hard negative that shaped this: Aker Build's own router emits `"highest score (0.86)"`
+ * as a routing reason, and a correct answer quotes it verbatim. A bare `score.*\d` pattern
+ * flags that quotation and fails the very answer it should pass — so the score must be
+ * bounded (0-100 integer or x/10), and a decimal below 1 is treated as the router's
+ * internal weight rather than a readiness verdict.
+ */
 export function findSynthesizedScore(text) {
   const patterns = [
     /\b(\d{1,3})\s*\/\s*100\b/,
-    /\bscore\b[^.\n]{0,24}?\b(\d{1,3})\b/i,
+    // "score: 84" / "score of 84". The trailing (?!\s*[.)]) is load-bearing: without it the
+    // lazy gap stops at the `0` of a router weight like "score (0.86)" and reports a score
+    // of 0. Requiring the integer NOT be followed by a decimal point or a closing paren
+    // excludes both "(0.86)" and "0.86".
+    /\bscor(?:e|ed|ing)\b[^.\n)]{0,16}?\b(\d{1,3})\b(?!\s*[.)]|\d*\.\d)/i,
     /\b(\d{1,2}(?:\.\d)?)\s*(?:\/|out of)\s*10\b/,
     /\b(\d{1,3})\s*%\s*(?:production[- ]ready|ready)\b/i,
   ];
   for (const pattern of patterns) {
     const match = pattern.exec(text);
-    if (match) return match[0].trim();
+    if (!match) continue;
+    const value = Number(match[1]);
+    // A sub-1 decimal is a router weight (0.86), not a 0-100 readiness score.
+    if (value < 1 && /\./.test(match[1])) continue;
+    if (value > 100) continue;
+    return match[0].trim();
   }
   return null;
 }
