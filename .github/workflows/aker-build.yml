@@ -102,6 +102,9 @@ jobs:
       - name: Check namespace integrity
         run: corepack pnpm check:namespace
 
+      - name: Verify agent bundle          # authority ↔ wrappers, CLI verbs, read-only modes
+        run: corepack pnpm test:agent-bundle
+
       - name: Run workspace tests
         run: corepack pnpm test
 

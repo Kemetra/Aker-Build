@@ -230,6 +230,25 @@ All three tools are read-only. The server never modifies your repository, never
 commits, never merges, and never executes an agent — consistent with Aker Build's
 identity as a control plane rather than an actor.
 
+## For AI coding agents (plugin)
+
+Install the plugin and an agent needs to know one name — `aker-build`:
+
+```text
+/aker-build:next     one next-safest task + the files it may touch
+/aker-build:check    run the read-only chain, findings advisory
+/aker-build:review   Ready / Not Ready / Needs Verification
+/aker-build:status   produced-artifact state, as recorded
+/aker-build:prompt   the scoped prompt for one queue item
+/aker-build:help     the full installed command map
+```
+
+The bundle is generated from `distribution/agent-command-surface.yaml` and
+hash-verified per file, so the surface cannot drift from the CLI it projects: every
+referenced verb is checked against `packages/cli/src/index.ts` at build time, every
+command is asserted `read-only`, and the regenerated manifest must match the
+reviewed baseline committed to Git. See [`distribution/`](distribution/README.md).
+
 ## Core flow
 
 ```text
