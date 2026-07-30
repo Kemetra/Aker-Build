@@ -1,0 +1,11 @@
+{
+  "name": "@aker-build/plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated Claude Code plugin bundle — the agent surface for Aker Build's read-only kernel",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test ../../scripts/agent-bundle.test.mjs"
+  }
+}

@@ -15,7 +15,7 @@ afterEach(() => {
   if (existsSync(out)) rmSync(out, { recursive: true, force: true });
 });
 
-describe("T026 `aker-build scan` command", () => {
+describe("T026 `aker scan` command", () => {
   it("produces a 002-valid project-map.json and exits 0", () => {
     const code = runScan(saas, { out });
     expect(code).toBe(0);

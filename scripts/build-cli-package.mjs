@@ -44,7 +44,7 @@ export async function buildCliPackage() {
 
   await build({
     entryPoints: [join(repo, "packages", "cli", "src", "bin.ts")],
-    outfile: join(output, "dist", "aker-build.js"),
+    outfile: join(output, "dist", "aker.js"),
     bundle: true,
     platform: "node",
     format: "esm",
@@ -56,7 +56,7 @@ export async function buildCliPackage() {
     },
   });
 
-  const executablePath = join(output, "dist", "aker-build.js");
+  const executablePath = join(output, "dist", "aker.js");
   const executable = readFileSync(executablePath, "utf8");
   if (!executable.startsWith("#!/usr/bin/env node")) {
     throw new Error("built CLI is missing its node shebang");
@@ -69,8 +69,9 @@ export async function buildCliPackage() {
     description: "Aker Build — CLI-first SaaS Build Kernel",
     license: "MIT",
     type: "module",
-    bin: { "aker-build": "dist/aker-build.js" },
-    files: ["dist/aker-build.js", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.txt"],
+    // The package is `aker-build`; the command it installs is `aker`.
+    bin: { aker: "dist/aker.js" },
+    files: ["dist/aker.js", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.txt"],
     engines: { node: ">=22.13" },
     repository: { type: "git", url: "git+https://github.com/Kemetra/Aker-Build.git" },
     homepage: "https://github.com/Kemetra/Aker-Build#readme",

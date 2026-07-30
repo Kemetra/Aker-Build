@@ -1,5 +1,5 @@
 export const REQUIRED_PACKAGE_FILES = [
-  "dist/aker-build.js",
+  "dist/aker.js",
   "README.md",
   "LICENSE",
   "THIRD_PARTY_NOTICES.txt",
@@ -39,8 +39,8 @@ const RELEASE_MANIFEST_RULES = [
     message: "release package description/type mismatch",
   },
   {
-    holds: (m) => m.bin?.["aker-build"] === "dist/aker-build.js",
-    message: "aker-build bin must target dist/aker-build.js",
+    holds: (m) => m.bin?.aker === "dist/aker.js",
+    message: "aker bin must target dist/aker.js",
   },
   {
     holds: (m) => m.engines?.node === ">=22.13",

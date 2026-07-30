@@ -27,7 +27,7 @@
     ".": "./src/index.ts"
   },
   "bin": {
-    "aker-build": "./src/bin.ts"
+    "aker": "./src/bin.ts"
   },
   "scripts": {
     "test": "vitest run",

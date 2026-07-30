@@ -1,0 +1,11 @@
+{
+  "name": "aker-build",
+  "version": "__VERSION__",
+  "description": "Drive Aker Build's read-only SaaS build kernel from an agent: next safest task, derived scope, and gate findings.",
+  "author": { "name": "Ahmed Shaaban" },
+  "homepage": "https://github.com/Kemetra/Aker-Build",
+  "repository": "https://github.com/Kemetra/Aker-Build",
+  "license": "MIT",
+  "skills": "./skills/",
+  "commands": "./commands/"
+}

@@ -18,8 +18,8 @@ const valid = {
   description: "Aker Build — CLI-first SaaS Build Kernel",
   license: "MIT",
   type: "module",
-  bin: { "aker-build": "dist/aker-build.js" },
-  files: ["dist/aker-build.js", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.txt"],
+  bin: { aker: "dist/aker.js" },
+  files: ["dist/aker.js", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.txt"],
   engines: { node: ">=22.13" },
   repository: { type: "git", url: "git+https://github.com/Kemetra/Aker-Build.git" },
   homepage: "https://github.com/Kemetra/Aker-Build#readme",
@@ -36,7 +36,7 @@ for (const [name, mutate] of [
   ["workspace reference", (manifest) => { manifest.devDependencies = { "@aker-build/scanner": "workspace:*" }; }],
   ["runtime dependency", (manifest) => { manifest.dependencies = { commander: "^12.1.0" }; }],
   ["install hook", (manifest) => { manifest.scripts = { postinstall: "node install.js" }; }],
-  ["wrong bin", (manifest) => { manifest.bin = { "aker-build": "src/bin.ts" }; }],
+  ["wrong bin", (manifest) => { manifest.bin = { aker: "src/bin.ts" }; }],
   ["private package", (manifest) => { manifest.private = true; }],
   ["missing discovery metadata", (manifest) => { delete manifest.repository; }],
 ]) {
@@ -47,7 +47,7 @@ for (const [name, mutate] of [
   });
 }
 
-const packed = ["package.json", "dist/aker-build.js", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.txt"];
+const packed = ["package.json", "dist/aker.js", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.txt"];
 
 test("accepts the exact packed file set", () => {
   assert.doesNotThrow(() => validatePackedPaths(packed));
@@ -94,7 +94,7 @@ test("parses and validates --tarball-dir", () => {
 test("builds a self-contained executable package with required license notices", async () => {
   const packageDir = await buildCliPackage();
   const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
-  const executablePath = join(packageDir, "dist", "aker-build.js");
+  const executablePath = join(packageDir, "dist", "aker.js");
   const executable = readFileSync(executablePath, "utf8");
   const notices = readFileSync(join(packageDir, "THIRD_PARTY_NOTICES.txt"), "utf8");
 

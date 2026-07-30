@@ -1,0 +1,80 @@
+# Canonical public command surface -- the single authority for what the generated
+# agent bundle advertises.
+#
+# Scope: agent-platform surfaces only. CLI verbs remain owned by
+# `packages/cli/src/index.ts`; an entry here MAY reference a CLI verb but never
+# defines one. The agent surface is a projection of the CLI, never a second
+# source of truth.
+#
+# Reconciled by `scripts/verify-agent-bundle.mjs`. Every shipped command needs a
+# reviewed wrapper template and a generated bundle file; a deferred or internal
+# entry must have neither. Adding a command here without shipping its wrapper --
+# or shipping a wrapper absent from here -- fails verification.
+schema_version: 1
+canonical_repository: Kemetra/Aker-Build
+commands:
+  - name: help
+    platform: claude
+    intent: Show the accurate installed Aker Build command map and surface distinctions.
+    cli_verbs: []
+    skill: aker-build
+    wrapper_template: distribution/bundle-templates/claude/commands/help.md
+    bundle_destination: commands/help.md
+    mode: read-only
+    status: shipped
+  - name: check
+    platform: claude
+    intent: Run the read-only chain and interpret its findings as advisory.
+    cli_verbs: [check]
+    skill: aker-build
+    wrapper_template: distribution/bundle-templates/claude/commands/check.md
+    bundle_destination: commands/check.md
+    mode: read-only
+    status: shipped
+  - name: next
+    platform: claude
+    intent: Return the one next-safest task with its derived file scope.
+    cli_verbs: [route]
+    skill: aker-build
+    wrapper_template: distribution/bundle-templates/claude/commands/next.md
+    bundle_destination: commands/next.md
+    mode: read-only
+    status: shipped
+  - name: status
+    platform: claude
+    intent: Report the state of produced Aker Build artifacts exactly as recorded.
+    cli_verbs: [report]
+    skill: aker-build
+    wrapper_template: distribution/bundle-templates/claude/commands/status.md
+    bundle_destination: commands/status.md
+    mode: read-only
+    status: shipped
+  - name: review
+    platform: claude
+    intent: Review a local diff or PR and report Ready / Not Ready / Needs Verification.
+    cli_verbs: [review-pr]
+    skill: aker-build
+    wrapper_template: distribution/bundle-templates/claude/commands/review.md
+    bundle_destination: commands/review.md
+    mode: read-only
+    status: shipped
+  - name: prompt
+    platform: claude
+    intent: Compile the safe, scoped agent prompt for one queue item.
+    cli_verbs: [prompt]
+    skill: aker-build
+    wrapper_template: distribution/bundle-templates/claude/commands/prompt.md
+    bundle_destination: commands/prompt.md
+    mode: read-only
+    status: shipped
+  # Spec 019 ships the governed loop. Recorded here so the authority states the
+  # planned surface, with no wrapper and no bundle file until 019 lands.
+  - name: auto
+    platform: claude
+    intent: Run the governed loop one action at a time until the next human gate.
+    cli_verbs: []
+    skill: aker-build
+    wrapper_template: ""
+    bundle_destination: ""
+    mode: read-only
+    status: deferred

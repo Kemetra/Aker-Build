@@ -27,7 +27,7 @@ export function buildContext(repoRoot: string, outDir: string, config?: AkerBuil
   const mapPath = resolve(outDir, "project-map.json");
   if (!existsSync(mapPath)) {
     throw new MissingProjectMapError(
-      `No produced map at ${mapPath}. Run \`aker-build scan\` first.`,
+      `No produced map at ${mapPath}. Run \`aker scan\` first.`,
     );
   }
 

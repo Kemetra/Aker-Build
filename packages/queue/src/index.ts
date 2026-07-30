@@ -69,7 +69,7 @@ export function route(targetPath: string, opts: RouteOptions = {}, inputs?: Part
   const out = opts.out ?? DEFAULT_OUT;
   const queuePath = resolve(out, QUEUE_FILENAME);
   if (!existsSync(queuePath)) {
-    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`aker-build queue\` first.`);
+    throw new MissingQueueError(`No produced queue at ${queuePath}. Run \`aker queue\` first.`);
   }
   const parsed = JSON.parse(readFileSync(queuePath, "utf8")) as Queue;
   const ctx = buildContext(resolve(targetPath), out, inputs);

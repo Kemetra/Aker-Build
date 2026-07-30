@@ -27,32 +27,32 @@ The executable is generated at `packages/cli/dist/npm/dist/aker-build.js`. Publi
 
 ```bash
 # Run scan → gates → queue → route → report atomically
-aker-build check [path] [--config <path>] [--out <dir>]
+aker check [path] [--config <path>] [--out <dir>]
 
 # Scan a repo (read-only) and write .aker-build/project-map.json
-aker-build scan [path] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
+aker scan [path] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Show / re-emit the produced map
-aker-build map [--out <dir>] [--format json|yaml]
+aker map [--out <dir>] [--format json|yaml]
 
 # Run SaaS gates and write risks.json
-aker-build gates [path] [--gates <ids>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
+aker gates [path] [--gates <ids>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Derive queue.json from project-map.json + risks.json
-aker-build queue [path] [--out <dir>] [--stdout] [--format json|yaml]
+aker queue [path] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Select one next-safest task and write route.json
-aker-build route [path] [--out <dir>] [--stdout] [--format json|yaml]
+aker route [path] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Compile a safe agent prompt for a queue item
-aker-build prompt <id> [--agent claude|codex|generic] [--out <dir>] [--stdout]
+aker prompt <id> [--agent claude|codex|generic] [--out <dir>] [--stdout]
 
 # Review a local diff or GitHub PR
-aker-build review-pr [path] --local-diff [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
-aker-build review-pr <number> [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
+aker review-pr [path] --local-diff [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
+aker review-pr <number> [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
 
 # Summarize produced artifacts
-aker-build report [path] [--out <dir>] [--stdout] [--format json|yaml|md]
+aker report [path] [--out <dir>] [--stdout] [--format json|yaml|md]
 ```
 
 Successful `check` output contains exactly these owned artifacts:

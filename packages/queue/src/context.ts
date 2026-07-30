@@ -29,7 +29,7 @@ export function buildContext(repoRoot: string, outDir: string, inputs?: Partial<
 
   const mapPath = resolve(outDir, "project-map.json");
   if (!existsSync(mapPath)) {
-    throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`aker-build scan\` first.`);
+    throw new MissingProjectMapError(`No produced map at ${mapPath}. Run \`aker scan\` first.`);
   }
   const parsedMap = loadJson(readFileSync(mapPath, "utf8"));
   const mapResult = validate(parsedMap);
@@ -41,7 +41,7 @@ export function buildContext(repoRoot: string, outDir: string, inputs?: Partial<
 
   const risksPath = resolve(outDir, "risks.json");
   if (!existsSync(risksPath)) {
-    throw new MissingRisksError(`No produced risks at ${risksPath}. Run \`aker-build gates\` first.`);
+    throw new MissingRisksError(`No produced risks at ${risksPath}. Run \`aker gates\` first.`);
   }
   const parsedRisks = loadJson(readFileSync(risksPath, "utf8"));
   const risksResult = validateRisks(parsedRisks);

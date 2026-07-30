@@ -1,0 +1,68 @@
+{
+  "entries": [
+    {
+      "classification": "generated_wrapper",
+      "destination": ".claude-plugin/plugin.json",
+      "output_sha256": "8b5f479c95124c88eff062fb9747f27fe83bcd73b1420b69e5d3732e066ce5cf",
+      "source": "distribution/bundle-templates/claude/.claude-plugin/plugin.json",
+      "source_sha256": "f3b1792f7be6d68429619a960a54e243f34574e09bb694ee201f44e20be9af61",
+      "transform": "template-substitute-version-v1"
+    },
+    {
+      "classification": "router_skill",
+      "destination": "skills/aker-build/SKILL.md",
+      "output_sha256": "3da2081870f81f5a21a4d8d04c00e93b9291ab863bf62bc8cdb6d19e68333328",
+      "source": "distribution/bundle-templates/claude/skills/aker-build/SKILL.md",
+      "source_sha256": "3da2081870f81f5a21a4d8d04c00e93b9291ab863bf62bc8cdb6d19e68333328",
+      "transform": "copy-normalized-v1"
+    },
+    {
+      "classification": "generated_wrapper",
+      "destination": "commands/help.md",
+      "output_sha256": "406217099e1a3cff54ae7742c0379f94cd74e69e8841a207c4e9c15168028adf",
+      "source": "distribution/bundle-templates/claude/commands/help.md",
+      "source_sha256": "406217099e1a3cff54ae7742c0379f94cd74e69e8841a207c4e9c15168028adf",
+      "transform": "copy-normalized-v1"
+    },
+    {
+      "classification": "generated_wrapper",
+      "destination": "commands/check.md",
+      "output_sha256": "d018df51ff9b453d4ec6806e089f350fe493ea2b1cdec075d19e57dd1ade309c",
+      "source": "distribution/bundle-templates/claude/commands/check.md",
+      "source_sha256": "d018df51ff9b453d4ec6806e089f350fe493ea2b1cdec075d19e57dd1ade309c",
+      "transform": "copy-normalized-v1"
+    },
+    {
+      "classification": "generated_wrapper",
+      "destination": "commands/next.md",
+      "output_sha256": "7fea7faca1c82023fb5606d204536d3349bd5d6fbfafae6d9957b14c7de898d3",
+      "source": "distribution/bundle-templates/claude/commands/next.md",
+      "source_sha256": "7fea7faca1c82023fb5606d204536d3349bd5d6fbfafae6d9957b14c7de898d3",
+      "transform": "copy-normalized-v1"
+    },
+    {
+      "classification": "generated_wrapper",
+      "destination": "commands/status.md",
+      "output_sha256": "4b03309e723f9f3eb2e9fc37f330317c80117cfa4ca5887b0e2f76c4cc5a3d75",
+      "source": "distribution/bundle-templates/claude/commands/status.md",
+      "source_sha256": "4b03309e723f9f3eb2e9fc37f330317c80117cfa4ca5887b0e2f76c4cc5a3d75",
+      "transform": "copy-normalized-v1"
+    },
+    {
+      "classification": "generated_wrapper",
+      "destination": "commands/review.md",
+      "output_sha256": "78710178f90b8ac07ab2c315d90e3755b5c76ee209b192b6bccf89d8f12b04b1",
+      "source": "distribution/bundle-templates/claude/commands/review.md",
+      "source_sha256": "78710178f90b8ac07ab2c315d90e3755b5c76ee209b192b6bccf89d8f12b04b1",
+      "transform": "copy-normalized-v1"
+    },
+    {
+      "classification": "generated_wrapper",
+      "destination": "commands/prompt.md",
+      "output_sha256": "1440f48ba473325c5259164cf1284e557087fd1ba5a66efc11b184bb8371d9dd",
+      "source": "distribution/bundle-templates/claude/commands/prompt.md",
+      "source_sha256": "1440f48ba473325c5259164cf1284e557087fd1ba5a66efc11b184bb8371d9dd",
+      "transform": "copy-normalized-v1"
+    }
+  ]
+}

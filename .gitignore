@@ -12,6 +12,22 @@ coverage/
 # Aker Build CLI output (project-map.json / risks.json / queue.json / review.* etc.)
 .aker-build/
 
+# Generated agent bundle. The manifest is committed as the reviewed baseline
+# (see scripts/verify-agent-bundle.mjs); the files it describes are not.
+#
+# The blanket `dist/` rule above excludes the whole directory, and Git does not
+# descend into an excluded directory -- so a negation on a file inside it is never
+# consulted. Re-include each directory level first, then ignore its contents, then
+# exempt the one file we track.
+!packages/plugin/dist/
+packages/plugin/dist/*
+!packages/plugin/dist/bundle-manifest.json
+
+# Raw skill-eval run transcripts. The prompts, assertions, and graded results are
+# committed (distribution/evals/*.json); per-run output is a point-in-time artifact
+# of one model version and goes stale, so it is not tracked.
+distribution/evals/workspace/
+
 # Editor / OS
 .DS_Store
 *.log

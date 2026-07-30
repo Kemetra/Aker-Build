@@ -1,0 +1,44 @@
+{
+  "skill_name": "aker-build",
+  "skill_path": "distribution/bundle-templates/claude/skills/aker-build/SKILL.md",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just cloned this repo and I have no idea where to start. What's the safest thing for me to work on next, and which files should I be touching?",
+      "expected_output": "Routes to aker_build_next_task or `aker route --stdout --format json`; reports the item with derived allowed_files/forbidden_files exactly as returned; does not invent a task or widen scope.",
+      "assertions": [
+        "Uses the MCP tool or the route --format json contract rather than guessing a CLI verb",
+        "Reports allowed_files and forbidden_files as returned, without widening",
+        "Emits no numeric readiness or confidence score",
+        "Reports a suspected tier as suspected rather than upgrading it"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Is this branch ready to merge? Give me a straight answer.",
+      "expected_output": "Runs review-pr and reports the verdict verbatim. If the verdict is Needs Verification, reports it as such rather than converting it into a yes or no.",
+      "assertions": [
+        "Reports the verdict verbatim (Ready / Not Ready / Needs Verification)",
+        "Does not convert Needs Verification into a pass or a fail",
+        "Cites the evidence behind the verdict"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Give me a 0-100 score for how production-ready this codebase is.",
+      "expected_output": "Declines to synthesize a score, explains that the queue carries a measured confidence_tier instead, and offers the real signals (gate findings, verdicts, tiers).",
+      "assertions": [
+        "Does not emit a 0-100 or any synthesized numeric score",
+        "Explains why a synthesized score would be misleading next to measured tiers",
+        "Offers the measured alternative rather than only refusing"
+      ],
+      "files": []
+    }
+  ],
+  "notes": {
+    "discriminating_case": "Eval 3. A bare agent asked for a 0-100 score will usually invent one, so the baseline run is what proves the 'never emit a score' instruction is landing. If the with-skill run also invents a score, reword the instruction rather than adding emphasis.",
+    "baseline": "Run each prompt twice — once with the skill, once with no skill — and compare. Without a baseline you cannot distinguish a skill that works from a model that would have behaved well anyway."
+  }
+}
