@@ -28,33 +28,60 @@ Aker Build's MVP CLI chain and FORTIFY phases are implemented. The repository no
 ## Benchmark scorecard
 
 ![benchmark](https://img.shields.io/badge/G4_confirmed_precision-100%25-brightgreen)
-![benchmark](https://img.shields.io/badge/G4_confirmed_recall-100%25-brightgreen)
+![benchmark](https://img.shields.io/badge/G4_suspected_recall-50%25-orange)
 
-Aker Build's detection quality is measured, not asserted. A labeled corpus of
-synthetic multi-tenant failure cases (`benchmark/cases/`, 15 cases) runs through
-the real `scan → gates` pipeline; precision/recall are computed per gate ×
-confidence tier, and CI fails if they drop below `benchmark/thresholds.json`.
+Aker Build's detection quality is measured, not asserted — **including where it
+fails**. A labeled corpus of synthetic multi-tenant failure cases
+(`benchmark/cases/`, 18 cases) runs through the real `scan → gates` pipeline;
+precision and recall are computed per gate × confidence tier, and CI fails if
+they drop below `benchmark/thresholds.json`.
 
-| Gate | Tier | Precision | Recall |
-|---|---|---|---|
-| TG-G3 Migration Safety | confirmed | 100% | 100% |
-| TG-G3 Migration Safety | suspected | 100% | 100% |
-| TG-G4 Tenant Isolation | confirmed | 100% | 100% |
-| TG-G4 Tenant Isolation | suspected | 100% | 100% |
-| TG-G5 Idempotency | suspected | 100% | 100% |
+Every number below is reproducible with one command, against a corpus that ships
+in this repository.
 
-The `suspected` tier is the honest-uncertainty channel: it carries findings the
-engine cannot yet structurally prove (they advise, never block). The
-multi-line ORM false positive documented in earlier scorecards is fixed by
-W3a's windowed, receiver-gated detector; the corpus pins both behaviors
-(`multiline-tenant-scope`, `bare-array-method`) so they cannot regress silently.
+| Gate | Tier | Precision | Recall | TP | FP | FN |
+|---|---|---|---|---|---|---|
+| TG-G3 Migration Safety | confirmed | 100% | 100% | 1 | 0 | 0 |
+| TG-G3 Migration Safety | suspected | 100% | 100% | 1 | 0 | 0 |
+| TG-G4 Tenant Isolation | confirmed | 100% | 100% | 2 | 0 | 0 |
+| TG-G4 Tenant Isolation | suspected | 100% | **50%** | 2 | 0 | 2 |
+| TG-G5 Idempotency | suspected | 100% | 100% | 2 | 0 | 0 |
 
-Known limitations (deliberate v0 tradeoffs, W3b scope): data-access detection is
-receiver-gated to common DB handle names plus raw SQL, so model-first ORM calls
-(e.g. Mongoose-style `User.findOne(`) and unlisted receivers are not yet
-covered; and the 5-line statement window can classify an unscoped query as
-scoped when a neighboring statement's tenant token falls inside the window.
-Framework signature packs and a coverage-honesty field close these in W3b.
+Absolute counts are shown because percentages over small denominators mislead:
+these rates rest on 8 true positives in total. Treat the corpus as a regression
+harness that is still growing, not as a population estimate.
+
+### What we miss
+
+These are corpus cases that currently **fail**. They are published rather than
+hidden, because a scorecard with no misses is a corpus that is not hard enough.
+Both were known limitations before they were measured; now they are pinned so
+they cannot be quietly forgotten.
+
+- **Window bleed** (`window-bleed-false-negative`) — the data-access detector
+  scans a 5-line window below a query for a tenant token. A token belonging to a
+  *neighbouring* statement can scope an unscoped query, producing a **false
+  negative in the tenant-isolation gate**. Fixing it requires statement-bounded
+  windows.
+- **Model-first ORM calls** (`model-first-orm`) — query detection is gated on a
+  known database-handle receiver (`db`, `prisma`, `knex`, …), so Mongoose-style
+  `User.findOne(` is never seen at all. Fixing it requires framework signature
+  packs.
+
+Both misses land in `suspected`, the honest-uncertainty channel: findings the
+engine cannot structurally prove. `suspected` advises and never blocks. Every
+finding carries an evidence span (`file:line`) and a confidence tier.
+
+### Coverage
+
+The scanner partitions the frameworks it detects into those its detectors
+understand and those they do not (`project-map.coverage.covered` /
+`.uncovered`), so "no findings" always reads as "no findings **in covered
+frameworks**". An unrecognised stack produces silence, and silence is not safety.
+
+Aker Build analyses TypeScript **application-layer** query code. For
+database-layer RLS analysis it complements, rather than replaces, tools such as
+[pgrls](https://github.com/pgrls/pgrls).
 
 Regenerate: `pnpm dlx tsx packages/eval/src/bin.ts` (writes `.aker-build/benchmark-report.{json,md}`).
 
