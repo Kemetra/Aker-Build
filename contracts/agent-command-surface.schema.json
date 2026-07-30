@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Kemetra/Aker-Build/contracts/agent-command-surface.schema.json",
+  "title": "Aker Build agent command surface",
+  "description": "The single authority for what a generated agent bundle advertises. An entry MAY reference a CLI verb but MUST NEVER define one; CLI verbs are owned by packages/cli/src/index.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "canonical_repository", "commands"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "canonical_repository": { "type": "string", "minLength": 1 },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/command" }
+    }
+  },
+  "$defs": {
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "platform",
+        "intent",
+        "cli_verbs",
+        "skill",
+        "wrapper_template",
+        "bundle_destination",
+        "mode",
+        "status"
+      ],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "platform": { "type": "string", "enum": ["claude"] },
+        "intent": { "type": "string", "minLength": 1 },
+        "cli_verbs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "skill": { "type": "string", "minLength": 1 },
+        "wrapper_template": { "type": "string" },
+        "bundle_destination": { "type": "string" },
+        "mode": { "type": "string", "enum": ["read-only"] },
+        "status": { "type": "string", "enum": ["shipped", "deferred", "internal"] }
+      }
+    }
+  }
+}
