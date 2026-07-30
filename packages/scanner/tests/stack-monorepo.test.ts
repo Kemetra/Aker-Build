@@ -39,12 +39,42 @@ describe("detectStack in a workspace layout", () => {
     expect(detectStack(root).frameworks).toEqual(["express"]);
   });
 
-  it("ignores manifests inside dependency directories", () => {
+  it("ignores manifests inside vendored dependency directories", () => {
     const root = fixture({
       "package.json": `{"name":"app","dependencies":{"express":"^4"}}`,
       "node_modules/vue/package.json": `{"name":"vue","dependencies":{"vue":"^3"}}`,
+      "vendor/svelte/package.json": `{"name":"svelte","dependencies":{"svelte":"^4"}}`,
+      "bower_components/angular/package.json": `{"name":"ng","dependencies":{"@angular/core":"^17"}}`,
+      ".yarn/cache/react/package.json": `{"name":"react","dependencies":{"react":"^18"}}`,
+      ".pnpm/next/package.json": `{"name":"next","dependencies":{"next":"^14"}}`,
     });
-    const stack = detectStack(root, ["package.json", "node_modules/vue/package.json"]);
+    const stack = detectStack(root, [
+      "package.json",
+      "node_modules/vue/package.json",
+      "vendor/svelte/package.json",
+      "bower_components/angular/package.json",
+      ".yarn/cache/react/package.json",
+      ".pnpm/next/package.json",
+    ]);
     expect(stack.frameworks).toEqual(["express"]);
+  });
+
+  it("does NOT skip build-output-shaped directory names, which are also valid source dirs", () => {
+    // `out`, `dist` and `build` are common build-output names but equally common source directory
+    // names. Skipping them silently drops coverage — the false-confidence failure the coverage
+    // field exists to prevent — so they are read. Over-reading is the cheaper error here.
+    const root = fixture({
+      "package.json": `{"name":"app","private":true}`,
+      "out/api/package.json": `{"name":"api","dependencies":{"express":"^4"}}`,
+      "dist/worker/package.json": `{"name":"w","dependencies":{"@prisma/client":"^5"}}`,
+      "build/web/package.json": `{"name":"web","dependencies":{"next":"^14"}}`,
+    });
+    const stack = detectStack(root, [
+      "package.json",
+      "out/api/package.json",
+      "dist/worker/package.json",
+      "build/web/package.json",
+    ]);
+    expect(stack.frameworks).toEqual(["express", "nextjs", "prisma"]);
   });
 });

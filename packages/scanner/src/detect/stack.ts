@@ -74,6 +74,13 @@ export function partitionCoverage(frameworks: string[]): CoverageReport {
   return { covered: covered.sort(), uncovered: uncovered.sort() };
 }
 
+/**
+ * Directories whose manifests describe vendored third-party code rather than this repo. Only
+ * names that are unambiguously not source belong here — see the call site for why build-output
+ * names like `dist`/`out` are deliberately absent.
+ */
+const VENDORED_DIR = /(^|\/)(node_modules|vendor|bower_components|\.yarn|\.pnpm)\//;
+
 /** Collect framework ids from a manifest's dependency maps into `into`. */
 function collectFrameworks(raw: string | null, into: Set<string>): void {
   if (!raw) return;
@@ -119,14 +126,20 @@ export function detectStack(root: string, files?: string[]): StackDetection {
     signals.push({ type: "file", path: "pyproject.toml", signal: "pyproject_present", confidence: "high" });
   }
 
-  // Workspace package manifests. Vendored trees are excluded: a dependency's own manifest
+  // Workspace package manifests. Vendored trees are excluded because a dependency's own manifest
   // describes the dependency, not this repo's stack.
+  //
+  // The list is deliberately short. `dist`, `build` and `out` are NOT excluded: they are common
+  // build-output names but also legitimate source directory names, and the costs are lopsided —
+  // wrongly reading a build artifact's manifest adds a framework the repo arguably does use, while
+  // wrongly skipping a real source manifest silently drops coverage, which is the exact
+  // false-confidence failure this field exists to prevent. Pinned by stack-monorepo tests.
   if (files) {
     for (const rel of files) {
       const normalized = rel.replace(/\\/g, "/");
       if (!normalized.endsWith("package.json")) continue;
       if (normalized === "package.json") continue; // already read above
-      if (/(^|\/)(node_modules|vendor|dist|build|\.next|out)\//.test(normalized)) continue;
+      if (VENDORED_DIR.test(normalized)) continue;
       collectFrameworks(readFileSafe(root, rel), frameworks);
     }
   }
