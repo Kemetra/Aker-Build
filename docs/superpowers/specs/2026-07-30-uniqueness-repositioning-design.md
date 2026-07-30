@@ -398,8 +398,13 @@ floors tripped, the detectors were fixed, and the floors now pass on merit.
 Both endpoints read 100%, and they are not equivalent. The baseline was
 unfalsifiable — 2 true positives and nothing that could fail. The final figure
 rests on 4 true positives including two cases built specifically to break the
-engine, both of which did. The corpus grew 15 → 18 cases; total distinct true
+engine, both of which did. The corpus grew 15 → 19 cases; total distinct true
 positives across all gates grew 8 → 10.
+
+The table above records the state at the end of the planned six tasks. Two
+further defects were found in post-implementation review and fixed — see
+"Detector fixes shipped" items 2 and 3. Neither changed the measured figures;
+both changed whether those figures could be trusted.
 
 ### Final measured result
 
