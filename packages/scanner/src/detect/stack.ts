@@ -18,14 +18,41 @@ const FRAMEWORK_DEPS: Record<string, string> = {
   vue: "vue",
   react: "react",
   svelte: "svelte",
+  // Data-access libraries. The flagship detector keys entirely on ORM idioms, so coverage
+  // reporting is meaningless without them: a Prisma repo that lists only "express" says nothing
+  // about whether its queries were understood.
+  "@prisma/client": "prisma",
+  prisma: "prisma",
+  mongoose: "mongoose",
+  knex: "knex",
+  sequelize: "sequelize",
+  typeorm: "typeorm",
+  "drizzle-orm": "drizzle",
 };
 
 /**
- * Frameworks whose idioms the current detectors actually recognise. Deliberately short: it must
- * name what is truly covered, never what is aspirationally supported. Growing this list is a task
- * that ships together with the signature packs that justify it.
+ * Frameworks whose idioms the current detectors actually recognise. It must name what is truly
+ * covered, never what is aspirationally supported — every entry here is backed by a pattern in a
+ * detector and a benchmark case. Growing this list ships together with the signatures that justify
+ * it.
+ *
+ * express — g4-security.ts ROUTE_DEF (app/router/server.get|post|...).
+ * prisma, knex, sequelize, typeorm, drizzle — data-access.ts ORM_QUERY receiver allow-list.
+ * mongoose — data-access.ts MODEL_QUERY (PascalCase model receiver).
+ *
+ * Deliberately absent: nextjs (route handlers are `export async function GET`, unmatched by
+ * ROUTE_DEF), nestjs (decorator-based), fastify (hook-based), and all UI frameworks — they are
+ * detected but not understood, which is exactly what `uncovered` is for.
  */
-const COVERED_FRAMEWORKS = new Set(["express"]);
+const COVERED_FRAMEWORKS = new Set([
+  "express",
+  "prisma",
+  "mongoose",
+  "knex",
+  "sequelize",
+  "typeorm",
+  "drizzle",
+]);
 
 export interface CoverageReport {
   covered: string[];
