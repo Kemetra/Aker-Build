@@ -63,7 +63,7 @@ test("rejects an out-of-range value rather than reporting a nonsense score", () 
 
 test("detects whether the machine contract was reached", () => {
   assert.equal(usedMachineContract("use aker_build_next_task"), true);
-  assert.equal(usedMachineContract("aker-build route --stdout --format json"), true);
+  assert.equal(usedMachineContract("aker route --stdout --format json"), true);
   assert.equal(usedMachineContract("I read the specs and guessed"), false);
 });
 

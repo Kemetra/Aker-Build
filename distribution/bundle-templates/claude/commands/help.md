@@ -19,6 +19,7 @@ Bundled skill: `aker-build` (the build-kernel router).
 
 Slash commands and terminal CLI verbs are different surfaces: a slash command is a
 reviewed prompt inside this agent session, while `aker-build` is a separately
-installed npm package (`npx aker-build check .`). If it is not installed, say so
-instead of simulating its output. CLI-only verbs include `scan`, `map`, `gates`,
-and `queue` (sub-steps of `check`); list everything with `aker-build --help`.
+installed npm package. The package is `aker-build`; the command it installs is `aker`
+(`npx --package aker-build aker check .`). If it is not installed, say so instead of
+simulating its output. CLI-only verbs include `scan`, `map`, `gates`, and `queue`
+(sub-steps of `check`); list everything with `aker --help`.

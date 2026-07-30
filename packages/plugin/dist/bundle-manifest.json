@@ -11,57 +11,57 @@
     {
       "classification": "router_skill",
       "destination": "skills/aker-build/SKILL.md",
-      "output_sha256": "d4bfb5b5bfbfa463c7ebe619570eb06913a32e42ce73d607de5dbb0ddd0cd04a",
+      "output_sha256": "3da2081870f81f5a21a4d8d04c00e93b9291ab863bf62bc8cdb6d19e68333328",
       "source": "distribution/bundle-templates/claude/skills/aker-build/SKILL.md",
-      "source_sha256": "d4bfb5b5bfbfa463c7ebe619570eb06913a32e42ce73d607de5dbb0ddd0cd04a",
+      "source_sha256": "3da2081870f81f5a21a4d8d04c00e93b9291ab863bf62bc8cdb6d19e68333328",
       "transform": "copy-normalized-v1"
     },
     {
       "classification": "generated_wrapper",
       "destination": "commands/help.md",
-      "output_sha256": "b295b0c5793b41d24a8729b1a52fbbaa73c837e82fde7b8d28ca23f77b0f34c6",
+      "output_sha256": "406217099e1a3cff54ae7742c0379f94cd74e69e8841a207c4e9c15168028adf",
       "source": "distribution/bundle-templates/claude/commands/help.md",
-      "source_sha256": "b295b0c5793b41d24a8729b1a52fbbaa73c837e82fde7b8d28ca23f77b0f34c6",
+      "source_sha256": "406217099e1a3cff54ae7742c0379f94cd74e69e8841a207c4e9c15168028adf",
       "transform": "copy-normalized-v1"
     },
     {
       "classification": "generated_wrapper",
       "destination": "commands/check.md",
-      "output_sha256": "0b5cf2ea2a1c98b341aefad6d1192fdbbbb48fe8b7e5e7d108e2e767e68ef1aa",
+      "output_sha256": "d018df51ff9b453d4ec6806e089f350fe493ea2b1cdec075d19e57dd1ade309c",
       "source": "distribution/bundle-templates/claude/commands/check.md",
-      "source_sha256": "0b5cf2ea2a1c98b341aefad6d1192fdbbbb48fe8b7e5e7d108e2e767e68ef1aa",
+      "source_sha256": "d018df51ff9b453d4ec6806e089f350fe493ea2b1cdec075d19e57dd1ade309c",
       "transform": "copy-normalized-v1"
     },
     {
       "classification": "generated_wrapper",
       "destination": "commands/next.md",
-      "output_sha256": "a19c49e7b636b05f1d8b6663ed6ac69f6a61251c34f08cf3d24fd013e9bf8f07",
+      "output_sha256": "7fea7faca1c82023fb5606d204536d3349bd5d6fbfafae6d9957b14c7de898d3",
       "source": "distribution/bundle-templates/claude/commands/next.md",
-      "source_sha256": "a19c49e7b636b05f1d8b6663ed6ac69f6a61251c34f08cf3d24fd013e9bf8f07",
+      "source_sha256": "7fea7faca1c82023fb5606d204536d3349bd5d6fbfafae6d9957b14c7de898d3",
       "transform": "copy-normalized-v1"
     },
     {
       "classification": "generated_wrapper",
       "destination": "commands/status.md",
-      "output_sha256": "33d24d2e53cc6230c6902bbc0d4ddcde5dcb6289e31592aa57cf3e00da7a7609",
+      "output_sha256": "4b03309e723f9f3eb2e9fc37f330317c80117cfa4ca5887b0e2f76c4cc5a3d75",
       "source": "distribution/bundle-templates/claude/commands/status.md",
-      "source_sha256": "33d24d2e53cc6230c6902bbc0d4ddcde5dcb6289e31592aa57cf3e00da7a7609",
+      "source_sha256": "4b03309e723f9f3eb2e9fc37f330317c80117cfa4ca5887b0e2f76c4cc5a3d75",
       "transform": "copy-normalized-v1"
     },
     {
       "classification": "generated_wrapper",
       "destination": "commands/review.md",
-      "output_sha256": "0adb667a6fd8c2c6facb9274bc863c6a8412fe6f6b03b08eb740e25809222006",
+      "output_sha256": "78710178f90b8ac07ab2c315d90e3755b5c76ee209b192b6bccf89d8f12b04b1",
       "source": "distribution/bundle-templates/claude/commands/review.md",
-      "source_sha256": "0adb667a6fd8c2c6facb9274bc863c6a8412fe6f6b03b08eb740e25809222006",
+      "source_sha256": "78710178f90b8ac07ab2c315d90e3755b5c76ee209b192b6bccf89d8f12b04b1",
       "transform": "copy-normalized-v1"
     },
     {
       "classification": "generated_wrapper",
       "destination": "commands/prompt.md",
-      "output_sha256": "484aa16378ce26eea74aeeeccce5927306dbe537f43b28e6524c24b2e08ae62a",
+      "output_sha256": "1440f48ba473325c5259164cf1284e557087fd1ba5a66efc11b184bb8371d9dd",
       "source": "distribution/bundle-templates/claude/commands/prompt.md",
-      "source_sha256": "484aa16378ce26eea74aeeeccce5927306dbe537f43b28e6524c24b2e08ae62a",
+      "source_sha256": "1440f48ba473325c5259164cf1284e557087fd1ba5a66efc11b184bb8371d9dd",
       "transform": "copy-normalized-v1"
     }
   ]

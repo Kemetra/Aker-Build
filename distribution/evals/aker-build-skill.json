@@ -5,7 +5,7 @@
     {
       "id": 1,
       "prompt": "I just cloned this repo and I have no idea where to start. What's the safest thing for me to work on next, and which files should I be touching?",
-      "expected_output": "Routes to aker_build_next_task or `aker-build route --stdout --format json`; reports the item with derived allowed_files/forbidden_files exactly as returned; does not invent a task or widen scope.",
+      "expected_output": "Routes to aker_build_next_task or `aker route --stdout --format json`; reports the item with derived allowed_files/forbidden_files exactly as returned; does not invent a task or widen scope.",
       "assertions": [
         "Uses the MCP tool or the route --format json contract rather than guessing a CLI verb",
         "Reports allowed_files and forbidden_files as returned, without widening",
