@@ -60,15 +60,23 @@ const FIELD_RULES = [
  * Both directions matter: the first would advertise a command with no prompt behind it,
  * the second would ship a file the authority says does not exist yet.
  */
+function declaresWrapper(entry) {
+  return Boolean(entry.wrapper_template) && Boolean(entry.bundle_destination);
+}
+
+function declaresNeither(entry) {
+  return !entry.wrapper_template && !entry.bundle_destination;
+}
+
 function checkWrapperPairing(entry) {
-  const shipped = entry.status === "shipped";
-  if (shipped && (!entry.wrapper_template || !entry.bundle_destination)) {
-    return ["shipped entries need wrapper_template and bundle_destination"];
+  if (entry.status === "shipped") {
+    return declaresWrapper(entry)
+      ? []
+      : ["shipped entries need wrapper_template and bundle_destination"];
   }
-  if (!shipped && (entry.wrapper_template || entry.bundle_destination)) {
-    return [`${entry.status} entries must declare no wrapper_template or bundle_destination`];
-  }
-  return [];
+  return declaresNeither(entry)
+    ? []
+    : [`${entry.status} entries must declare no wrapper_template or bundle_destination`];
 }
 
 function findMissingFields(entry) {
@@ -193,18 +201,18 @@ export function extractCliVerbs(indexSource) {
  * The surface is a projection of the CLI, so a renamed verb must break the build
  * loudly rather than leave the bundle advertising a verb that no longer resolves.
  */
+/** The verbs one entry references that the CLI does not register. */
+function unknownVerbsFor(entry, known) {
+  return (entry.cli_verbs ?? [])
+    .filter((verb) => !known.has(verb))
+    .map((verb) => `${entry.name}: references CLI verb "${verb}" which is not registered`);
+}
+
 export function checkCliVerbsExist({ entries, registered }) {
   const known = new Set(registered);
-  const problems = [];
-  for (const entry of entries) {
-    if (entry.status !== "shipped") continue;
-    for (const verb of entry.cli_verbs ?? []) {
-      if (!known.has(verb)) {
-        problems.push(`${entry.name}: references CLI verb "${verb}" which is not registered`);
-      }
-    }
-  }
-  return problems;
+  return entries
+    .filter((entry) => entry.status === "shipped")
+    .flatMap((entry) => unknownVerbsFor(entry, known));
 }
 
 /** Normalize to LF with exactly one trailing newline so hashes are stable across platforms. */
