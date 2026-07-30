@@ -20,6 +20,33 @@ const FRAMEWORK_DEPS: Record<string, string> = {
   svelte: "svelte",
 };
 
+/**
+ * Frameworks whose idioms the current detectors actually recognise. Deliberately short: it must
+ * name what is truly covered, never what is aspirationally supported. Growing this list is a task
+ * that ships together with the signature packs that justify it.
+ */
+const COVERED_FRAMEWORKS = new Set(["express"]);
+
+export interface CoverageReport {
+  covered: string[];
+  uncovered: string[];
+}
+
+/**
+ * Partition detected frameworks into those the detectors understand and those they do not.
+ * Read-only and judgment-free. This is the anti-false-confidence field: it lets "no findings" be
+ * rendered as "no findings in covered frameworks", so an unrecognised stack reads as silence
+ * rather than as safety. Both lists are sorted for determinism.
+ */
+export function partitionCoverage(frameworks: string[]): CoverageReport {
+  const covered: string[] = [];
+  const uncovered: string[] = [];
+  for (const fw of frameworks) {
+    (COVERED_FRAMEWORKS.has(fw) ? covered : uncovered).push(fw);
+  }
+  return { covered: covered.sort(), uncovered: uncovered.sort() };
+}
+
 /** Detect runtime / package manager / frameworks from high-signal manifests at the repo root. */
 export function detectStack(root: string): StackDetection {
   const signals: DetectionSignal[] = [];

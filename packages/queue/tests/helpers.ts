@@ -9,7 +9,15 @@ import type { ProjectMap } from "@aker-build/project-map";
 export function minimalMap(): ProjectMap {
   return {
     version: 1,
-    project: { name: "fixture", detected_stack: { runtime: null, package_manager: null, frameworks: [] } },
+    project: {
+      name: "fixture",
+      detected_stack: {
+        runtime: null,
+        package_manager: null,
+        frameworks: [],
+        coverage: { covered: [], uncovered: [] },
+      },
+    },
     repos: [],
     boundaries: [],
     tenant_model: { status: "not_detected", strategy: null, tenant_key: null, required_surfaces: [] },
