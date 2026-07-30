@@ -238,6 +238,54 @@ function parseScalar(raw) {
  * support is worse than one that refuses, because the surface it produces would look
  * valid while describing something else. Anything outside the subset throws.
  */
+/** Blank and comment-only lines carry no data. */
+function isSkippableLine(line) {
+  return line.trim() === "" || line.trimStart().startsWith("#");
+}
+
+/** Anchors, aliases, and merge keys change what a document means, so refuse them outright. */
+function rejectAnchors(line, where) {
+  if (/(^|\s)[&*][A-Za-z0-9_-]+/.test(line) || /<<:/.test(line)) {
+    throw new Error(`${where}: unsupported YAML anchor or alias in the command surface`);
+  }
+}
+
+/** `key: value` at column 0 — one of the document's two top-level scalars, or `commands:`. */
+function parseTopLevelLine(body, where, root) {
+  const match = /^([a-z_]+):\s*(.*)$/.exec(body);
+  if (!match) throw new Error(`${where}: unsupported top-level line "${body}"`);
+  const [, key, value] = match;
+  if (key === "commands") {
+    if (value.trim() !== "") throw new Error(`${where}: commands must be a block list`);
+    return;
+  }
+  if (value.trim() === "") throw new Error(`${where}: unsupported empty scalar for ${key}`);
+  root[key] = parseScalar(value);
+}
+
+/** `- key: value` — opens a new command and returns it as the current item. */
+function parseListItemLine(body, where) {
+  const match = /^-\s+([a-z_]+):\s*(.*)$/.exec(body);
+  if (!match) throw new Error(`${where}: unsupported list item "${body}"`);
+  return { [match[1]]: parseScalar(match[2]) };
+}
+
+// The only two fields allowed to be empty: a deferred command declares no wrapper.
+const MAY_BE_EMPTY = new Set(["wrapper_template", "bundle_destination"]);
+
+/** `key: value` indented under the current command. */
+function parseMappingLine(body, where, current) {
+  const match = /^([a-z_]+):\s*(.*)$/.exec(body);
+  if (!match) throw new Error(`${where}: unsupported mapping line "${body}"`);
+  if (current === null) throw new Error(`${where}: mapping outside any list item`);
+  const [, key, value] = match;
+  // A key with no inline value would introduce nesting, which this subset excludes.
+  if (value.trim() === "" && !MAY_BE_EMPTY.has(key)) {
+    throw new Error(`${where}: unsupported nested mapping under "${key}"`);
+  }
+  current[key] = parseScalar(value);
+}
+
 export function parseSurfaceYaml(text) {
   const root = {};
   const commands = [];
@@ -245,49 +293,22 @@ export function parseSurfaceYaml(text) {
 
   const lines = text.replace(/\r\n/g, "\n").split("\n");
   for (const [index, line] of lines.entries()) {
+    if (isSkippableLine(line)) continue;
+
     const where = `line ${index + 1}`;
-    if (line.trim() === "" || line.trimStart().startsWith("#")) continue;
-    if (/[&*]|<<:/.test(line) && !line.trimStart().startsWith("#")) {
-      // Anchors, aliases, and merge keys change what a document means; refuse them.
-      if (/(^|\s)[&*][A-Za-z0-9_-]+/.test(line)) {
-        throw new Error(`${where}: unsupported YAML anchor or alias in the command surface`);
-      }
-    }
+    rejectAnchors(line, where);
 
-    const indent = line.length - line.trimStart().length;
     const body = line.trim();
+    const atTopLevel = line.length === body.length;
 
-    if (indent === 0) {
-      const match = /^([a-z_]+):\s*(.*)$/.exec(body);
-      if (!match) throw new Error(`${where}: unsupported top-level line "${body}"`);
-      const [, key, value] = match;
-      if (key === "commands") {
-        if (value.trim() !== "") throw new Error(`${where}: commands must be a block list`);
-        continue;
-      }
-      if (value.trim() === "") throw new Error(`${where}: unsupported empty scalar for ${key}`);
-      root[key] = parseScalar(value);
-      continue;
-    }
-
-    if (body.startsWith("- ")) {
-      const match = /^-\s+([a-z_]+):\s*(.*)$/.exec(body);
-      if (!match) throw new Error(`${where}: unsupported list item "${body}"`);
-      current = {};
+    if (atTopLevel) {
+      parseTopLevelLine(body, where, root);
+    } else if (body.startsWith("- ")) {
+      current = parseListItemLine(body, where);
       commands.push(current);
-      current[match[1]] = parseScalar(match[2]);
-      continue;
+    } else {
+      parseMappingLine(body, where, current);
     }
-
-    const match = /^([a-z_]+):\s*(.*)$/.exec(body);
-    if (!match) throw new Error(`${where}: unsupported mapping line "${body}"`);
-    if (current === null) throw new Error(`${where}: mapping outside any list item`);
-    const [, key, value] = match;
-    // A key with no inline value would introduce nesting, which this subset excludes.
-    if (value.trim() === "" && key !== "wrapper_template" && key !== "bundle_destination") {
-      throw new Error(`${where}: unsupported nested mapping under "${key}"`);
-    }
-    current[key] = parseScalar(value);
   }
 
   return { ...root, commands };

@@ -21,54 +21,59 @@ import {
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-function main() {
-  const problems = [];
+const MANIFEST_RELATIVE = "packages/plugin/dist/bundle-manifest.json";
 
-  // Read the reviewed baseline BEFORE regenerating, since generating overwrites it.
-  //
-  // Prefer Git's committed copy over the working-tree file. The generator rewrites the
-  // manifest in place, so a run that detects drift also destroys the very baseline it
-  // compared against — the next run would then "pass" against the drifted output and
-  // silently bless the change. Asking Git keeps the baseline immutable.
-  const manifestRelative = "packages/plugin/dist/bundle-manifest.json";
-  let committed = null;
+/**
+ * The reviewed baseline, read from Git rather than the working tree.
+ *
+ * The generator rewrites the manifest in place, so a run that detects drift would also
+ * destroy the very baseline it compared against — the next run would then "pass" against
+ * the drifted output and silently bless the change. Asking Git keeps the baseline
+ * immutable. Returns null when it has never been committed, which is a first-run
+ * condition rather than an error.
+ */
+function readCommittedBaseline(problems) {
   try {
-    committed = execFileSync("git", ["show", `HEAD:${manifestRelative}`], {
+    return execFileSync("git", ["show", `HEAD:${MANIFEST_RELATIVE}`], {
       cwd: repo,
       encoding: "utf8",
     });
   } catch {
     // Not committed yet (first run, or a shallow/absent Git context): fall back to disk.
     try {
-      committed = readFileSync(join(repo, manifestRelative), "utf8");
+      return readFileSync(join(repo, MANIFEST_RELATIVE), "utf8");
     } catch {
       problems.push(
-        `${manifestRelative} is missing — run \`pnpm build:agent-bundle\` and commit it as the reviewed baseline`,
+        `${MANIFEST_RELATIVE} is missing — run \`pnpm build:agent-bundle\` and commit it as the reviewed baseline`,
       );
+      return null;
     }
   }
+}
 
-  // Generating twice must yield identical manifests, or "verified by hash" means nothing.
-  const first = buildAgentBundle();
-  const second = buildAgentBundle();
-  if (JSON.stringify(first.manifest) !== JSON.stringify(second.manifest)) {
-    problems.push("generator is not reproducible: two runs produced different manifests");
-  }
+/** Two consecutive runs must agree, or "verified by hash" means nothing. */
+function checkReproducible(first, second) {
+  return JSON.stringify(first.manifest) === JSON.stringify(second.manifest)
+    ? []
+    : ["generator is not reproducible: two runs produced different manifests"];
+}
 
-  // The regenerated manifest must match the committed baseline. Determinism alone
-  // proves nothing about whether this is the bundle a reviewer approved.
-  if (committed !== null) {
-    const regenerated = `${JSON.stringify(second.manifest, null, 2)}\n`;
-    if (normalizeText(regenerated) !== normalizeText(committed)) {
-      problems.push(
+/** Determinism alone says nothing about whether this is the bundle a reviewer approved. */
+function checkMatchesBaseline(manifest, committed) {
+  if (committed === null) return [];
+  const regenerated = `${JSON.stringify(manifest, null, 2)}\n`;
+  return normalizeText(regenerated) === normalizeText(committed)
+    ? []
+    : [
         "regenerated manifest differs from the committed baseline — if a template changed on purpose, run `pnpm build:agent-bundle` and commit the new manifest",
-      );
-    }
-  }
+      ];
+}
 
-  // Every manifest hash must match the bytes actually on disk.
-  for (const entry of second.manifest.entries) {
-    const onDisk = readFileSync(join(second.output, entry.destination), "utf8");
+/** Every recorded hash must match the bytes on disk, for both output and source. */
+function checkHashes({ manifest, output }) {
+  const problems = [];
+  for (const entry of manifest.entries) {
+    const onDisk = readFileSync(join(output, entry.destination), "utf8");
     if (sha256(normalizeText(onDisk)) !== entry.output_sha256) {
       problems.push(`${entry.destination}: output_sha256 does not match the file on disk`);
     }
@@ -77,23 +82,39 @@ function main() {
       problems.push(`${entry.source}: source_sha256 does not match the template on disk`);
     }
   }
+  return problems;
+}
+
+/**
+ * 018 ships a read-only surface. Asserting it here means a mutating entry cannot reach a
+ * release on review alone.
+ */
+function checkReadOnlyModes(commands) {
+  return commands
+    .filter((entry) => !SHIPPED_MODES.includes(entry.mode))
+    .map((entry) => `${entry.name}: mode "${entry.mode}" is not permitted in a read-only surface`);
+}
+
+function main() {
+  const problems = [];
+
+  // Read the baseline BEFORE regenerating, since generating overwrites it.
+  const committed = readCommittedBaseline(problems);
+
+  const first = buildAgentBundle();
+  const second = buildAgentBundle();
+  problems.push(...checkReproducible(first, second));
+  problems.push(...checkMatchesBaseline(second.manifest, committed));
+  problems.push(...checkHashes(second));
 
   const surface = parseSurfaceYaml(
     readFileSync(join(repo, "distribution/agent-command-surface.yaml"), "utf8"),
   );
-
   const registered = extractCliVerbs(
     readFileSync(join(repo, "packages/cli/src/index.ts"), "utf8"),
   );
   problems.push(...checkCliVerbsExist({ entries: surface.commands, registered }));
-
-  // 018 ships a read-only surface. Asserting it here means a mutating entry cannot
-  // reach a release on review alone.
-  for (const entry of surface.commands) {
-    if (!SHIPPED_MODES.includes(entry.mode)) {
-      problems.push(`${entry.name}: mode "${entry.mode}" is not permitted in a read-only surface`);
-    }
-  }
+  problems.push(...checkReadOnlyModes(surface.commands));
 
   if (problems.length > 0) {
     process.stderr.write(`agent bundle verification failed:\n  ${problems.join("\n  ")}\n`);

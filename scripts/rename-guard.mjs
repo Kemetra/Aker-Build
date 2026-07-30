@@ -53,25 +53,31 @@ const SELF_REFERENTIAL = new Set([
   "packages/queue/tests/error-guidance.test.ts",
 ]);
 
-/**
- * Historical records are point-in-time evidence, not living documentation. A spec that
- * documented the old command was true when written; rewriting it would damage the audit
- * trail this project depends on, so the guard exempts these paths by design.
- */
+// Directories holding point-in-time records: specs as written, decisions as made, runs as
+// observed. A spec that documented the old command was true when written, and rewriting it
+// would damage the audit trail this project depends on.
+const HISTORICAL_PREFIXES = [
+  "specs/",
+  "docs/decisions/",
+  "docs/roadmap/",
+  "docs/superpowers/",
+  "docs/evidence/",
+  "docs/status/",
+  "docs/release/",
+  "docs/demo/",
+  ".specify/",
+];
+
+const HISTORICAL_FILES = new Set(["docs/aker_build_project_blueprint.md"]);
+
+/** True for records the rename deliberately leaves naming the retired command. */
 export function isHistoricalPath(relativePath) {
-  const p = relativePath.split(sep).join("/");
-  return (
-    p.startsWith("specs/") ||
-    p.startsWith("docs/decisions/") ||
-    p.startsWith("docs/roadmap/") ||
-    p.startsWith("docs/superpowers/") ||
-    p.startsWith("docs/evidence/") ||
-    p.startsWith("docs/status/") ||
-    p.startsWith("docs/release/") ||
-    p.startsWith("docs/demo/") ||
-    p.startsWith(".specify/") ||
-    p === "docs/aker_build_project_blueprint.md"
-  );
+  const p = toPosix(relativePath);
+  return HISTORICAL_PREFIXES.some((prefix) => p.startsWith(prefix)) || HISTORICAL_FILES.has(p);
+}
+
+function toPosix(path) {
+  return path.split(sep).join("/");
 }
 
 function walk(root, dir, out) {
@@ -90,7 +96,15 @@ function walk(root, dir, out) {
 
 /** True for files that must name the retired command to serve their purpose. */
 export function isSelfReferential(relativePath) {
-  return SELF_REFERENTIAL.has(relativePath.split(sep).join("/"));
+  return SELF_REFERENTIAL.has(toPosix(relativePath));
+}
+
+/** Lines within one file that invoke the retired command. */
+function retiredRefsInFile(fullPath, relativePath) {
+  const lines = readFileSync(fullPath, "utf8").split("\n");
+  return lines
+    .map((line, index) => (RETIRED.test(line) ? { file: toPosix(relativePath), line: index + 1 } : null))
+    .filter((hit) => hit !== null);
 }
 
 /** Every live (non-historical, non-self-referential) line that still invokes the retired command. */
@@ -99,10 +113,7 @@ export function findLiveCommandRefs(root) {
   for (const full of walk(root, root, [])) {
     const rel = relative(root, full);
     if (isHistoricalPath(rel) || isSelfReferential(rel)) continue;
-    const lines = readFileSync(full, "utf8").split("\n");
-    for (const [index, line] of lines.entries()) {
-      if (RETIRED.test(line)) hits.push({ file: rel.split(sep).join("/"), line: index + 1 });
-    }
+    hits.push(...retiredRefsInFile(full, rel));
   }
   return hits;
 }
