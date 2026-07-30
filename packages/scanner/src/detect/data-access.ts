@@ -15,11 +15,46 @@ const RAW_SQL =
 // A tenant-id token scoping the statement.
 const TENANT_TOKEN = /\btenant_?id\b|\borg_?id\b|\baccount_?id\b/i;
 
-// Statement window: the match line plus the next 5 lines (multi-line builder calls put the
-// `where:` clause below the call). A regex window can neither prove presence robustly nor prove
-// absence, so every window-based classification is emitted at medium confidence; only a
-// same-line tenant token is high.
-const WINDOW_LINES = 5;
+// Statement window: multi-line builder calls put the `where:` clause below the call, so the
+// window must extend past the match line — but only to the end of the query's OWN statement. An
+// unconditional line window lets a neighbouring statement's tenant token scope an unscoped query,
+// which is a false negative in the tenant-isolation gate. Bounding by bracket depth keeps the
+// multi-line case working while cutting the window off where the statement ends.
+//
+// Still a heuristic, not a parser: a regex window can neither prove presence robustly nor prove
+// absence, so every window-based classification is emitted at medium confidence; only a same-line
+// tenant token is high.
+const MAX_WINDOW_LINES = 20;
+
+/**
+ * The lines belonging to the statement that starts on `startIndex`, bounded by bracket depth.
+ * Walks forward while the call's brackets remain open, so the window ends where the statement
+ * does. Capped at MAX_WINDOW_LINES so an unbalanced or minified file cannot run away.
+ */
+function statementWindow(lines: string[], startIndex: number): string {
+  const first = lines[startIndex] ?? "";
+  let depth = countDepth(first);
+  if (depth <= 0) return ""; // statement closed on its own line — nothing below belongs to it
+  const collected: string[] = [];
+  const limit = Math.min(lines.length, startIndex + 1 + MAX_WINDOW_LINES);
+  for (let i = startIndex + 1; i < limit; i++) {
+    const line = lines[i] ?? "";
+    collected.push(line);
+    depth += countDepth(line);
+    if (depth <= 0) break; // the statement's brackets closed here
+  }
+  return collected.join("\n");
+}
+
+/** Net bracket depth contributed by a line: openers minus closers. */
+function countDepth(line: string): number {
+  let depth = 0;
+  for (const ch of line) {
+    if (ch === "(" || ch === "{" || ch === "[") depth++;
+    else if (ch === ")" || ch === "}" || ch === "]") depth--;
+  }
+  return depth;
+}
 
 /**
  * Detect database access sites as normative Evidence. Read-only: records WHERE a query happens
@@ -41,7 +76,7 @@ export function detectDataAccess(root: string, files: string[]): Evidence[] {
         out.push({ type: "line", path: rel, line: i + 1, signal: "tenant_scoped", confidence: "high" });
         continue;
       }
-      const window = lines.slice(i + 1, i + 1 + WINDOW_LINES).join("\n");
+      const window = statementWindow(lines, i);
       out.push({
         type: "line",
         path: rel,

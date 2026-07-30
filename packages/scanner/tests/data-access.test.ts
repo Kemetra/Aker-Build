@@ -83,6 +83,27 @@ describe("detectDataAccess", () => {
     expect(ev[0]).toMatchObject({ line: 2, signal: "tenant_scoped", confidence: "medium" });
   });
 
+  it("does not let a neighbouring statement's tenant token scope an unscoped query", () => {
+    // The tenantId below belongs to auditFor, a separate statement. Treating it as scoping
+    // listAllInvoices is a false negative in the flagship tenant-isolation gate.
+    const root = fixture({
+      "db.ts":
+        `export async function listAllInvoices(db) {\n` +
+        `  return db.invoice.findMany({\n` +
+        `    orderBy: { createdAt: "desc" },\n` +
+        `  });\n` +
+        `}\n` +
+        `\n` +
+        `export async function auditFor(db, tenantId) {\n` +
+        `  return db.auditLog.findMany({ where: { tenantId } });\n` +
+        `}\n`,
+    });
+    const ev = detectDataAccess(root, ["db.ts"]);
+    expect(ev).toHaveLength(2);
+    expect(ev[0]).toMatchObject({ line: 2, signal: "no_tenant_filter" });
+    expect(ev[1]).toMatchObject({ line: 8, signal: "tenant_scoped" });
+  });
+
   it("ignores bare array/Map method calls (no db-ish receiver)", () => {
     const root = fixture({
       "util.ts": `export const active = (users) => users.find((u) => u.active);\nexport const drop = (m, k) => m.delete(k);\n`,
