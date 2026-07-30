@@ -4,8 +4,7 @@
   "paths": {
     "exclude": [
       "benchmark/**",
-      "packages/gates/tests/fixtures/**",
-      "packages/scanner/tests/fixtures/**",
+      "packages/*/tests/**",
       "examples/**"
     ]
   }

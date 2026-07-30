@@ -155,11 +155,30 @@ export function matchesPathPattern(path: string, pattern: string): boolean {
   const normalizedPattern = pattern.replace(/\\/g, "/");
   if (normalizedPath === normalizedPattern) return true;
   if (normalizedPattern.endsWith("/**")) {
-    const prefix = normalizedPattern.slice(0, -3);
-    return normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`);
+    return matchesRecursivePattern(normalizedPath, normalizedPattern);
   }
   if (!normalizedPattern.includes("*")) return false;
   return globToRegex(normalizedPattern).test(normalizedPath);
+}
+
+/**
+ * A `dir/**` pattern matches the directory itself as well as everything under it.
+ *
+ * The bare-directory half cannot be expressed by the compiled regex, which always requires
+ * the trailing slash — hence the string comparison. But that comparison only works when the
+ * prefix is literal: `startsWith` performs no glob expansion, so a prefix like
+ * `packages/*​/tests` could never match a real path, and such a pattern silently excluded
+ * nothing at all. A wildcard prefix therefore goes to the regex, testing the prefix pattern
+ * too so both forms agree on what `/**` means.
+ */
+function matchesRecursivePattern(normalizedPath: string, normalizedPattern: string): boolean {
+  const prefix = normalizedPattern.slice(0, -3);
+  if (!prefix.includes("*")) {
+    return normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`);
+  }
+  return (
+    globToRegex(normalizedPattern).test(normalizedPath) || globToRegex(prefix).test(normalizedPath)
+  );
 }
 
 export function isPathAllowed(path: string, config: AkerBuildConfig): boolean {

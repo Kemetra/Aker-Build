@@ -281,6 +281,44 @@ aker report [path]
 
 `check` composes `scan → gates → queue → route → report` and promotes its six-file output only after every stage succeeds. It does not generate prompts, review diffs, execute agents, or mutate the analyzed source.
 
+## Scope your scan first
+
+**Path scoping is not optional on a real repository.** Detectors read code that
+*looks like* a vulnerability, and a test suite for security-adjacent code is full of
+deliberately-vulnerable examples on purpose. Scanning this repository unscoped
+produces 38 findings, of which 30 are its own test fixtures — locally correct, and
+almost all useless.
+
+Create `aker-build.config.json` at the repo root before your first real run:
+
+```json
+{
+  "version": 1,
+  "paths": {
+    "exclude": ["**/tests/**", "**/*.test.ts", "fixtures/**", "examples/**"]
+  }
+}
+```
+
+That removes every test-path finding. Add an entry for any other directory of
+intentionally-unsafe code — this repository also excludes `benchmark/**`, its labeled
+corpus of synthetic vulnerabilities, which takes its own scan from 21 findings to 8.
+
+Verify the effect on your own repo rather than trusting a default — run
+`aker check .`, add an exclude, run it again, and compare:
+
+```bash
+aker check . --out .aker-build
+```
+
+Pattern rules: `*` matches within one path segment and does not cross `/`; `**`
+crosses segments; `dir/**` matches `dir` itself as well as everything beneath it.
+`include` narrows the set first, `exclude` removes from it.
+
+This repository's own [`aker-build.config.json`](aker-build.config.json) is a
+working reference, and [`docs/evidence/2026-07-30-self-scan.md`](docs/evidence/2026-07-30-self-scan.md)
+records the before-and-after numbers.
+
 ## Support Aker Build
 
 Aker Build is developed in public. Sponsorship helps fund benchmark expansion,
