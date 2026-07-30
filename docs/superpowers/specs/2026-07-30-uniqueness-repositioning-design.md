@@ -387,6 +387,32 @@ resolve it by editing the floor):
 - **Lower the floor with a written reason**, documenting both uncovered patterns
   as accepted v0 limitations, and raise it again when W3b lands.
 
+### CI consequence that affects the cost of waiting
+
+Two jobs in `.github/workflows/aker-build.yml` are affected, and they differ in
+kind:
+
+1. **`benchmark` job** (`pnpm dlx tsx packages/eval/src/bin.ts`) fails on the
+   breach. This is the regression gate doing exactly its job — intended.
+2. **`release-integrity` job** (`pnpm test`) is the problem. `pnpm -r` **halts at
+   the first failing package**, and `@aker-build/eval` sorts before `prompt`,
+   `review`, `report`, `cli`, `github-app`, and `github-app-server`. Those
+   packages' tests (≈220 tests) will not *fail* — they will silently **never
+   run** on any future PR until the threshold decision is resolved.
+
+Consequence 2 raises the cost of "leave the floor and fix the detectors later":
+the repository would lose test coverage on six packages in the interim, and the
+loss would be invisible in the CI summary (one red job, no signal that others
+were skipped). Verified locally with
+`pnpm -r --filter '!@aker-build/eval' test` — all six pass today (391 tests
+total, 3 pre-existing skips).
+
+If the owner chooses to leave the floor tripped, the workflow should be adjusted
+so the benchmark breach does not mask the rest of the suite (e.g. run the eval
+package's tests as their own step, or make the recursive run non-halting). That
+adjustment is **not** made here: it changes CI semantics and belongs to the
+owner's decision, not to Stage A.
+
 ### Findings surfaced during implementation
 
 1. **The corpus is small enough that percentages mislead.** All rates rest on
