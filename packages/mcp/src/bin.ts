@@ -2,13 +2,16 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { CLI_VERSION } from "@aker-build/cli";
 import { nextTask, compileFor } from "./tools.js";
 import { denyBlock } from "./deny-block.js";
 
 // Transport wiring only. All logic lives in tools.ts / deny-block.ts so it stays testable without
 // a live client. Registration uses registerTool(name, config, cb) — every server.tool() overload
 // is deprecated in SDK 1.30.
-const server = new McpServer({ name: "aker-build", version: "0.1.0" });
+// Version derived, not restated: a server announcing a version the CLI no longer reports is the
+// same self-misidentification the `aker` rename shipped with.
+const server = new McpServer({ name: "aker-build", version: CLI_VERSION });
 
 /** Wrap a handler so a thrown error reaches the model as readable text, not a stack trace. */
 function reply(fn: () => unknown): { content: { type: "text"; text: string }[]; isError?: boolean } {
