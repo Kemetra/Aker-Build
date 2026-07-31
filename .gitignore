@@ -31,3 +31,11 @@ distribution/evals/workspace/
 # Editor / OS
 .DS_Store
 *.log
+
+# Python distribution. vendor/ is copied from the npm artifact at build time; dist/ is
+# the built wheel and sdist. Neither is a source.
+python/aker_build/vendor/
+python/dist/
+python/*.egg-info/
+python/.pytest_cache/
+__pycache__/
