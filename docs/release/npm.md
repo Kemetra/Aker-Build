@@ -16,9 +16,25 @@ Neither is a code change and both require account access:
 1. Configure npm Trusted Publishing for repository `Kemetra/Aker-Build`, workflow
    `npm-release.yml`, environment `npm-release`. This is only possible now that the
    package exists.
-2. Configure required reviewers on the GitHub `npm-release` environment, then revoke the
-   bootstrap token from step 2 below and remove the local `~/.npmrc` entry. Do not add a
-   long-lived npm publish token to Actions secrets.
+
+   Note that **linking a GitHub account to an npm account is not this.** The account link is
+   identity convenience and grants the workflow nothing. Trusted Publishing is configured per
+   package, at npmjs.com → `aker-build` → Settings → Trusted Publisher, and the three fields
+   must match the workflow exactly. If that panel is empty, the publish step fails on auth.
+2. Configure required reviewers on the release environments, then revoke the bootstrap token
+   from step 2 below and remove the local `~/.npmrc` entry. Do not add a long-lived npm
+   publish token to Actions secrets.
+
+   Run `node scripts/setup-release-environments.mjs` (`--dry-run` to preview). Verified
+   2026-07-31: the `npm-release` environment **did not exist**, and `pypi` existed with an
+   empty `protection_rules` array. Both matter because `npm-release.yml` names an environment
+   GitHub auto-creates on first use *with no protection rules* — so a dispatch would publish
+   unreviewed while looking gated. Confirm with:
+
+   ```bash
+   gh api repos/Kemetra/Aker-Build/environments \
+     --jq '.environments[] | {name, rules: [.protection_rules[].type]}'
+   ```
 
 Until (1) is done, `npm-release.yml` cannot authenticate: it publishes with
 `id-token: write` and no token, which requires a registered publisher.
