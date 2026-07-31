@@ -27,14 +27,14 @@ Aker Build is not a SaaS boilerplate. It does not generate a full app. It contro
 
 ## Status
 
-Aker Build's MVP CLI chain and FORTIFY phases are implemented, and `aker-build@0.1.0` is
-published on both [npm](https://www.npmjs.com/package/aker-build) and
-[PyPI](https://pypi.org/project/aker-build/).
+Aker Build's MVP CLI chain and FORTIFY phases are implemented. `aker-build@0.1.2` is published
+on [npm](https://www.npmjs.com/package/aker-build) and is `latest`; the
+[PyPI](https://pypi.org/project/aker-build/) channel ships the same bundle from the same tag.
 
 - Aker Build runs against its own repo through a report-only GitHub Action.
 - A self-hostable, single-tenant report-only GitHub App runtime is implemented and tested locally; credentialed field verification remains an operator-run smoke step.
 - An MCP server (`packages/mcp`) exposes the control plane to AI coding agents, read-only.
-- The 0.1.0 npm release carries no provenance: it had to be published manually, because npm cannot bind a Trusted Publisher to a package that does not yet exist. Releases after Trusted Publishing is configured are provenanced — see `docs/release/npm.md`.
+- 0.1.2 is the first provenanced npm release, carrying a SLSA attestation published tokenlessly through Trusted Publishing. 0.1.0 had to be published by hand — npm cannot bind a Trusted Publisher to a package that does not yet exist — so it has npm's registry signature only, which is not provenance. See `docs/release/npm.md`.
 - The hosted dashboard/org view, blocking enforcement, auto-fix, auto-commit, and auto-merge remain deferred.
 
 ## Benchmark scorecard

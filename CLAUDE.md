@@ -30,15 +30,16 @@ One-line positioning:
 
 ## Current Phase
 
-MVP implementation / dogfooding. Distribution is **shipped**: `aker-build@0.1.0` is public on
-both [npm](https://www.npmjs.com/package/aker-build) and
-[PyPI](https://pypi.org/project/aker-build/), released from tag `v0.1.0`.
+MVP implementation / dogfooding. Distribution is **shipped**: `aker-build@0.1.2` is public on
+[npm](https://www.npmjs.com/package/aker-build) and is `latest`, released from tag `v0.1.2`
+through the automated workflow. It is the first provenanced release. The
+[PyPI](https://pypi.org/project/aker-build/) channel ships the same bundle from the same tag.
 
 The MVP CLI is implemented (`check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, `report`) and installs as the `aker` command from either channel.
 
 Landed since 017: 018 (agent surface), 020 (PyPI distribution), 021 (command rename to `aker`), 022 (glob wildcard-prefix fix), 023 (rename-guard nested checkouts). Spec 019 (Governed Loop) is named and sequenced but not yet written.
 
-Open operator actions, both account-side rather than code: configure npm Trusted Publishing (so releases after 0.1.0 carry provenance) and enable 2FA on the publishing account. See `docs/release/npm.md`.
+The operator setup is done: npm Trusted Publishing is registered, and both release environments require approval before a publish. Two release-path bugs were found and fixed in the process — the version was restated by five producers rather than derived, and `setup-node`'s `registry-url` injected a placeholder auth token that silently displaced OIDC. Both are guarded by tests. See `docs/release/npm.md`.
 
 > The Spec Kit block at the end of this file still names 017 as the active feature. That block is tool-managed and is stale — treat this section as the authoritative statement of current phase.
 
