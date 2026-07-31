@@ -5,7 +5,7 @@
 // OVER-BROAD (the internal @aker-build/* scope is untouched). A rename checked only by
 // "tests pass" can fail either way without any test noticing.
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 const VERBS = [
@@ -80,11 +80,32 @@ function toPosix(path) {
   return path.split(sep).join("/");
 }
 
+/**
+ * True for a directory that is its own checkout: a linked worktree (`.git` file), a
+ * clone, or a submodule (`.git` directory).
+ *
+ * Such a directory's files belong to a different commit -- frequently an older one that
+ * still invokes the retired command, because that is what the rename retired. Reporting
+ * them describes history, not this tree. Git draws this boundary itself; this guard walks
+ * the filesystem, so it must draw the boundary explicitly.
+ *
+ * Keyed on the checkout marker rather than a directory name on purpose: worktrees are not
+ * required to live anywhere in particular, and a name-based skip would have to guess. It
+ * would also overshoot -- `SKIP_DIRS` matches basenames, so skipping `claude` would
+ * silence `distribution/bundle-templates/claude/`, whose templates are live content.
+ */
+function isNestedCheckout(dir) {
+  return existsSync(join(dir, ".git"));
+}
+
 function walk(root, dir, out) {
   for (const entry of readdirSync(dir)) {
     if (SKIP_DIRS.has(entry)) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) {
+      // The repository root is never tested here -- walk() only reaches child
+      // directories, and the root's own `.git` is already in SKIP_DIRS.
+      if (isNestedCheckout(full)) continue;
       walk(root, full, out);
       continue;
     }

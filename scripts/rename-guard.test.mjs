@@ -71,6 +71,71 @@ test("still catches a retired invocation in an ordinary file", () => {
   }
 });
 
+test("skips a nested checkout, whose files belong to another commit", () => {
+  // A linked worktree carries a `.git` FILE; a nested clone carries a `.git` DIRECTORY.
+  // Either way the contents are some other commit's, often an older one that still
+  // invokes the retired command -- which the rename retired, so finding it there is a
+  // statement about history rather than about this tree.
+  const dir = mkdtempSync(join(tmpdir(), "aker-rename-guard-nested-"));
+  try {
+    writeFileSync(join(dir, "README.md"), "Run `aker check .` to begin.\n");
+
+    const linked = join(dir, ".claude", "worktrees", "old-branch");
+    mkdirSync(linked, { recursive: true });
+    writeFileSync(join(linked, ".git"), "gitdir: /elsewhere/.git/worktrees/old-branch\n");
+    writeFileSync(join(linked, "README.md"), "Run `aker-build scan .` to begin.\n");
+
+    const clone = join(dir, "vendor", "checkout");
+    mkdirSync(join(clone, ".git"), { recursive: true });
+    writeFileSync(join(clone, "README.md"), "Run `aker-build route .` to begin.\n");
+
+    assert.deepEqual(
+      findLiveCommandRefs(dir),
+      [],
+      "a separate checkout's files must not be reported as this tree's",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("still scans an ordinary directory named claude", () => {
+  // The near-miss that makes a name-based skip unsafe: `SKIP_DIRS` matches basenames, so
+  // skipping "claude" would silence distribution/bundle-templates/claude/ -- the live
+  // agent command templates the other tests assert are NOT exempt.
+  const dir = mkdtempSync(join(tmpdir(), "aker-rename-guard-claude-"));
+  try {
+    const templates = join(dir, "distribution", "bundle-templates", "claude");
+    mkdirSync(templates, { recursive: true });
+    writeFileSync(join(templates, "check.md"), "Run `aker-build check .` to begin.\n");
+
+    assert.deepEqual(findLiveCommandRefs(dir), [
+      { file: "distribution/bundle-templates/claude/check.md", line: 1 },
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("scans a directory holding .gitignore but no .git", () => {
+  // The checkout test matches an exact entry name, not a prefix: `.gitignore`,
+  // `.github/`, and `.gitattributes` are ordinary tracked content.
+  const dir = mkdtempSync(join(tmpdir(), "aker-rename-guard-gitish-"));
+  try {
+    const sub = join(dir, "packages", "thing");
+    mkdirSync(sub, { recursive: true });
+    writeFileSync(join(sub, ".gitignore"), "node_modules\n");
+    writeFileSync(join(sub, ".gitattributes"), "* text=auto\n");
+    writeFileSync(join(sub, "README.md"), "Run `aker-build gates .` to begin.\n");
+
+    assert.deepEqual(findLiveCommandRefs(dir), [
+      { file: "packages/thing/README.md", line: 1 },
+    ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("the internal package scope was not renamed", () => {
   // The scope is a package namespace users never see. Renaming it would be the broad
   // refactor CLAUDE.md forbids, so this pins the count: the rename must not leak in.
