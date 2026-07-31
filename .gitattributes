@@ -1,0 +1,11 @@
+# Generated files whose bytes are compared, not just their content.
+#
+# scripts/build-agent-bundle.mjs writes the bundle manifest with LF. With core.autocrlf=true
+# and no attribute here, Git checks it out as CRLF, so every local `pnpm build:agent-bundle`
+# leaves the file modified in `git status` while `git diff` — which normalizes line endings —
+# reports nothing. That split is actively misleading: it reads as an uncommitted change that
+# does not exist, and it blocks `git stash pop` on a tree that looks clean.
+#
+# Scoped to the one generated file rather than a repo-wide `* text=auto`, which would
+# renormalize every tracked file at once.
+packages/plugin/dist/bundle-manifest.json text eol=lf
