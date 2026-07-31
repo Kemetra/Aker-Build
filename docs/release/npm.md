@@ -39,6 +39,43 @@ Neither is a code change and both require account access:
 Until (1) is done, `npm-release.yml` cannot authenticate: it publishes with
 `id-token: write` and no token, which requires a registered publisher.
 
+## Why `setup-node`'s `registry-url` must stay off this workflow
+
+Two 0.1.1 release attempts failed at `npm publish` with:
+
+```
+npm error 404 Not Found - PUT https://registry.npmjs.org/aker-build
+npm error 404  The requested resource 'aker-build@0.1.1' could not be found
+               or you do not have permission to access it.
+```
+
+The package plainly exists, so the message is misleading twice over. npm answers an
+**unauthorized** `PUT` on an existing package with `404` rather than `403` — it will not
+confirm a package's existence to a caller not entitled to know — so rejected credentials
+read as a missing package. And provenance signing *succeeded* in the same step, which made
+the log look like OIDC was working:
+
+```
+npm notice publish Signed provenance statement with source and build information from GitHub Actions
+npm notice publish Provenance statement published to transparency log: …
+```
+
+The cause was `actions/setup-node` with `registry-url`. It writes an `.npmrc` containing
+`//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`, points `NPM_CONFIG_USERCONFIG` at it,
+and — when given no token — sets `NODE_AUTH_TOKEN` to the literal placeholder
+`XXXXX-XXXXX-XXXXX-XXXXX`. npm found a configured token for the registry and authenticated
+with that placeholder rather than exchanging its OIDC identity, so Trusted Publishing was
+never attempted. The tell is that the placeholder appears **unmasked** in the step env; a real
+secret prints as `***`.
+
+Provenance signing is unaffected because it uses the OIDC token directly and never touches the
+registry, which is exactly why the log is so misleading.
+
+`registry-url` is redundant here regardless: the generated manifest carries
+`publishConfig.registry`, which `validateReleaseManifest` requires and npm honours on publish.
+`scripts/release-oidc-auth.mjs` fails the build if any workflow that runs `npm publish` under
+`id-token: write` sets `registry-url` again.
+
 ## Why the first publish was manual
 
 npm can only bind a Trusted Publisher to a package that **already exists**. There is no

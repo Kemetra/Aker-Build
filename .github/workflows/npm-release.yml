@@ -24,11 +24,17 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Node and npm registry
+      # No `registry-url`, deliberately. It writes an .npmrc carrying
+      # `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}` and defaults NODE_AUTH_TOKEN to the
+      # placeholder `XXXXX-XXXXX-XXXXX-XXXXX` when no token is given, so npm authenticates with
+      # that placeholder instead of exchanging its OIDC identity and Trusted Publishing is never
+      # attempted. The registry is already pinned by `publishConfig.registry` in the generated
+      # manifest, which validateReleaseManifest requires, so nothing is lost by omitting it.
+      # Guarded by scripts/release-oidc-auth.mjs.
+      - name: Set up Node
         uses: actions/setup-node@v6
         with:
           node-version: "22.14"
-          registry-url: "https://registry.npmjs.org/"
           package-manager-cache: false
 
       - run: corepack enable
