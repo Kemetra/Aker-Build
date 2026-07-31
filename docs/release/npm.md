@@ -2,42 +2,53 @@
 
 ## Current state
 
-`aker-build@0.1.0` is published: <https://www.npmjs.com/package/aker-build>. Verified
-from the public registry with `npx --package aker-build aker --version` → `0.1.0`.
+`aker-build@0.1.2` is published and is `latest`: <https://www.npmjs.com/package/aker-build>.
+Verified from the public registry with `npx --package aker-build aker --version` → `0.1.2`,
+and `aker --help` → `Usage: aker [options] [command]`.
 
 The package is `aker-build`; the command it installs is `aker`.
 
-**This first release carries no provenance.** See "Why the first publish was manual".
+**0.1.2 is the first provenanced release.** It carries a SLSA attestation
+(`predicateType: https://slsa.dev/provenance/v1`), published tokenlessly from
+`npm-release.yml` through Trusted Publishing. 0.1.0 was published by hand and has npm's
+registry signature only, which is not provenance — see "Why the first publish was manual".
 
-## Pending operator actions
+0.1.1 was tagged but never published; the release workflow itself had to be fixed first. See
+"Why `setup-node`'s `registry-url` must stay off this workflow".
 
-Neither is a code change and both require account access:
+## Operator setup — done
 
-1. Configure npm Trusted Publishing for repository `Kemetra/Aker-Build`, workflow
-   `npm-release.yml`, environment `npm-release`. This is only possible now that the
-   package exists.
+Both required account access and neither is a code change. Recorded because they must be
+repeated for any new package, and because each has a failure mode that reads as something else.
+
+1. **npm Trusted Publishing**, configured per package at npmjs.com → `aker-build` →
+   Settings → Trusted Publisher: owner `Kemetra`, repository `Aker-Build`, workflow
+   `npm-release.yml`, environment `npm-release`.
+
+   **Every field is case-sensitive and must match exactly.** Registering the owner as
+   `kemetra` instead of `Kemetra` cost a release cycle: the OIDC claim did not match any
+   publisher rule, the registry returned no token, and npm — left with no credentials at all
+   — reported `ENEEDAUTH … you need to be logged in`. That message names the fallback, not
+   the cause, and says nothing about case.
 
    Note that **linking a GitHub account to an npm account is not this.** The account link is
-   identity convenience and grants the workflow nothing. Trusted Publishing is configured per
-   package, at npmjs.com → `aker-build` → Settings → Trusted Publisher, and the three fields
-   must match the workflow exactly. If that panel is empty, the publish step fails on auth.
-2. Configure required reviewers on the release environments, then revoke the bootstrap token
-   from step 2 below and remove the local `~/.npmrc` entry. Do not add a long-lived npm
-   publish token to Actions secrets.
-
-   Run `node scripts/setup-release-environments.mjs` (`--dry-run` to preview). Verified
-   2026-07-31: the `npm-release` environment **did not exist**, and `pypi` existed with an
-   empty `protection_rules` array. Both matter because `npm-release.yml` names an environment
-   GitHub auto-creates on first use *with no protection rules* — so a dispatch would publish
-   unreviewed while looking gated. Confirm with:
+   identity convenience and grants the workflow nothing.
+2. **Required reviewers on both release environments**, so a dispatch stops for approval
+   before it publishes. Run `node scripts/setup-release-environments.mjs` (`--dry-run` to
+   preview). Verified 2026-07-31: the `npm-release` environment **did not exist**, and `pypi`
+   existed with an empty `protection_rules` array — so both channels were ungated, which is
+   how 0.1.0 published without an approval stop. `npm-release.yml` names an environment
+   GitHub auto-creates on first use *with no protection rules*, so the gap is invisible in the
+   workflow file. Confirm with:
 
    ```bash
    gh api repos/Kemetra/Aker-Build/environments \
      --jq '.environments[] | {name, rules: [.protection_rules[].type]}'
    ```
 
-Until (1) is done, `npm-release.yml` cannot authenticate: it publishes with
-`id-token: write` and no token, which requires a registered publisher.
+Do not add a long-lived npm publish token to Actions secrets. The workflow publishes with
+`id-token: write` and no token; a fallback token would convert a loud misconfiguration into a
+quiet unprovenanced release.
 
 ## Why `setup-node`'s `registry-url` must stay off this workflow
 
