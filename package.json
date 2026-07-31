@@ -13,7 +13,7 @@
     "build:cli-package": "node scripts/build-cli-package.mjs",
     "test": "pnpm test:namespace && pnpm -r --no-bail test",
     "test:agent-bundle": "node --test scripts/agent-bundle.test.mjs distribution/evals/grade.test.mjs scripts/rename-guard.test.mjs && node scripts/verify-agent-bundle.mjs",
-    "test:cli-package": "node --test scripts/cli-package.test.mjs && node scripts/verify-cli-package.mjs",
+    "test:cli-package": "node --test scripts/cli-package.test.mjs scripts/release-publish-path.test.mjs && node scripts/verify-cli-package.mjs",
     "test:namespace": "node --test scripts/check-namespace.test.mjs",
     "check:namespace": "node scripts/check-namespace.mjs",
     "typecheck": "pnpm -r typecheck"

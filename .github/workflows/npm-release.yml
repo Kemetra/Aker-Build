@@ -41,4 +41,7 @@ jobs:
       - run: corepack pnpm build:cli-package
       - run: node scripts/release-preflight.mjs "$RELEASE_VERSION"
       - run: node scripts/verify-cli-package.mjs --tarball-dir release
-      - run: npm publish "release/aker-build-${RELEASE_VERSION}.tgz" --provenance
+      # The `./` is load-bearing: npm parses a bare `release/…` argument as a GitHub
+      # shorthand and tries to clone it, failing with a git authentication error at the
+      # last step of the release. See scripts/release-publish-path.mjs.
+      - run: npm publish "./release/aker-build-${RELEASE_VERSION}.tgz" --provenance
