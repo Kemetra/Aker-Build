@@ -3,7 +3,7 @@
     {
       "classification": "generated_wrapper",
       "destination": ".claude-plugin/plugin.json",
-      "output_sha256": "8b5f479c95124c88eff062fb9747f27fe83bcd73b1420b69e5d3732e066ce5cf",
+      "output_sha256": "3adb8596084a0ea9e2e46583f4f2d921b44aeeabe17d4285dbf092dd00b2518f",
       "source": "distribution/bundle-templates/claude/.claude-plugin/plugin.json",
       "source_sha256": "f3b1792f7be6d68429619a960a54e243f34574e09bb694ee201f44e20be9af61",
       "transform": "template-substitute-version-v1"

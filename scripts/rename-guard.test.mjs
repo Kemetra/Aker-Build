@@ -181,5 +181,10 @@ test("distinguishes the command's identity from the package's name", () => {
 test("the internal package scope was not renamed", () => {
   // The scope is a package namespace users never see. Renaming it would be the broad
   // refactor CLAUDE.md forbids, so this pins the count: the rename must not leak in.
-  assert.equal(countScopeRefs(repoRoot), 195);
+  //
+  // 195 → 196: the MCP server now imports CLI_VERSION from @aker-build/cli instead of restating
+  // the version, which adds one legitimate reference. The pin is exact by design, so any new
+  // internal import moves it — see the release notes for the standing question of whether a floor
+  // would serve the stated intent (catching a rename, which drops the count) with fewer false trips.
+  assert.equal(countScopeRefs(repoRoot), 196);
 });
