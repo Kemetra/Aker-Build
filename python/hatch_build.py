@@ -22,6 +22,14 @@ COPIES = [
     (ARTIFACT / "THIRD_PARTY_NOTICES.txt", VENDOR / "THIRD_PARTY_NOTICES.txt"),
 ]
 
+# The bundle is ESM, and npm says so with `"type": "module"` in its package manifest.
+# A wheel has no such manifest, so Node walks up from aker.js, finds nothing, tries
+# CommonJS, fails, and reparses as ESM — printing MODULE_TYPELESS_PACKAGE_JSON and
+# paying a reparse cost on *every* invocation. Stating the type removes the guess and
+# keeps the two channels' runtime behaviour identical.
+MANIFEST = VENDOR / "package.json"
+MANIFEST_TEXT = '{\n  "type": "module"\n}\n'
+
 
 class VendorBundleHook(BuildHookInterface):
     PLUGIN_NAME = "vendor-bundle"
@@ -29,7 +37,7 @@ class VendorBundleHook(BuildHookInterface):
     def initialize(self, version: str, build_data: dict) -> None:
         # An sdist built from a clean checkout already carries vendor/, so a missing
         # artifact is only an error when there is nothing vendored to fall back on.
-        if all(destination.is_file() for _, destination in COPIES):
+        if self._already_vendored():
             if not (ARTIFACT / "dist" / "aker.js").is_file():
                 return
 
@@ -43,3 +51,11 @@ class VendorBundleHook(BuildHookInterface):
         VENDOR.mkdir(parents=True, exist_ok=True)
         for source, destination in COPIES:
             shutil.copy2(source, destination)
+        MANIFEST.write_text(MANIFEST_TEXT, encoding="utf8")
+
+    @staticmethod
+    def _already_vendored() -> bool:
+        # The manifest counts as vendored content: a vendor/ carrying the bundle but no
+        # manifest is incomplete, and treating it as complete would let the ESM guess
+        # back in through the sdist path.
+        return all(destination.is_file() for _, destination in COPIES) and MANIFEST.is_file()
