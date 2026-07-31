@@ -38,4 +38,7 @@ python/aker_build/vendor/
 python/dist/
 python/*.egg-info/
 python/.pytest_cache/
-__pycache__/
+
+# Bytecode caches, written next to whatever ran. Scoped to python/ so this stays a
+# statement about the one Python tree in the repo rather than a repo-wide rule.
+python/**/__pycache__/
