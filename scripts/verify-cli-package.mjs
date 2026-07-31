@@ -19,6 +19,7 @@ import {
   validateReleaseManifest,
   validateVersion,
 } from "./cli-package.mjs";
+import { readCliVersion } from "./cli-version.mjs";
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -48,10 +49,9 @@ function run(command, args, cwd) {
 
 try {
   const packageDir = await buildCliPackage();
-  const cliSource = readFileSync(join(repo, "packages", "cli", "src", "version.ts"), "utf8")
-    .match(/CLI_VERSION\s*=\s*"([^"]+)"/)?.[1];
+  const cliSource = readCliVersion(repo);
   const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
-  validateReleaseManifest(manifest);
+  validateReleaseManifest(manifest, cliSource);
   validateVersion({ packageVersion: manifest.version, cliVersion: cliSource });
 
   const packJson = JSON.parse(run(

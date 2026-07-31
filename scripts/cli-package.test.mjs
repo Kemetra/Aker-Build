@@ -10,11 +10,17 @@ import {
   validateReleaseManifest,
   validateVersion,
 } from "./cli-package.mjs";
+import { readCliVersion } from "./cli-version.mjs";
 import { validateReleasePreflight } from "./release-preflight.mjs";
+
+// Derived, never restated. A literal here would pass whatever the builder emitted, which is the
+// defect these tests exist to catch: the release identity rule used to compare one literal to
+// another and so could not fail.
+const released = readCliVersion();
 
 const valid = {
   name: "aker-build",
-  version: "0.1.0",
+  version: released,
   description: "Aker Build — CLI-first SaaS Build Kernel",
   license: "MIT",
   type: "module",
@@ -29,7 +35,19 @@ const valid = {
 };
 
 test("accepts the exact public zero-dependency manifest", () => {
-  assert.doesNotThrow(() => validateReleaseManifest(valid));
+  assert.doesNotThrow(() => validateReleaseManifest(valid, released));
+});
+
+test("rejects a manifest pinned to a version other than the released one", () => {
+  const manifest = { ...valid, version: "0.0.9" };
+  assert.throws(
+    () => validateReleaseManifest(manifest, released),
+    new RegExp(`release identity must be aker-build@${released.replaceAll(".", "\\.")}`),
+  );
+});
+
+test("refuses to validate a manifest without an expected version", () => {
+  assert.throws(() => validateReleaseManifest(valid), /requires the expected version/);
 });
 
 for (const [name, mutate] of [
@@ -43,7 +61,7 @@ for (const [name, mutate] of [
   test(`rejects ${name}`, () => {
     const manifest = structuredClone(valid);
     mutate(manifest);
-    assert.throws(() => validateReleaseManifest(manifest));
+    assert.throws(() => validateReleaseManifest(manifest, released));
   });
 }
 
@@ -98,13 +116,17 @@ test("builds a self-contained executable package with required license notices",
   const executable = readFileSync(executablePath, "utf8");
   const notices = readFileSync(join(packageDir, "THIRD_PARTY_NOTICES.txt"), "utf8");
 
-  assert.doesNotThrow(() => validateReleaseManifest(manifest));
+  assert.doesNotThrow(() => validateReleaseManifest(manifest, released));
   assert.match(executable, /^#!\/usr\/bin\/env node/);
   for (const file of manifest.files) assert.equal(existsSync(join(packageDir, file)), true, file);
   for (const dependency of ["commander", "yaml", "zod"]) assert.match(notices, new RegExp(`===== ${dependency} =====`));
+  // The manifest the builder writes and the version the built binary reports must both come from
+  // the source constant. They were independent literals, so a bump could ship a 0.1.0 manifest
+  // wrapped around a 0.1.1 binary and only the packing verifier would notice.
+  assert.equal(manifest.version, released);
   const version = spawnSync(process.execPath, [executablePath, "--version"], { encoding: "utf8" });
   assert.equal(version.status, 0, version.stderr);
-  assert.equal(version.stdout.trim(), "0.1.0");
+  assert.equal(version.stdout.trim(), released);
 });
 
 const release = {
