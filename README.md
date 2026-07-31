@@ -163,6 +163,17 @@ npx --package aker-build aker check .
 > The package is `aker-build`; the command it installs is `aker`. Once installed
 > globally (`npm i -g aker-build`), it is just `aker check .`.
 
+Python-first toolchains can install the same CLI from PyPI:
+
+```bash
+pip install aker-build
+aker check .
+```
+
+The wheel carries the compiled JavaScript engine and requires Node.js 22.13+ on your
+PATH; it does not bundle a Node runtime. Both channels publish the same
+`CLI_VERSION`, so `pip` and `npm` never diverge.
+
 The standalone source commands remain available when a specific stage is needed:
 
 ```bash
