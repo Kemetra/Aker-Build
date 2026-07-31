@@ -1,0 +1,76 @@
+# Manual, environment-protected PyPI publish via OIDC Trusted Publishing.
+#
+# Mirrors npm-release.yml: dispatch-only, a protected environment, no long-lived token.
+# The filename is part of the registered publisher configuration on PyPI and must not
+# change without updating it there.
+name: PyPI Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact package version; dispatch this workflow from refs/tags/v<version>
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.14"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: corepack enable
+
+      - name: Install workspace dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Build the CLI bundle
+        run: corepack pnpm build:cli-package
+
+      - name: Install build tooling
+        run: python -m pip install --upgrade build pytest
+
+      - name: Build the distribution
+        working-directory: python
+        run: python -m build
+
+      - name: Verify the distribution before publishing
+        working-directory: python
+        run: python -m pytest -q
+
+      - name: Fail closed on a version mismatch
+        working-directory: python
+        run: |
+          python - <<'PY'
+          import glob, os, sys
+          requested = os.environ["REQUESTED"]
+          wheels = glob.glob("dist/aker_build-*-py3-none-any.whl")
+          if len(wheels) != 1:
+              sys.exit(f"expected exactly one wheel, found {wheels}")
+          if f"aker_build-{requested}-" not in wheels[0]:
+              sys.exit(f"requested {requested} but built {wheels[0]}")
+          print(f"version check passed: {wheels[0]}")
+          PY
+        env:
+          REQUESTED: ${{ inputs.version }}
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist
