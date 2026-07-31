@@ -30,6 +30,17 @@ const RETIRED = new RegExp(String.raw`(?<![@\w-])aker-build\s+(?:${VERBS.join("|
 
 const SCOPE = /@aker-build\/[a-z-]+/g;
 
+// The command's own declared identity, e.g. Commander's `.name("aker-build")`. The
+// invocation pattern above cannot catch this: it requires a verb after the name, and the
+// help banner reads `Usage: aker-build [options]`.
+//
+// Deliberately keyed to the `.name(...)` call rather than the bare string, because the
+// published npm *package* is still legitimately called `aker-build` -- only the command
+// was renamed. Flagging `"name": "aker-build"` in a manifest would demand a wrong change.
+const PROGRAM_NAME = /\.name\(\s*["']aker-build["']\s*\)/;
+
+const PROGRAM_EXTENSIONS = [".ts", ".mjs", ".js"];
+
 const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "coverage", ".aker-build"]);
 const SCANNED_EXTENSIONS = [".md", ".ts", ".mjs", ".json", ".yml", ".yaml", ".ps1", ".sh"];
 
@@ -138,6 +149,22 @@ export function findLiveCommandRefs(root) {
     const rel = relative(root, full);
     if (isHistoricalPath(rel) || isSelfReferential(rel)) continue;
     hits.push(...retiredRefsInFile(full, rel));
+  }
+  return hits;
+}
+
+/** Every live line declaring the retired name as the command's own identity. */
+export function findRetiredProgramNames(root) {
+  const hits = [];
+  for (const full of walk(root, root, [])) {
+    const rel = relative(root, full);
+    if (isHistoricalPath(rel) || isSelfReferential(rel)) continue;
+    if (!PROGRAM_EXTENSIONS.some((ext) => full.endsWith(ext))) continue;
+    readFileSync(full, "utf8")
+      .split("\n")
+      .forEach((line, index) => {
+        if (PROGRAM_NAME.test(line)) hits.push({ file: toPosix(rel), line: index + 1 });
+      });
   }
   return hits;
 }

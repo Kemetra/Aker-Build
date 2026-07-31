@@ -1,94 +1,158 @@
-# @aker-build/cli
+# aker-build
 
-The `aker-build` command-line interface (Commander). Current commands are `check`, `scan`, `map`, `gates`, `queue`, `route`, `prompt`, `review-pr`, and `report`.
+**Build SaaS with AI agents without losing architecture control.**
 
-Scanner spec: [`specs/003-cli-scanner`](../../specs/003-cli-scanner/spec.md) ·
-Gates spec: [`specs/004-saas-gates-v0`](../../specs/004-saas-gates-v0/spec.md) ·
-Queue/router spec: [`specs/005-derived-queue-router`](../../specs/005-derived-queue-router/spec.md) ·
-Prompt spec: [`specs/006-agent-prompt-compiler`](../../specs/006-agent-prompt-compiler/spec.md) ·
-Review spec: [`specs/007-pr-reviewer`](../../specs/007-pr-reviewer/spec.md)
+Aker Build scans a repository, runs SaaS gates over what it finds, derives a queue, and
+routes the one next-safest task — along with the exact files that task may touch. It
+reports; it never mutates your code, commits, merges, or executes an agent.
 
-Run the CLI from source during development:
+> The package is **`aker-build`**; the command it installs is **`aker`**.
 
 ```bash
-pnpm dlx tsx packages/cli/src/bin.ts --help
+npx --package aker-build aker check .
 ```
 
-Build or fully verify the zero-dependency npm artifact:
+Or install it: `npm i -g aker-build` → `aker check .`
 
-```bash
-pnpm build:cli-package
-pnpm test:cli-package
+Also on PyPI for Python-first toolchains: `pip install aker-build`
+([details](https://pypi.org/project/aker-build/)). Both channels ship the same compiled
+engine and the same version.
+
+## Requirements
+
+Node.js **22.13+**. Aker Build analyses TypeScript application-layer code in a Git
+repository. Scanning a non-Git directory is out of scope and exits non-zero.
+
+## What one pass produces
+
+```text
+.aker-build/
+├── project-map.json         what is in the repo, and what the scanner understands
+├── risks.json               gate findings, each with file:line evidence + confidence
+├── queue.json               derived work items
+├── route.json               the one next-safest task, with the reason it won
+├── aker-build-report.json
+└── aker-build-report.md
 ```
 
-The executable is generated at `packages/cli/dist/npm/dist/aker-build.js`. Public `npx aker-build ...` usage begins only after the owner completes the first npm publish.
+The set is written as one transaction. A failed stage preserves the previous complete set
+and leaves unrelated files in the output directory untouched.
+
+## Routing, which is the point
+
+```console
+$ aker route . --stdout --format json
+{
+  "next": {
+    "id": "Q-002",
+    "title": "Fix: API route without an auth guard",
+    "reason": [
+      "highest score (0.86)",
+      "status=ready",
+      "tier=confirmed",
+      "validation available"
+    ]
+  },
+  "blocked": [
+    { "id": "Q-001", "reason": "insufficient evidence to scope a safe action (needs verification)" }
+  ]
+}
+```
+
+Items are *blocked* rather than guessed at when evidence is too thin to scope a safe
+change. Findings carry a confidence tier: `confirmed` findings can drive action,
+`suspected` findings advise and never block.
+
+## Scope your scan before the first real run
+
+Detectors read code that *looks* like a vulnerability, and a security-adjacent test suite
+is full of deliberately-unsafe examples. On Aker Build's own repository, **76% of findings
+land in its own test fixtures** — each locally correct, most not useful. Create
+`aker-build.config.json` at your repo root:
+
+```json
+{
+  "version": 1,
+  "paths": {
+    "exclude": ["**/tests/**", "**/*.test.ts", "fixtures/**", "examples/**"]
+  }
+}
+```
 
 ## Commands
 
 ```bash
-# Run scan → gates → queue → route → report atomically
-aker check [path] [--config <path>] [--out <dir>]
-
-# Scan a repo (read-only) and write .aker-build/project-map.json
-aker scan [path] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
-
-# Show / re-emit the produced map
-aker map [--out <dir>] [--format json|yaml]
-
-# Run SaaS gates and write risks.json
-aker gates [path] [--gates <ids>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
-
-# Derive queue.json from project-map.json + risks.json
-aker queue [path] [--out <dir>] [--stdout] [--format json|yaml]
-
-# Select one next-safest task and write route.json
-aker route [path] [--out <dir>] [--stdout] [--format json|yaml]
-
-# Compile a safe agent prompt for a queue item
-aker prompt <id> [--agent claude|codex|generic] [--out <dir>] [--stdout]
-
-# Review a local diff or GitHub PR
-aker review-pr [path] --local-diff [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
-aker review-pr <number> [--item <id>] [--config <path>] [--out <dir>] [--stdout] [--format json|yaml]
-
-# Summarize produced artifacts
-aker report [path] [--out <dir>] [--stdout] [--format json|yaml|md]
+aker check [path]              # scan → gates → queue → route → report, one read-only pass
+aker scan [path]               # produce project-map.json
+aker map                       # show / re-emit the produced map
+aker gates [path]              # run the gate set (or --gates <ids>), produce risks.json
+aker queue [path]              # derive queue.json
+aker route [path]              # select one next-safest task + list blocked items
+aker prompt <id>               # compile a scoped agent prompt (--agent claude|codex|generic)
+aker review-pr [path] --local-diff   # review a local diff → Ready / Not Ready / Needs Verification
+aker review-pr <pr-number>     # or review a GitHub PR
+aker report [path]             # summarize produced artifacts (--format json|yaml|md)
 ```
 
-Successful `check` output contains exactly these owned artifacts:
+Common flags: `--config <path>`, `--out <dir>`, `--stdout`, `--format json|yaml`.
+
+### Gates
 
 ```text
-project-map.json
-risks.json
-queue.json
-route.json
-aker-build-report.json
-aker-build-report.md
+TG-G0 Source Truth     TG-G1 Architecture Boundary   TG-G2 Contract/API
+TG-G3 Migration Safety TG-G4 Security/Tenant Isolation TG-G5 Idempotency
+TG-G6 Billing/Usage    TG-G7 Observability           TG-G8 Dependency/Upgrade
+TG-G9 Release Readiness
 ```
-
-The files are staged separately and promoted as one complete transaction. A failed stage preserves the prior complete set and leaves unrelated files in the output directory untouched.
 
 ## Exit codes
 
-- `check`: `0` complete artifact set produced · `1` missing prerequisite/not a Git repo · `2` bad input/config · `3` internal or artifact-integrity error. Findings alone do not make `check` fail.
-- `scan`: `0` map produced & valid · `1` not a Git repo · `2` internal error (assembled map invalid).
-- `map`: `0` map shown · `1` no produced map (run `scan` first).
-- `gates`: `0` risks produced & valid · `1` no project map · `2` bad input · `3` internal error.
-- `queue`: `0` queue produced & valid · `1` missing project map or risks · `2` not a Git repo · `3` internal error.
-- `route`: `0` decision produced · `1` missing queue · `2` not a Git repo · `3` internal error.
-- `prompt`: `0` prompt compiled · `1` missing queue · `2` bad input or scope refusal · `3` internal error.
-- `review-pr`: `0` review completed · `1` missing upstream input · `2` bad input or unavailable git/gh · `3` internal error.
-- `report`: `0` report produced · `2` invalid input artifact · `3` internal error.
+Findings alone never fail a command — only errors do.
 
-## Guarantees
+| Code | Meaning |
+|---|---|
+| `0` | completed; artifacts produced and valid |
+| `1` | missing prerequisite (run `scan` first) or not a Git repository |
+| `2` | bad input, bad config, or a refused scope |
+| `3` | internal or artifact-integrity error |
 
-The CLI is local-first and read-only on scanned/reviewed source. It does not execute AI agents, commit, push, open PRs, auto-fix, auto-merge, or require GitHub credentials for `--local-diff`.
+## For AI coding agents
 
-Outputs are validated by their owning packages where schemas exist, and findings carry file/line/missing-artifact evidence. Secret-like content is flagged without copying the value into reports.
+An MCP server exposes the control plane read-only, so an agent can ask for the next task
+and a scoped prompt without being handed the whole repository. See
+[the MCP docs](https://github.com/Kemetra/Aker-Build#for-ai-coding-agents-mcp).
 
-## Develop
+## What it will not do
 
-```bash
-pnpm test
-pnpm typecheck
-```
+Local-first and read-only on the source it scans. It does not execute AI agents, commit,
+push, open pull requests, auto-fix, auto-merge, or require GitHub credentials for
+`--local-diff`. Secret-like content is flagged without copying the value into any report.
+
+## Honest limitations
+
+Detection is **regex-based, not parsed**. ORM idioms outside the recognised
+database-handle allow-list and the PascalCase-model convention go unseen, and window-based
+classifications stay in the `suspected` tier on purpose.
+
+The scanner therefore reports what it *does* understand: `project-map.coverage.covered`
+and `.uncovered`, so "no findings" always reads as "no findings **in covered
+frameworks**". Covered today: `express`, `prisma`, `mongoose`, `knex`, `sequelize`,
+`typeorm`, `drizzle`. Detected but not understood, and reported as such: `nextjs`,
+`nestjs`, `fastify`, and UI frameworks. An unrecognised stack produces silence, and
+silence is not safety.
+
+Detection quality is measured against a labeled corpus that ships in the repository (19
+cases) and gated in CI — including the cases that exist specifically to break it. The
+[scorecard](https://github.com/Kemetra/Aker-Build#benchmark-scorecard) reports absolute
+counts next to percentages, because those rates rest on 10 true positives.
+
+For database-layer RLS analysis, Aker Build complements rather than replaces tools such as
+[pgrls](https://github.com/pgrls/pgrls).
+
+## Links
+
+- [Source and documentation](https://github.com/Kemetra/Aker-Build)
+- [Issues](https://github.com/Kemetra/Aker-Build/issues)
+- [Changelog / releases](https://github.com/Kemetra/Aker-Build/releases)
+
+MIT licensed.
