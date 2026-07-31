@@ -102,10 +102,13 @@ function walk(root, dir, out) {
   for (const entry of readdirSync(dir)) {
     if (SKIP_DIRS.has(entry)) continue;
     const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
-      // The repository root is never tested here -- walk() only reaches child
-      // directories, and the root's own `.git` is already in SKIP_DIRS.
-      if (isNestedCheckout(full)) continue;
+    const directory = statSync(full).isDirectory();
+    // Each condition stays at one level: nesting the checkout test inside the directory
+    // branch reads as a second decision about the same entry, which it is not.
+    // The repository root is never tested -- walk() only reaches child directories, and
+    // the root's own `.git` is already in SKIP_DIRS.
+    if (directory && isNestedCheckout(full)) continue;
+    if (directory) {
       walk(root, full, out);
       continue;
     }
