@@ -145,11 +145,13 @@ function registerVerificationCommands(program: Command): void {
     });
 }
 
-/** Build the `aker-build` CLI program. Commands set process.exitCode (no hard process.exit). */
+/** Build the `aker` CLI program. Commands set process.exitCode (no hard process.exit). */
 export function buildProgram(): Command {
   const program = new Command();
   program
-    .name("aker-build")
+    // The installed command is `aker`; the package that installs it is `aker-build`.
+    // Commander prints this in every usage and error line, so it must be the command.
+    .name("aker")
     .description("Aker Build — CLI-first SaaS Build Kernel")
     .version(CLI_VERSION);
 

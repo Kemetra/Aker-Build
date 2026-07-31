@@ -8,6 +8,7 @@ import { join } from "node:path";
 import {
   countScopeRefs,
   findLiveCommandRefs,
+  findRetiredProgramNames,
   isHistoricalPath,
   isSelfReferential,
 } from "./rename-guard.mjs";
@@ -131,6 +132,47 @@ test("scans a directory holding .gitignore but no .git", () => {
     assert.deepEqual(findLiveCommandRefs(dir), [
       { file: "packages/thing/README.md", line: 1 },
     ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("no live file declares the retired name as the command's own identity", () => {
+  // The invocation pattern needs a verb after the name, so it cannot see
+  // `.name("aker-build")` -- yet that is what Commander prints in `aker --help`
+  // ("Usage: aker-build"), which is the rename being visibly incomplete to every user.
+  const refs = findRetiredProgramNames(repoRoot);
+  assert.deepEqual(
+    refs,
+    [],
+    `the CLI still identifies itself by the retired name:\n  ${refs
+      .map((r) => `${r.file}:${r.line}`)
+      .join("\n  ")}`,
+  );
+});
+
+test("distinguishes the command's identity from the package's name", () => {
+  // The published npm package IS called aker-build; only the *command* was renamed. A
+  // detector that flagged the package name would demand an incorrect change, so these
+  // near-misses are the ones that matter.
+  const dir = mkdtempSync(join(tmpdir(), "aker-rename-guard-progname-"));
+  try {
+    mkdirSync(join(dir, "packages"), { recursive: true });
+    writeFileSync(join(dir, "package.json"), '{ "name": "aker-build", "bin": { "aker": "x.js" } }\n');
+    writeFileSync(
+      join(dir, "packages", "keep.ts"),
+      [
+        'program.name("aker");',
+        'import { x } from "@aker-build/queue";',
+        'const out = ".aker-build/queue.json";',
+        'const report = "aker-build-report.json";',
+        "",
+      ].join("\n"),
+    );
+    assert.deepEqual(findRetiredProgramNames(dir), []);
+
+    writeFileSync(join(dir, "packages", "bad.ts"), 'program\n  .name("aker-build")\n');
+    assert.deepEqual(findRetiredProgramNames(dir), [{ file: "packages/bad.ts", line: 2 }]);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
