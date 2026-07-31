@@ -128,7 +128,12 @@ describe("runCheck", () => {
 });
 
 describe("CLI version", () => {
-  it("uses the first public package version", () => {
-    expect(CLI_VERSION).toBe("0.1.0");
+  // Pinning the literal meant hand-editing this on every release, and it said nothing about
+  // whether the value was usable. The release path parses this constant three times — the npm
+  // builder, the package verifier, and hatch's `pattern` in python/pyproject.toml — so the
+  // invariant worth holding is that it stays a bare semver string. Catches `v0.1.1`, a trailing
+  // space, or a two-part version, none of which would fail until the release was already running.
+  it("is a bare semver string the release path can parse", () => {
+    expect(CLI_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });

@@ -14,6 +14,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { validateReleaseManifest } from "./cli-package.mjs";
+import { readCliVersion } from "./cli-version.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = join(repo, "packages", "cli", "dist", "npm");
@@ -63,9 +64,13 @@ export async function buildCliPackage() {
   }
   chmodSync(executablePath, 0o755);
 
+  // Derived from the same constant the bundled binary reports, so the manifest version and
+  // `aker --version` cannot disagree. As a literal it silently survived a bump.
+  const version = readCliVersion(repo);
+
   const manifest = {
     name: "aker-build",
-    version: "0.1.0",
+    version,
     description: "Aker Build — CLI-first SaaS Build Kernel",
     license: "MIT",
     type: "module",
@@ -79,7 +84,7 @@ export async function buildCliPackage() {
     keywords: ["cli", "saas", "architecture", "code-review", "static-analysis"],
     publishConfig: { access: "public", registry: "https://registry.npmjs.org/" },
   };
-  validateReleaseManifest(manifest);
+  validateReleaseManifest(manifest, version);
 
   writeFileSync(join(output, "package.json"), `${JSON.stringify(manifest, null, 2)}\n`);
   copyFileSync(join(repo, "packages", "cli", "README.md"), join(output, "README.md"));
