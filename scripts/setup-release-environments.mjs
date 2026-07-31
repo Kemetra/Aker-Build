@@ -36,12 +36,16 @@ function reviewerId() {
 }
 
 function configure(environment, reviewer) {
+  // `-F` parses typed values, `-f` sends strings. prevent_self_review and the reviewer id must
+  // be a real boolean and a real number: `-f prevent_self_review=false` sends the STRING
+  // "false" and the API rejects it with `not of type boolean` (HTTP 422). The reviewer type is
+  // genuinely a string, so it stays on `-f`.
   const args = [
     "api",
     "-X",
     "PUT",
     `repos/${REPO}/environments/${environment}`,
-    "-f",
+    "-F",
     "prevent_self_review=false",
     "-f",
     "reviewers[][type]=User",
