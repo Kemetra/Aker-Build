@@ -6,8 +6,16 @@ and no second version number: both read `CLI_VERSION` from
 
 ## Current state
 
-`aker-build 0.1.0` is published: <https://pypi.org/project/aker-build/> (wheel + sdist).
-Verified with `pip install aker-build` in a clean virtualenv → `aker --version` → `0.1.0`.
+`aker-build 0.1.2` is published and is the latest release:
+<https://pypi.org/project/aker-build/> (wheel + sdist). Released from tag `v0.1.2` through
+`pypi-release.yml`, which uploads a publish attestation alongside each artifact.
+
+0.1.0 remains available as the bootstrap release. 0.1.1 was tagged but never published to
+either registry — see `docs/release/npm.md`.
+
+Note that `pip index versions aker-build` served a stale `0.1.0` for some minutes after the
+upload succeeded. The authoritative check is the JSON API
+(<https://pypi.org/pypi/aker-build/json>), not the index.
 
 The setup below is **done** for this project; it is recorded because it must be repeated
 for any new project, and because getting it wrong is the failure mode below.
