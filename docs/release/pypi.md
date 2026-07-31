@@ -4,6 +4,14 @@ The PyPI channel wraps the same compiled bundle npm ships. There is no second en
 and no second version number: both read `CLI_VERSION` from
 `packages/cli/src/version.ts`.
 
+## Current state
+
+`aker-build 0.1.0` is published: <https://pypi.org/project/aker-build/> (wheel + sdist).
+Verified with `pip install aker-build` in a clean virtualenv → `aker --version` → `0.1.0`.
+
+The setup below is **done** for this project; it is recorded because it must be repeated
+for any new project, and because getting it wrong is the failure mode below.
+
 ## One-time setup (operator)
 
 1. Register a Trusted Publisher at <https://pypi.org/manage/account/publishing/>:
@@ -16,6 +24,17 @@ and no second version number: both read `CLI_VERSION` from
    reviewers who may approve a publish.
 
 No API token is stored anywhere; the workflow authenticates by OIDC.
+
+**A Trusted Publisher is per-project, not per-account.** Holding one for another project
+grants nothing here: PyPI looks for a publisher filed under *this* project name matching
+the token's claims, and returns `invalid-publisher` ("valid token, but no corresponding
+publisher") when there is none. Because a project that has never been published has no
+settings page, the first registration must go in the **pending publishers** section at the
+bottom of the account publishing page — a different form from the per-project one. Once the
+first upload succeeds, PyPI converts the pending entry into a normal project publisher.
+
+Unlike npm, this means PyPI's *first* release needs no manual token: pending publishers
+exist precisely to break that chicken-and-egg.
 
 ## Publishing
 

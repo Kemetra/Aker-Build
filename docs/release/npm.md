@@ -2,12 +2,49 @@
 
 ## Current state
 
-The repository builds and verifies `aker-build@0.1.0`. Public availability begins only after the owner completes the first-publish checklist below.
+`aker-build@0.1.0` is published: <https://www.npmjs.com/package/aker-build>. Verified
+from the public registry with `npx --package aker-build aker --version` → `0.1.0`.
 
-## First publish (operator-owned)
+The package is `aker-build`; the command it installs is `aker`.
 
-1. Recheck `https://registry.npmjs.org/aker-build` and confirm the intended npm account has two-factor authentication enabled.
-2. From the reviewed `v0.1.0` release tag, run:
+**This first release carries no provenance.** See "Why the first publish was manual".
+
+## Pending operator actions
+
+Neither is a code change and both require account access:
+
+1. Configure npm Trusted Publishing for repository `Kemetra/Aker-Build`, workflow
+   `npm-release.yml`, environment `npm-release`. This is only possible now that the
+   package exists.
+2. Configure required reviewers on the GitHub `npm-release` environment, then revoke the
+   bootstrap token from step 2 below and remove the local `~/.npmrc` entry. Do not add a
+   long-lived npm publish token to Actions secrets.
+
+Until (1) is done, `npm-release.yml` cannot authenticate: it publishes with
+`id-token: write` and no token, which requires a registered publisher.
+
+## Why the first publish was manual
+
+npm can only bind a Trusted Publisher to a package that **already exists**. There is no
+equivalent of PyPI's *pending* publisher, so the first release cannot come from the
+workflow — the workflow has nothing to authenticate against. That is the bootstrap gap.
+
+Two consequences learned by doing it:
+
+- **Provenance is impossible for a first publish.** `npm publish --provenance` requires a
+  supported CI environment with OIDC; it cannot run from a workstation. So the first
+  release is unprovenanced by necessity, and every release after (1) above gets provenance
+  automatically through the workflow.
+- **A "Publish" token is not sufficient on its own.** npm requires publish-time 2FA or a
+  token permitted to bypass it. With account 2FA disabled, a classic **Automation** token
+  is what works; a classic **Publish** token returns
+  `403 … Two-factor authentication or granular access token with bypass 2fa enabled is required`.
+  A **Granular** token scoped to specific packages cannot create a package that does not
+  exist yet — for a first publish it must be scoped to all packages.
+
+## What was done for 0.1.0
+
+1. From the reviewed `v0.1.0` tag, with a clean tree:
 
    ```bash
    pnpm install --frozen-lockfile
@@ -18,11 +55,26 @@ The repository builds and verifies `aker-build@0.1.0`. Public availability begin
    node scripts/verify-cli-package.mjs --tarball-dir release
    ```
 
-3. Inspect the verifier's `npm pack --json` evidence, then publish `release/aker-build-0.1.0.tgz` interactively with two-factor authentication and provenance.
-4. Configure npm Trusted Publisher for repository `Kemetra/Aker-Build`, workflow `npm-release.yml`, and environment `npm-release`.
-5. Configure required reviewers on the GitHub `npm-release` environment and do not add a long-lived npm publish token.
+2. Authenticated with a classic **Automation** token written to `~/.npmrc` by the
+   operator, never passed through a transcript or committed:
 
-The manual workflow deliberately fails with a bootstrap diagnostic until the package exists. It is for trusted post-bootstrap releases, not the first registry write.
+   ```bash
+   npm config set //registry.npmjs.org/:_authToken=<automation-token>
+   ```
+
+3. Inspected the verifier's `npm pack --json` evidence, then:
+
+   ```bash
+   npm publish --dry-run ./release/aker-build-0.1.0.tgz   # confirm contents
+   npm publish ./release/aker-build-0.1.0.tgz
+   ```
+
+   The leading `./` is required. npm parses a bare `release/aker-build-0.1.0.tgz` as a
+   GitHub shorthand and attempts
+   `git ls-remote ssh://git@github.com/release/aker-build-0.1.0.tgz.git`, which fails with
+   a git authentication error that points nowhere near the cause.
+   `scripts/release-publish-path.test.mjs` guards both release workflows against
+   reintroducing the unanchored form.
 
 ## Subsequent releases
 
@@ -34,4 +86,5 @@ The manual workflow deliberately fails with a bootstrap diagnostic until the pac
 
 ## Rollback
 
-npm versions are immutable. Deprecate a bad version with an explanatory message, fix forward with a new patch version, and never reuse or force-republish a version.
+npm versions are immutable. Deprecate a bad version with an explanatory message, fix
+forward with a new patch version, and never reuse or force-republish a version.
